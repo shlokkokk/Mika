@@ -4,6 +4,7 @@ import com.wangzan101.mika.R
 import com.wangzan101.mika.cap.web.KeptPage
 import com.wangzan101.mika.i18n.tr
 import com.wangzan101.mika.i18n.trPlural
+import com.wangzan101.mika.i18n.uiLocale
 import com.wangzan101.mika.core.assembly.legacyNames
 import com.wangzan101.mika.core.tool.LegacyNames
 import com.wangzan101.mika.chat.BranchCopyResult
@@ -138,7 +139,7 @@ data class StepRow(val step: Int, val title: String, val subtitle: String, val s
          * 当界面语言为非中文环境（如当前语言为英文），而模型未遵循指令输出了包含中文字符的用意时，
          * 避免在界面上展示突兀的生硬中文，回退为已本地化的动作标题（如 Tap · WeChat）。
          */
-        internal fun shouldHideRawReason(reason: String, isChineseLocale: Boolean = java.util.Locale.getDefault().language == "zh"): Boolean {
+        internal fun shouldHideRawReason(reason: String, isChineseLocale: Boolean = uiLocale().language == "zh"): Boolean {
             if (reason.isEmpty()) return false
             if (isChineseLocale) return false
             return reason.any { it in '\u4e00'..'\u9fa5' }
@@ -2469,7 +2470,7 @@ class ChatViewModel(
                 "unverified" -> answerParts(t.outcome).let { (a, e) -> ExchangeStatus.Done(a, e, verified = false, note = t.note, unconfirmed = t.unconfirmed) }
                 "cancelled" -> {
                     val rawSummary = Conversation.stopSummary(t)
-                    val summary = if (rawSummary != null && java.util.Locale.getDefault().language != "zh") {
+                    val summary = if (rawSummary != null && uiLocale().language != "zh") {
                         rawSummary
                             .replace("已经停下。停止前:", "Stopped. Before stopping:")
                             .replace("已经停下,停止前做了这些:", "Stopped. Actions before stop:")

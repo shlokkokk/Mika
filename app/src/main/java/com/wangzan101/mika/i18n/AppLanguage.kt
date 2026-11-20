@@ -72,6 +72,17 @@ enum class AppLanguage(val tag: String?, val speechTag: String?) {
             },
         )
 
+        /**
+         * 实际生效的语言:选定语言直接返回;跟随系统时按系统当前语言映射到支持的某一项
+         * (中文按文字体系分简繁,不支持的落英文)。给界面上写停驻说明、语言指令等要用到
+         * 确定语言标签、又拿不到用户明确选择的地方,避免把「跟随系统」当成中文。
+         */
+        fun resolved(context: Context): AppLanguage {
+            val cur = current(context)
+            if (cur != System) return cur
+            return fromTag(Locale.getDefault().toLanguageTag())
+        }
+
         /** 语言标签对应哪一项:见 [fromTag];标签里没写文字体系时,按 ICU 的常见写法补出来。 */
         fun fromTag(tag: String?): AppLanguage = fromTag(tag) { ULocale.addLikelySubtags(ULocale.forLanguageTag(it)).script }
 

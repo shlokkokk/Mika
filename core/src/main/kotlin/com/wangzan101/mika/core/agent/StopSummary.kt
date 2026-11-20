@@ -112,7 +112,7 @@ class StopSummary(
                 if (a.kind == "observe" && line == lastObserve) continue
                 lastObserve = if (a.kind == "observe") line else null
                 val note = notes[a.step]?.takeIf { said.add(a.step) }
-                lines += if (note == null) line else if (isZh) "$line —— 用意:$note" else "$line —— Intent:$note"
+                lines += if (note == null) line else if (isZh) "$line —— 用意:$note" else "$line — Intent: $note"
             }
             val shown = if (lines.size <= MAX_LINES) lines
                 else lines.take(20) + "…(中间省略 ${lines.size - MAX_LINES} 件)…" + lines.takeLast(MAX_LINES - 20)
@@ -125,7 +125,7 @@ class StopSummary(
                 append("<actions>\n").append(untag(shown.joinToString("\n").ifEmpty { emptyActions })).append("\n</actions>")
                 checkpoint?.let { c ->
                     if (c.criteria.isNotEmpty()) append("\n\n<acceptance>\n").append(untag(c.criteria.joinToString("\n"))).append("\n</acceptance>")
-                    progress(c)?.let { p -> append("\n\n<progress>\n").append(untag(p)).append("\n</progress>") }
+                    progress(c, isZh)?.let { p -> append("\n\n<progress>\n").append(untag(p)).append("\n</progress>") }
                 }
                 if (reads.isNotEmpty()) append("\n\n<last_read>\n").append(untag(reads.joinToString("\n----\n"))).append("\n</last_read>")
                 draft?.trim()?.takeIf(String::isNotEmpty)?.let { append("\n\n<draft>\n").append(untag(it.clip(DRAFT_CHARS))).append("\n</draft>") }
@@ -163,7 +163,7 @@ class StopSummary(
                 if (done.isNotEmpty()) lines += "做过:" + done.entries.joinToString("、") { (what, n) -> if (n > 1) "$what $n 次" else what }
                 checkpoint?.let { c ->
                     if (c.criteria.isNotEmpty()) lines += "验收:" + c.criteria.joinToString("；")
-                    progress(c)?.let { lines += "已确认进度:$it" }
+                    progress(c, isZh)?.let { lines += "已确认进度:$it" }
                 }
                 if (outward.isNotEmpty()) {
                     val where = outward.mapNotNull { a -> a.target?.let { placeOf(it, appLabel) } }.distinct()
@@ -180,18 +180,18 @@ class StopSummary(
                 return listOf(head, body, tail).filter(String::isNotEmpty).joinToString("\n")
             } else {
                 val sep = ", "
-                if (places.isNotEmpty()) lines += phrase.visited + places.take(4).joinToString(sep)
-                if (seen.isNotEmpty()) lines += phrase.observed + seen.take(4).joinToString(sep)
+                if (places.isNotEmpty()) lines += phrase.visited + listOverflow(places, 4)
+                if (seen.isNotEmpty()) lines += phrase.observed + listOverflow(seen, 4)
                 if (done.isNotEmpty()) lines += phrase.actions + done.entries.joinToString(sep) { (what, n) -> if (n > 1) "$what ($n)" else what }
                 checkpoint?.let { c ->
                     if (c.criteria.isNotEmpty()) lines += "Criteria: " + c.criteria.joinToString("; ")
-                    progress(c)?.let { lines += phrase.confirmedProgress + it }
+                    progress(c, isZh)?.let { lines += phrase.confirmedProgress + it }
                 }
                 if (outward.isNotEmpty()) {
                     val where = outward.mapNotNull { a -> a.target?.let { placeOf(it, appLabel) } }.distinct()
                     val which = outward.map { it.step }.distinct().mapNotNull(notes::get).distinct()
                     lines += "${phrase.externalSent}${outward.size}" + (if (where.isEmpty()) "" else " (${where.joinToString(sep)})") +
-                        (if (which.isEmpty()) "" else ": " + which.take(5).joinToString(sep))
+                        (if (which.isEmpty()) "" else ": " + listOverflow(which, 5))
                 }
                 if (failed > 0) lines += "$failed ${phrase.stepsFailed}"
                 draft?.trim()?.takeIf(String::isNotEmpty)?.let { lines += phrase.drafting + it.clip(200) }
@@ -221,6 +221,10 @@ class StopSummary(
         private fun list(items: List<String>, max: Int) =
             items.take(max).joinToString("、") + if (items.size > max) " 等 ${items.size} 处" else ""
 
+        /** 非中文里截断后补一个计数,别默默丢掉。 */
+        private fun listOverflow(items: List<String>, max: Int) =
+            items.take(max).joinToString(", ") + if (items.size > max) " (+${items.size - max})" else ""
+
         /** 每一步模型写的话:先用回复里的进度说明,没有用调用参数里的用意(reason)。 */
         private fun notes(events: List<RunEvent>): Map<Int, String> {
             val out = mutableMapOf<Int, String>()
@@ -236,12 +240,12 @@ class StopSummary(
             runCatching { (Json.parseToJsonElement(it) as? JsonObject)?.get("reason") as? JsonPrimitive }.getOrNull()?.contentOrNull?.trim()
         }
 
-        private fun progress(c: RunEvent.Criteria): String? {
-            c.confirmedIds?.let { return "目标 ${it.size}/${c.criteria.size}" }
+        private fun progress(c: RunEvent.Criteria, isZh: Boolean): String? {
+            c.confirmedIds?.let { return if (isZh) "目标 ${it.size}/${c.criteria.size}" else "goal ${it.size}/${c.criteria.size}" }
             val p = c.progress ?: return null
             val count = when {
                 p.done != null && p.total != null -> "${p.done}/${p.total}"
-                p.done != null -> "${p.done} 件"
+                p.done != null -> if (isZh) "${p.done} 件" else "${p.done} item(s)"
                 else -> null
             }
             return listOfNotNull(p.name.takeIf(String::isNotBlank), count, p.boundary?.takeIf(String::isNotBlank)).joinToString(" · ")
@@ -395,6 +399,21 @@ internal object StopPhrases {
                 tailComplete = { "استوفت \"$it\" معايير القبول ولكن تم الإيقاف قبل الإنهاء الطبيعي." },
                 tailIncomplete = { "الأجزاء غير المكتملة من \"$it\" لم تتم متابعتها." },
                 example = "مثال:\nتم الإيقاف. قبل التوقف:\n- تم فتح الإعدادات والتحقق من الشبكة والإنترنت والبلوتوث.\n- لم يتم التحقق من الشاشة والصوت بعد.",
+            )
+            t.startsWith("fa") -> StopPhrase(
+                isChinese = false,
+                headEmpty = "قبل از شروع هر اقدامی متوقف شد.",
+                headWithActs = "متوقف شد. قبل از توقف:",
+                visited = "بازدید شد: ",
+                observed = "مشاهده شد: ",
+                actions = "اقدامات: ",
+                confirmedProgress = "پیشرفت تأییدشده: ",
+                externalSent = "ارسال به بیرون: ",
+                stepsFailed = "مرحله ناموفق بود",
+                drafting = "در حال نوشتن هنگام توقف: ",
+                tailComplete = { "«$it» معیارهای پذیرش را برآورده کرد اما پیش از پایان عادی متوقف شد." },
+                tailIncomplete = { "بخش‌های ناتمام «$it» ادامه نیافت." },
+                example = "مثال:\nمتوقف شد. قبل از توقف:\n- تنظیمات باز شد و «شبکه و اینترنت» و «بلوتوث» بررسی شد.\n- «نمایشگر» و «صدا» هنوز بررسی نشده‌اند.",
             )
             t.startsWith("tr") -> StopPhrase(
                 isChinese = false,

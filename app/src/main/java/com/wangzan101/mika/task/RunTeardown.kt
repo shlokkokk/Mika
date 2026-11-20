@@ -81,7 +81,7 @@ internal class RunTeardown(
         }
         val events = recorded?.takeIf { StopSummary.worthSaying(it, null) } ?: synchronized(state.activityLog) { state.activityLog.toList() }
         if (!StopSummary.worthSaying(events, null)) return null
-        val lang = com.wangzan101.mika.i18n.AppLanguage.current(service).tag
+        val lang = com.wangzan101.mika.i18n.AppLanguage.resolved(service).tag
         val labels = ToolLabels(knownTools())
         return StopSummary.plain(k?.agent?.taskText ?: goal, events, null, labels::label, {
             ConfirmationNotifier.appLabel(service, it)
@@ -102,7 +102,7 @@ internal class RunTeardown(
         val (main, light) = if (k != null) k.model to k.light else withContext(Dispatchers.IO) {
             runCatching { env.modelFactory(service, session) }.getOrNull() to runCatching { env.lightModelFactory(service, session) }.getOrNull()
         }
-        val lang = com.wangzan101.mika.i18n.AppLanguage.current(service).tag
+        val lang = com.wangzan101.mika.i18n.AppLanguage.resolved(service).tag
         val labels = ToolLabels(knownTools())
         return StopSummary(light ?: main, main, language = lang).summarize(k?.agent?.taskText ?: goal, events, draft, labels::label) {
             ConfirmationNotifier.appLabel(service, it)

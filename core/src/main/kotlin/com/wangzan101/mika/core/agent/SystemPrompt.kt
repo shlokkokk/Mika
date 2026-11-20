@@ -38,8 +38,12 @@ object SystemPrompt {
                 "## 언어 설정\n모든 생각, 진행 상황 메모, 도구 호출 이유 및 최종 답변은 한국어로 작성해야 합니다."
             tag.startsWith("ar") ->
                 "## توجيه اللغة\nيجب عليك التفكير وكتابة جميع ملاحظات التقدم وأسباب استخدام الأدوات والردود النهائية باللغة العربية."
+            tag.startsWith("fa") ->
+                "## راهنمای زبان\nباید تمام افکار، یادداشت‌های پیشرفت، دلایل فراخوانی ابزارها و پاسخ‌های نهایی را به فارسی بنویسید."
             tag.startsWith("pt") ->
                 "## Diretriz de idioma\nVocê deve pensar, formular todas as notas de progresso, motivos de chamada de ferramentas e respostas finais em português."
+            tag.startsWith("id") || tag.startsWith("in") ->
+                "## Arahan Bahasa\nAnda harus berpikir, menulis semua catatan kemajuan, alasan pemanggilan alat, dan balasan akhir dalam bahasa Indonesia."
             tag.startsWith("ru") ->
                 "## Языковая директива\nВы должны думать, формулировать все заметки о ходе выполнения, причины вызова инструментов и окончательные ответы на русском языке."
             tag.startsWith("tr") ->

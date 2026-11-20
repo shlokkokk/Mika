@@ -1,11 +1,26 @@
 package com.wangzan101.mika.ui
 
+import com.wangzan101.mika.R
+import com.wangzan101.mika.i18n.UiText
+import com.wangzan101.mika.i18n.UiTexts
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
 class StepRowLanguageTest {
+
+    @Before
+    fun setUp() {
+        // 单测没有 App 进程装 UiText.source;给 ui_locale 定死一个英文值,让默认的「是否中文界面」判断稳定。
+        UiText.source = object : UiTexts {
+            override fun string(id: Int, args: Array<out Any?>): String =
+                if (id == R.string.ui_locale) "en" else ""
+
+            override fun plural(id: Int, count: Int, args: Array<out Any?>): String = ""
+        }
+    }
 
     @Test
     fun testShouldHideChineseReasonInNonChineseLocale() {
@@ -27,7 +42,7 @@ class StepRowLanguageTest {
 
     @Test
     fun testStepRowTextFallback() {
-        // When model outputs Chinese reason in an English environment, fallback to localized title
+        // 界面语言为英文(上面装的 ui_locale=en)时,模型输出的中文用意回退到本地化标题。
         val rowFallback = StepRow(
             step = 1,
             title = "Tap · WeChat",
@@ -35,11 +50,9 @@ class StepRowLanguageTest {
             state = StepState.Ok,
             reason = "点击“微信”应用图标",
         )
-        // If system default is non-zh, it falls back to title
-        val expected = if (java.util.Locale.getDefault().language == "zh") "点击“微信”应用图标" else "Tap · WeChat"
-        assertEquals(expected, rowFallback.text)
+        assertEquals("Tap · WeChat", rowFallback.text)
 
-        // When model outputs English reason, it is always displayed directly
+        // 模型输出英文用意时,始终直接展示。
         val rowEnglish = StepRow(
             step = 1,
             title = "Tap · WeChat",
