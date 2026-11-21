@@ -329,10 +329,7 @@ class ModelCatalog(private val http: OkHttpClient) {
         val root = fetch(req).getOrElse { return@run it.asFailure() }
         val result = root["result"] as? JsonArray ?: return@run ModelListResult.Failed(ListFailure.BadResponse)
         val models = result.mapNotNull { (it as? JsonObject)?.let(::cloudflareModel) }
-            .sortedWith(
-                compareByDescending<ListedModel> { it.toolCalls == true }
-                    .thenBy { it.id.contains("glm-5.3") }
-            )
+            .sortedWith(compareByDescending<ListedModel> { it.toolCalls == true }.thenBy { it.id })
             .distinctBy { it.id }
         ModelListResult.Ok(models)
     }
