@@ -25,7 +25,9 @@ class ConversationTitlerTest {
     private class Titler(private val reply: String = "", private val fail: Boolean = false, private val hang: Boolean = false) : ChatModel {
         override val capabilities = Capabilities(toolCalls = true, vision = false, contextTokens = 8_000, reasoning = false)
         val requests = mutableListOf<List<Message>>()
+        var system: String? = null
         override suspend fun complete(system: String, messages: List<Message>, tools: List<ToolSpec>): ModelReply {
+            this.system = system
             requests += messages
             if (fail) error("offline")
             if (hang) delay(60_000)
@@ -106,9 +108,18 @@ class ConversationTitlerTest {
         assertEquals("附近的川菜", ConversationTitler.clean("「附近的川菜」"))
         assertEquals("附近的川菜", ConversationTitler.clean("标题：附近的川菜。"))
         assertEquals("Book train", ConversationTitler.clean("\"Book train\"\n多余的解释"))
+        assertEquals("Open WhatsApp and greet Mom", ConversationTitler.clean("Title: Open WhatsApp and greet Mom"))
         assertEquals(16, ConversationTitler.clean("一".repeat(40))!!.length)
+        assertEquals(40, ConversationTitler.clean("a".repeat(60))!!.length)
         assertNull(ConversationTitler.clean("  \n "))
         assertNull(ConversationTitler.clean("「」"))
+    }
+
+    @Test fun titleCarriesLanguageDirective() = runBlocking {
+        val m = Titler("Open WhatsApp")
+        ConversationTitler.generate(listOf(m), "open whatsapp say hello to ved", language = "en")
+        assertTrue(m.system!!.contains("## Communication & Reasoning Language"))
+        assertTrue(m.system!!.contains("English"))
     }
 
     @Test fun titleRoundTripsAndShowsInTheList() {
