@@ -1,5 +1,7 @@
 package com.wangzan101.mika.settings
 
+import android.app.Activity
+import android.app.ActivityManager
 import android.content.Context
 import android.content.SharedPreferences
 import com.wangzan101.mika.capsule.CapsuleCardScale
@@ -205,6 +207,13 @@ class FeatureFlags(private val prefs: SharedPreferences) {
                 }
             }
         }
+
+    /** 排除在多任务卡片之外(防止误滑清理导致杀掉后台无障碍);默认关。 */
+    fun excludeFromRecents(): Boolean = prefs.getBoolean(EXCLUDE_FROM_RECENTS, false)
+
+    fun setExcludeFromRecents(on: Boolean) {
+        prefs.edit().putBoolean(EXCLUDE_FROM_RECENTS, on).commit()
+    }
 
     /** 界面配色:跟随系统、一直浅色、一直深色(见 [ThemeMode])。界面跟着 [themeModeChanges] 当场换,不用重建。 */
     fun themeMode(): ThemeMode = ThemeMode.parse(prefs.getString(THEME_MODE, null))
@@ -515,6 +524,7 @@ class FeatureFlags(private val prefs: SharedPreferences) {
         private const val PIP_OPERATE = "pip_operate"
         private const val EXTERNAL_SCHEDULE = "external_schedule"
         private const val PROACTIVE = "proactive"
+        private const val EXCLUDE_FROM_RECENTS = "exclude_from_recents"
         private const val PERSONA = "persona"
         private const val THEME_MODE = "theme_mode"
         private const val PERSONAL_START = "personal_start"
@@ -538,5 +548,24 @@ class FeatureFlags(private val prefs: SharedPreferences) {
         private const val CAPSULE_CARD_HEIGHT = "capsule_card_height"
 
         fun get(context: Context) = FeatureFlags(context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE))
+    }
+}
+
+/** 将当前任务卡片从系统的多任务列表（Recent Apps / Overview）中隐藏或恢复显示。 */
+fun Activity.applyExcludeFromRecents(exclude: Boolean) {
+    try {
+        val am = getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return
+        val currentTaskId = taskId
+        am.appTasks?.forEach { task ->
+            try {
+                val info = task.taskInfo
+                if (info == null || info.taskId == currentTaskId) {
+                    task.setExcludeFromRecents(exclude)
+                }
+            } catch (_: Throwable) {
+                task.setExcludeFromRecents(exclude)
+            }
+        }
+    } catch (_: Throwable) {
     }
 }
