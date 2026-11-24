@@ -351,29 +351,20 @@ class TaskGateTest {
         assertEquals(null, reported.last())
     }
 
-    /** 网页、沙箱上的步骤不需要内置助手,也不会被挪到主屏:只看锁屏。 */
+    /** Web/sandbox steps do not need the shell, virtual display move-back, or phone screen unlock. */
     @Test
-    fun shellAndMovedAwayOnlyCheckedForPhoneSteps() = runTest {
+    fun shellMovedAwayAndLockedOnlyCheckedForPhoneSteps() = runTest {
         shellUp.value = false
         gate.onTaskMovedAway()
+        locked.value = true
         gate.pass({ false }) { reported += it }
         assertEquals(listOf<TaskState?>(null), reported)
+
         var passed = false
         launch { gate.pass({ true }) { reported += it }; passed = true }
         runCurrent()
         assertFalse(passed)
         assertEquals(TaskState.Held(TaskGate.paused(TaskGate.SHELL_DOWN)), reported.last())
-        // 锁屏照样挡网页的步骤
-        reported.clear()
-        locked.value = true
-        var webPassed = false
-        launch { gate.pass({ false }) { reported += it }; webPassed = true }
-        runCurrent()
-        assertFalse(webPassed)
-        assertEquals(TaskState.Held(TaskGate.LOCKED), reported.last())
-        locked.value = false
-        runCurrent()
-        assertTrue(webPassed)
         coroutineContext.cancelChildren()
     }
 }

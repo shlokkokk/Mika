@@ -102,6 +102,8 @@ class TaskService : Service() {
     internal fun rememberRecord(run: TaskRun, recordId: String) = center.markRecord(run, recordId)
     /** 几个任务共用的屏幕常亮锁。 */
     internal val wakeLock by lazy { SharedWakeLock(ScreenWakeLock(this)) }
+    /** Keeps CPU awake while active runs execute in background / screen-off. */
+    internal val cpuWakeLock by lazy { PartialCpuWakeLock(this, "Mika:run") }
 
     internal fun reservePackage(pkg: String, runKey: String, stillUsed: () -> Boolean) = center.reserve(pkg, runKey, stillUsed)
     internal fun packageFree(pkg: String, runKey: String, stillUsed: () -> Boolean) = center.appFree(pkg, runKey, stillUsed)
@@ -273,6 +275,7 @@ class TaskService : Service() {
 
     override fun onDestroy() {
         pocketGuard.close()
+        cpuWakeLock.release()
         scope.cancel()
         // 服务没了就撑不住进程:留着的那一页如实关掉,对话里记下
         keeper.close(KeptPageClose.AppExit)

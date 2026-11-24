@@ -207,6 +207,7 @@ internal fun TaskService.nameConversation(store: ConversationStore, id: String, 
 
 /** 已经在前台(或即将收尾)时再次进入前台:用前台那个任务的进度通知。 */
 internal fun TaskService.keepForeground() {
+    cpuWakeLock.acquire()
     val fg = foreground
     if (fg != null) startInForeground(fg, progressNotification(fg, fg.state.value))
     else startInForeground(null, preparingNotification())

@@ -105,7 +105,11 @@ class DeviceAccess(private val port: DeviceAccessPort, private val store: Device
         }
         if (!allowed()) return@withLock result("disabled", now)
         val wasSecure = now.secure
-        if (!port.dismiss()) return@withLock result("dismiss_failed", read())
+        if (!port.dismiss()) {
+            if (!woke) return@withLock result("dismiss_failed", read())
+            delay(pollMs)
+            if (!port.dismiss()) return@withLock result("dismiss_failed", read())
+        }
         now = await { !allowed() || it.ready || it.secure && it.keyguardShowing } ?: return@withLock result("device_unavailable")
         if (!allowed()) return@withLock result("disabled", now)
         // 非安全锁屏由这次流程上滑解开、或这次流程唤醒了熄屏:算这次解的;安全锁屏没输入凭据就开了是用户同时自己解的

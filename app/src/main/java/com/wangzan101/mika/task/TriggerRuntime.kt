@@ -328,11 +328,20 @@ object ExactAlarmGuide {
 class TriggerAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != "com.wangzan101.mika.task.TRIGGER_ALARM") return
+        val app = context.applicationContext
+        val cpuLock = PartialCpuWakeLock(app, "Mika:trigger", ALARM_HOLD_MS).apply { acquire() }
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
-            try { TriggerRuntime.fire(context.applicationContext) }
+            try { TriggerRuntime.fire(app) }
             catch (e: Exception) { Log.e("MikaTrigger", "alarm dispatch failed", e) }
-            finally { pending.finish() }
+            finally {
+                cpuLock.release()
+                pending.finish()
+            }
         }
+    }
+
+    companion object {
+        private const val ALARM_HOLD_MS = 45_000L
     }
 }
