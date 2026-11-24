@@ -6,20 +6,23 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -146,7 +149,6 @@ fun PlanEditorDialog(
     var pickingTime by remember(original?.id) { mutableStateOf<TimeTarget?>(null) }
     var pickingZone by remember(original?.id) { mutableStateOf(false) }
     var conditionExpanded by remember(original?.id) { mutableStateOf(draft.condition.isNotBlank()) }
-    var moreExpanded by remember(original?.id) { mutableStateOf(false) }
     var configuringScreenOff by remember { mutableStateOf(false) }
 
     val nowMs = System.currentTimeMillis()
@@ -250,7 +252,7 @@ fun PlanEditorDialog(
                     Column(
                         Modifier.weight(1f).fillMaxWidth()
                             .verticalScroll(rememberScrollState())
-                            .windowInsetsPadding(WindowInsets.navigationBars)
+                            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
                             .padding(horizontal = MikaSpace.Page),
                     ) {
                         Spacer(Modifier.height(MikaSpace.S8))
@@ -610,28 +612,17 @@ fun PlanEditorDialog(
                             ) { RowChevron() }
                             ListRow(
                                 icon = null,
-                                title = tr(R.string.plans_more_options),
-                                onClick = { moreExpanded = !moreExpanded },
+                                title = tr(R.string.plans_when_idle),
+                                onClick = { draft = draft.copy(whenIdle = !draft.whenIdle) },
                             ) {
-                                RowValue(if (moreExpanded) "−" else "+")
+                                MikaSwitch(draft.whenIdle, { draft = draft.copy(whenIdle = it) }, Modifier.testTag("plan-editor-idle"))
                             }
-                            AnimatedVisibility(moreExpanded) {
-                                Column {
-                                    ListRow(
-                                        icon = null,
-                                        title = tr(R.string.plans_when_idle),
-                                        onClick = { draft = draft.copy(whenIdle = !draft.whenIdle) },
-                                    ) {
-                                        MikaSwitch(draft.whenIdle, { draft = draft.copy(whenIdle = it) }, Modifier.testTag("plan-editor-idle"))
-                                    }
-                                    ListRow(
-                                        icon = null,
-                                        title = tr(R.string.plans_enabled),
-                                        onClick = { draft = draft.copy(enabled = !draft.enabled) },
-                                    ) {
-                                        MikaSwitch(draft.enabled, { draft = draft.copy(enabled = it) }, Modifier.testTag("plan-editor-enabled"))
-                                    }
-                                }
+                            ListRow(
+                                icon = null,
+                                title = tr(R.string.plans_enabled),
+                                onClick = { draft = draft.copy(enabled = !draft.enabled) },
+                            ) {
+                                MikaSwitch(draft.enabled, { draft = draft.copy(enabled = it) }, Modifier.testTag("plan-editor-enabled"))
                             }
                         }
 
@@ -677,7 +668,7 @@ fun PlanEditorDialog(
                                 color = MikaTheme.colors.bad,
                             )
                         }
-                        Spacer(Modifier.height(MikaSpace.S24))
+                        Spacer(Modifier.height(32.dp))
                     }
                 }
             }
@@ -983,29 +974,32 @@ private fun PlanTimezonePickerDialog(
         onDismissRequest = onDismiss,
         title = { Text(tr(R.string.plans_timezone)) },
         text = {
-            Column(Modifier.fillMaxWidth().heightIn(max = 380.dp)) {
-                OutlinedTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    modifier = Modifier.fillMaxWidth().testTag("plan-zone-search"),
-                    placeholder = { Text(tr(R.string.plans_timezone_search)) },
-                    singleLine = true,
-                )
-                Spacer(Modifier.height(8.dp))
-                if (zones.isEmpty()) {
-                    EmptyNote(tr(R.string.plans_timezone_empty))
-                } else {
-                    LazyColumn(Modifier.fillMaxWidth()) {
-                        items(zones, key = { it.id }) { entry ->
-                            ListRow(
-                                icon = null,
-                                title = entry.id,
-                                subtitle = "${entry.displayName} · ${entry.offsetLabel}",
-                                first = entry == zones.first(),
-                                onClick = { onPicked(entry.id) },
-                            ) {
-                                if (entry.id == currentZoneId) {
-                                    Icon(MikaIcons.Check, null, Modifier.size(18.dp), tint = MikaTheme.colors.accent)
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                val listMaxHeight = maxHeight * 0.52f
+                Column(Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = query,
+                        onValueChange = { query = it },
+                        modifier = Modifier.fillMaxWidth().testTag("plan-zone-search"),
+                        placeholder = { Text(tr(R.string.plans_timezone_search)) },
+                        singleLine = true,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    if (zones.isEmpty()) {
+                        EmptyNote(tr(R.string.plans_timezone_empty))
+                    } else {
+                        LazyColumn(Modifier.fillMaxWidth().heightIn(max = listMaxHeight)) {
+                            items(zones, key = { it.id }) { entry ->
+                                ListRow(
+                                    icon = null,
+                                    title = entry.id,
+                                    subtitle = "${entry.displayName} · ${entry.offsetLabel}",
+                                    first = entry == zones.first(),
+                                    onClick = { onPicked(entry.id) },
+                                ) {
+                                    if (entry.id == currentZoneId) {
+                                        Icon(MikaIcons.Check, null, Modifier.size(18.dp), tint = MikaTheme.colors.accent)
+                                    }
                                 }
                             }
                         }
@@ -1013,7 +1007,15 @@ private fun PlanTimezonePickerDialog(
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(tr(R.string.cancel)) } },
+        confirmButton = {
+            MikaButton(
+                text = tr(R.string.cancel),
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth().testTag("plan-zone-cancel"),
+                kind = ButtonKind.Tonal,
+                size = ButtonSize.Small,
+            )
+        },
     )
 }
 
