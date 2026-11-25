@@ -124,6 +124,6 @@
     <string name="plans_use_tomorrow">Use tomorrow</string>
     <string name="plans_chat_deleted">That chat no longer exists</string>
     <string name="plans_started_toast">Scheduled task started</string>
-    <string name="plans_when_idle_sub">Delay if you're already running a task</string>
+    <string name="plans_when_idle_sub">Delay if you’re already running a task</string>
     <string name="plans_enabled_sub">Turn off to pause without deleting</string>
 </resources>
