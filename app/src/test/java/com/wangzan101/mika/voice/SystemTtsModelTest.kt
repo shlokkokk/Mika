@@ -73,6 +73,12 @@ class SystemTtsModelTest {
             return TextToSpeech.SUCCESS
         }
 
+        var voiceName: String? = null
+        override fun setVoice(voiceName: String): Int {
+            this.voiceName = voiceName
+            return TextToSpeech.SUCCESS
+        }
+
         override fun setOnUtteranceProgressListener(onDone: (String) -> Unit, onError: (String) -> Unit) {
             doneCallback = onDone
             errorCallback = onError
@@ -253,5 +259,37 @@ class SystemTtsModelTest {
         val controller = voiceTestEnvironment(catalog).tts
 
         assertEquals(cloud, controller.current())
+    }
+
+    @Test
+    fun `synthesis applies explicit voice to engine`() = runTest {
+        val engine = FakeEngine()
+        val tts = model(engine)
+
+        val response = tts.synthesize(TtsRequest("test", voice = "zh-cn-x-custom"))
+
+        assertEquals("audio/wav", response.mime)
+        assertEquals("zh-cn-x-custom", engine.voiceName)
+    }
+
+    @Test
+    fun `synthesis with custom enginePackage passes package to factory`() = runTest {
+        var capturedPackage: String? = null
+        val engine = FakeEngine()
+        val tts = SystemTtsModel(
+            context = context,
+            engineFactory = { _, pkg ->
+                capturedPackage = pkg
+                engine
+            },
+            resolvedLanguage = { AppLanguage.English },
+            outputDir = { tmp.root },
+            enginePackage = { "bin.gorden.multitts" },
+        )
+
+        val response = tts.synthesize(TtsRequest("test"))
+
+        assertEquals("audio/wav", response.mime)
+        assertEquals("bin.gorden.multitts", capturedPackage)
     }
 }

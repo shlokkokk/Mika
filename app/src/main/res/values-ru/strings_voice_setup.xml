@@ -31,6 +31,8 @@
     <string name="voice_settings_of">Настройки %1$s</string>
     <string name="voice_voice">Голос</string>
     <string name="voice_voice_default">По умолчанию</string>
+    <string name="voice_tts_engine">Движок TTS</string>
+    <string name="voice_engine_default">По умолчанию в системе</string>
     <string name="realtime_lead">Разговаривайте с Mika и перебивайте в любой момент. Телефонные звонки с ИИ используют тот же выбор, если не выбран свой.</string>
     <string name="realtime_empty">Модели для голосовых звонков пока нет</string>
     <string name="realtime_empty_note">Выберите модель ниже или подключите голосовой сервис с поддержкой звонков.</string>

@@ -31,6 +31,8 @@
     <string name="voice_settings_of">%1$s 的设置</string>
     <string name="voice_voice">音色</string>
     <string name="voice_voice_default">默认</string>
+    <string name="voice_tts_engine">语音合成引擎</string>
+    <string name="voice_engine_default">系统默认</string>
     <string name="realtime_lead">和 Mika 直接对话，随时可以打断。AI 接打电话默认也用这个选择，也可以单独指定。</string>
     <string name="realtime_empty">还没有语音通话模型</string>
     <string name="realtime_empty_note">在下面选一个，或接入支持通话的语音服务。</string>

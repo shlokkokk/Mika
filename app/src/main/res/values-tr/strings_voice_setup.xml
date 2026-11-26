@@ -31,6 +31,8 @@
     <string name="voice_settings_of">%1$s ayarları</string>
     <string name="voice_voice">Ses tonu</string>
     <string name="voice_voice_default">Varsayılan</string>
+    <string name="voice_tts_engine">TTS motoru</string>
+    <string name="voice_engine_default">Sistem varsayılanı</string>
     <string name="realtime_lead">Mika ile konuşun ve istediğiniz an sözünü kesin. Yapay zekâ telefon aramaları kendi seçimini yapmadıkça aynı seçimi kullanır.</string>
     <string name="realtime_empty">Henüz sesli arama modeli yok</string>
     <string name="realtime_empty_note">Aşağıdan birini seçin veya arama destekleyen bir ses hizmeti bağlayın.</string>

@@ -106,6 +106,22 @@ class VoiceSettingsTest {
         assertFalse(restarted.enabled)
     }
 
+    @Test fun ttsEngineSelectionSurvivesRestartAndResetsVoice() {
+        val prefs = MemoryPrefs()
+        val settings = VoiceSettings(prefs)
+        assertEquals("", settings.state.value.ttsEngine)
+
+        settings.setVoice("custom-voice")
+        settings.setTtsEngine("com.google.android.tts")
+        assertEquals("com.google.android.tts", settings.state.value.ttsEngine)
+        assertEquals("", settings.state.value.voice)
+
+        settings.setVoice("en-us-x-sfg#female_1-local")
+        val restarted = VoiceSettings(prefs).state.value
+        assertEquals("com.google.android.tts", restarted.ttsEngine)
+        assertEquals("en-us-x-sfg#female_1-local", restarted.voice)
+    }
+
     @Test fun badJsonFallsBackToDefaults() {
         val prefs = MemoryPrefs()
         prefs.edit().putString("voice_settings", "not json").commit()

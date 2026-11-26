@@ -31,6 +31,8 @@
     <string name="voice_settings_of">تنظیمات %1$s</string>
     <string name="voice_voice">صدا</string>
     <string name="voice_voice_default">پیش‌فرض</string>
+    <string name="voice_tts_engine">موتور تبدیل متن به گفتار</string>
+    <string name="voice_engine_default">پیش‌فرض سیستم</string>
     <string name="realtime_lead">با Mika صحبت کنید و هر وقت خواستید حرفش را قطع کنید. تماس‌های تلفنی هوش مصنوعی همین انتخاب را به کار می‌برند مگر اینکه انتخاب خودشان را داشته باشند.</string>
     <string name="realtime_empty">هنوز مدل تماس صوتی وجود ندارد</string>
     <string name="realtime_empty_note">یکی را از پایین انتخاب کنید، یا یک سرویس صوتی که تماس را پشتیبانی می‌کند وصل کنید.</string>

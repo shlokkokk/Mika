@@ -31,6 +31,8 @@
     <string name="voice_settings_of">Ajustes de %1$s</string>
     <string name="voice_voice">Voz</string>
     <string name="voice_voice_default">Predeterminada</string>
+    <string name="voice_tts_engine">Motor TTS</string>
+    <string name="voice_engine_default">Predeterminado del sistema</string>
     <string name="realtime_lead">Habla con Mika e interrúmpela cuando quieras. Las llamadas telefónicas con IA usan la misma opción salvo que elijan la suya.</string>
     <string name="realtime_empty">Aún no hay modelo de llamada de voz</string>
     <string name="realtime_empty_note">Elige uno abajo o conecta un servicio de voz que ofrezca llamadas.</string>

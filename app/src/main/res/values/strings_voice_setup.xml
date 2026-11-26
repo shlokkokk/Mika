@@ -31,6 +31,8 @@
     <string name="voice_settings_of">%1$s settings</string>
     <string name="voice_voice">Voice</string>
     <string name="voice_voice_default">Default</string>
+    <string name="voice_tts_engine">TTS engine</string>
+    <string name="voice_engine_default">System default</string>
     <string name="realtime_lead">Talk with Mika and interrupt it any time. AI phone calls use the same choice unless they pick their own.</string>
     <string name="realtime_empty">No voice call model yet</string>
     <string name="realtime_empty_note">Pick one below, or connect a voice service that offers calls.</string>

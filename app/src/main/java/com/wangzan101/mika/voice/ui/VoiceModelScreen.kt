@@ -214,6 +214,7 @@ private fun MigratedVoiceModelContent(
     val voiceVm = rememberVoiceCatalogViewModel(voiceModels)
     val providers by store.providers.collectAsState()
     var voicesOpen by remember { mutableStateOf(false) }
+    var enginesOpen by remember { mutableStateOf(false) }
     val state by settings.state.collectAsState()
     val catalog by voiceModels.catalog.state.collectAsState()
     val tts = voiceModels.tts
@@ -255,25 +256,90 @@ private fun MigratedVoiceModelContent(
 
         selectedModel?.let { model ->
             GroupCard {
-                val voices = VoiceVoices.tts(model)
-                val pickable = voices.isNotEmpty() || model.tts?.protocol.let { it != null && it != com.wangzan101.mika.voice.model.TtsProtocol.AndroidSystem }
-                if (pickable) {
-                    ListRow(null, tr(R.string.voice_voice), first = true, onClick = { voicesOpen = true },
-                        modifier = Modifier.testTag("tts-voice")) {
-                        RowValue(state.voice.ifBlank { tr(R.string.voice_voice_default) }.let { VoiceVoices.label(model, it) })
+                val isSystem = model.tts?.protocol == com.wangzan101.mika.voice.model.TtsProtocol.AndroidSystem
+                if (isSystem) {
+                    val installedEngines = remember { com.wangzan101.mika.voice.SystemTtsDiscovery.getInstalledEngines(context) }
+                    val currentEngine = installedEngines.firstOrNull { it.packageName == state.ttsEngine }
+                    val engineLabel = when {
+                        state.ttsEngine.isBlank() -> tr(R.string.voice_engine_default)
+                        currentEngine != null -> currentEngine.label
+                        else -> state.ttsEngine
+                    }
+                    ListRow(
+                        null, tr(R.string.voice_tts_engine), first = true, onClick = { enginesOpen = true },
+                        modifier = Modifier.testTag("tts-engine"),
+                    ) {
+                        RowValue(engineLabel)
                         RowChevron()
                     }
-                }
-                if (voicesOpen) {
-                    VoicePickerSheet(
-                        VoiceVoices.withCurrent(voices, state.voice),
-                        onPick = { settings.setVoice(it); test = null },
-                        onDismiss = { voicesOpen = false },
-                        model = model,
-                    )
+                    if (enginesOpen) {
+                        val actions = listOf(
+                            com.wangzan101.mika.ui.components.SheetAction(tr(R.string.voice_engine_default)) {
+                                settings.setTtsEngine("")
+                                test = null
+                            }
+                        ) + installedEngines.map { eng ->
+                            com.wangzan101.mika.ui.components.SheetAction("${eng.label} (${eng.packageName})") {
+                                settings.setTtsEngine(eng.packageName)
+                                test = null
+                            }
+                        }
+                        com.wangzan101.mika.ui.components.ActionSheet(
+                            tr(R.string.voice_tts_engine), actions,
+                        ) { enginesOpen = false }
+                    }
+
+                    var systemVoices by remember(state.ttsEngine) { mutableStateOf<List<com.wangzan101.mika.voice.SystemTtsVoiceInfo>?>(null) }
+                    androidx.compose.runtime.LaunchedEffect(state.ttsEngine) {
+                        systemVoices = com.wangzan101.mika.voice.SystemTtsDiscovery.queryVoices(context, state.ttsEngine.ifBlank { null })
+                    }
+                    val currentVoice = systemVoices?.firstOrNull { it.name == state.voice }
+                    val voiceLabel = when {
+                        state.voice.isBlank() -> tr(R.string.voice_voice_default)
+                        currentVoice != null -> currentVoice.displayName
+                        else -> state.voice
+                    }
+                    ListRow(
+                        null, tr(R.string.voice_voice), onClick = { voicesOpen = true },
+                        modifier = Modifier.testTag("tts-voice"),
+                    ) {
+                        RowValue(voiceLabel)
+                        RowChevron()
+                    }
+                    if (voicesOpen) {
+                        val voiceNames = systemVoices.orEmpty().map { it.name }
+                        val nameLabels = systemVoices.orEmpty().associate { it.name to it.displayName }
+                        val voiceModelForLabels = model.copy(
+                            tts = model.tts?.copy(voiceNames = nameLabels),
+                        )
+                        VoicePickerSheet(
+                            VoiceVoices.withCurrent(voiceNames, state.voice),
+                            onPick = { settings.setVoice(it); test = null },
+                            onDismiss = { voicesOpen = false },
+                            model = voiceModelForLabels,
+                        )
+                    }
+                } else {
+                    val voices = VoiceVoices.tts(model)
+                    val pickable = voices.isNotEmpty() || model.tts?.protocol.let { it != null && it != com.wangzan101.mika.voice.model.TtsProtocol.AndroidSystem }
+                    if (pickable) {
+                        ListRow(null, tr(R.string.voice_voice), first = true, onClick = { voicesOpen = true },
+                            modifier = Modifier.testTag("tts-voice")) {
+                            RowValue(state.voice.ifBlank { tr(R.string.voice_voice_default) }.let { VoiceVoices.label(model, it) })
+                            RowChevron()
+                        }
+                    }
+                    if (voicesOpen) {
+                        VoicePickerSheet(
+                            VoiceVoices.withCurrent(voices, state.voice),
+                            onPick = { settings.setVoice(it); test = null },
+                            onDismiss = { voicesOpen = false },
+                            model = model,
+                        )
+                    }
                 }
                 InputRow(
-                    tr(R.string.voice_speed), speed, first = !pickable,
+                    tr(R.string.voice_speed), speed, first = false,
                     onChange = {
                         speed = it
                         it.toFloatOrNull()?.takeIf { v -> v.isFinite() }?.let { v -> settings.setSpeed(normalizeVoiceSpeed(v)) }

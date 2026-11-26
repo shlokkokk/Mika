@@ -20,16 +20,32 @@ import java.util.Locale
  */
 class SystemTtsModel(
     private val context: Context,
-    private val engineFactory: (Context) -> SystemTtsEngine,
+    private val engineFactory: (Context, String?) -> SystemTtsEngine,
     private val resolvedLanguage: () -> AppLanguage,
     private val outputDir: () -> File,
     private val maxChars: Int = TtsCapabilities().maxChars,
+    private val enginePackage: () -> String? = { null },
 ) : TtsModel {
+    /** 兼容仅提供一参 engineFactory 的旧调用方和测试。 */
+    constructor(
+        context: Context,
+        engineFactory: (Context) -> SystemTtsEngine,
+        resolvedLanguage: () -> AppLanguage,
+        outputDir: () -> File,
+        maxChars: Int = TtsCapabilities().maxChars,
+    ) : this(
+        context = context,
+        engineFactory = { ctx, _ -> engineFactory(ctx) },
+        resolvedLanguage = resolvedLanguage,
+        outputDir = outputDir,
+        maxChars = maxChars,
+    )
+
     override val name: String = "system-tts"
     override val capabilities: TtsCapabilities = TtsCapabilities(voices = null, maxChars = maxChars, formats = setOf("wav"))
 
     override suspend fun synthesize(request: TtsRequest): TtsResponse {
-        val engine = engineFactory(context)
+        val engine = engineFactory(context, enginePackage())
         return try {
             val ready = CompletableDeferred<Int>()
             engine.init { ready.complete(it) }
@@ -47,6 +63,9 @@ class SystemTtsModel(
                 TextToSpeech.LANG_NOT_SUPPORTED -> throw VoiceModelError.Protocol(
                     VoiceErrorCategory.SYSTEM_UNAVAILABLE, "System text-to-speech does not support this language",
                 )
+            }
+            request.voice?.takeIf { it.isNotBlank() }?.let { voiceName ->
+                engine.setVoice(voiceName)
             }
             engine.setSpeechRate(request.speed ?: 1f)
 

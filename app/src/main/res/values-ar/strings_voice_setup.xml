@@ -31,6 +31,8 @@
     <string name="voice_settings_of">إعدادات %1$s</string>
     <string name="voice_voice">الصوت</string>
     <string name="voice_voice_default">افتراضي</string>
+    <string name="voice_tts_engine">محرك تحويل النص إلى كلام</string>
+    <string name="voice_engine_default">افتراضي النظام</string>
     <string name="realtime_lead">تحدث مع Mika وقاطعها في أي وقت. تستخدم المكالمات الهاتفية بالذكاء الاصطناعي الاختيار نفسه ما لم تختر واحدًا خاصًا بها.</string>
     <string name="realtime_empty">لا يوجد نموذج للمكالمات الصوتية بعد</string>
     <string name="realtime_empty_note">اختر واحدًا أدناه، أو اربط خدمة صوت تدعم المكالمات.</string>

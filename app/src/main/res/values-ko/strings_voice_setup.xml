@@ -31,6 +31,8 @@
     <string name="voice_settings_of">%1$s 설정</string>
     <string name="voice_voice">목소리</string>
     <string name="voice_voice_default">기본값</string>
+    <string name="voice_tts_engine">TTS 엔진</string>
+    <string name="voice_engine_default">시스템 기본값</string>
     <string name="realtime_lead">Mika와 대화하고 언제든 끼어들 수 있습니다. AI 전화도 따로 고르지 않으면 같은 선택을 사용합니다.</string>
     <string name="realtime_empty">아직 음성 통화 모델이 없습니다</string>
     <string name="realtime_empty_note">아래에서 고르거나 통화를 지원하는 음성 서비스를 연결하세요.</string>

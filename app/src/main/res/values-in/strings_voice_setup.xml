@@ -31,6 +31,8 @@
     <string name="voice_settings_of">Pengaturan %1$s</string>
     <string name="voice_voice">Suara</string>
     <string name="voice_voice_default">Default</string>
+    <string name="voice_tts_engine">Mesin TTS</string>
+    <string name="voice_engine_default">Default sistem</string>
     <string name="realtime_lead">Bicara dengan Mika dan sela kapan saja. Panggilan telepon AI memakai pilihan yang sama kecuali memilih sendiri.</string>
     <string name="realtime_empty">Belum ada model panggilan suara</string>
     <string name="realtime_empty_note">Pilih satu di bawah, atau hubungkan layanan suara yang mendukung panggilan.</string>
