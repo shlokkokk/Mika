@@ -42,7 +42,7 @@
     <string name="plans_notify_change">При изменении</string>
     <string name="plans_notify_each">Каждый раз</string>
     <string name="plans_cooldown_minutes">Минимум минут между запусками (необязательно)</string>
-    <string name="plans_when_idle">Запускать только когда Mika свободна</string>
+    <string name="plans_when_idle">Ждать, пока Mika освободится</string>
     <string name="plans_execution_window">Период выполнения</string>
     <string name="plans_window_anytime">В любое время</string>
     <string name="plans_window_off_peak">Вне пиковых часов</string>
@@ -52,7 +52,7 @@
     <string name="plans_window_end">Конец периода (HH:mm или 24:00)</string>
     <string name="plans_window_custom_hint">Часовой пояс: %1$s. Если время окончания раньше времени начала, период переходит через полночь.</string>
     <string name="plans_error_window">Введите корректный период; время начала и окончания должно различаться</string>
-    <string name="plans_enabled">Включена</string>
+    <string name="plans_enabled">Расписание активно</string>
     <string name="plans_error_content">Введите задачу или напоминание</string>
     <string name="plans_error_content_long">Не более 4 000 символов, для напоминания — 2 000</string>
     <string name="plans_error_condition_long">Условие должно содержать не более 2 000 символов</string>
@@ -126,4 +126,6 @@
     <string name="plans_use_tomorrow">На завтра</string>
     <string name="plans_chat_deleted">Этот чат больше не существует</string>
     <string name="plans_started_toast">Запланированная задача запущена</string>
+    <string name="plans_when_idle_sub">Отложить, если уже выполняется другая задача</string>
+    <string name="plans_enabled_sub">Выключите, чтобы поставить на паузу без удаления</string>
 </resources>

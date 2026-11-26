@@ -613,13 +613,20 @@ fun PlanEditorDialog(
                             ListRow(
                                 icon = null,
                                 title = tr(R.string.plans_when_idle),
+                                subtitle = tr(R.string.plans_when_idle_sub),
                                 onClick = { draft = draft.copy(whenIdle = !draft.whenIdle) },
                             ) {
                                 MikaSwitch(draft.whenIdle, { draft = draft.copy(whenIdle = it) }, Modifier.testTag("plan-editor-idle"))
                             }
+                        }
+
+                        Spacer(Modifier.height(MikaSpace.S12))
+                        GroupCard {
                             ListRow(
                                 icon = null,
                                 title = tr(R.string.plans_enabled),
+                                subtitle = tr(R.string.plans_enabled_sub),
+                                first = true,
                                 onClick = { draft = draft.copy(enabled = !draft.enabled) },
                             ) {
                                 MikaSwitch(draft.enabled, { draft = draft.copy(enabled = it) }, Modifier.testTag("plan-editor-enabled"))
@@ -668,7 +675,7 @@ fun PlanEditorDialog(
                                 color = MikaTheme.colors.bad,
                             )
                         }
-                        Spacer(Modifier.height(32.dp))
+                        Spacer(Modifier.height(48.dp))
                     }
                 }
             }

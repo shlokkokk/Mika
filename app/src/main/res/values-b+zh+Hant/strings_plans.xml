@@ -42,7 +42,7 @@
     <string name="plans_notify_change">條件剛滿足時</string>
     <string name="plans_notify_each">每次滿足時</string>
     <string name="plans_cooldown_minutes">兩次執行至少間隔多少分鐘（可選）</string>
-    <string name="plans_when_idle">僅在 Mika 閒置時執行</string>
+    <string name="plans_when_idle">等 Mika 空閒時再執行</string>
     <string name="plans_execution_window">執行時段</string>
     <string name="plans_window_anytime">任意時間</string>
     <string name="plans_window_off_peak">半價時段</string>
@@ -52,7 +52,7 @@
     <string name="plans_window_end">結束時刻（HH:mm 或 24:00）</string>
     <string name="plans_window_custom_hint">時區：%1$s。結束早於開始時，表示跨午夜執行。</string>
     <string name="plans_error_window">請輸入有效時段，開始與結束不能相同</string>
-    <string name="plans_enabled">啟用</string>
+    <string name="plans_enabled">啟用此排程</string>
     <string name="plans_error_content">請輸入任務或提醒內容</string>
     <string name="plans_error_content_long">任務最多 4,000 個字元，提醒最多 2,000 個字元</string>
     <string name="plans_error_condition_long">條件最多 2,000 個字元</string>
@@ -123,4 +123,6 @@
     <string name="plans_use_tomorrow">改為明天</string>
     <string name="plans_chat_deleted">原對話已刪除</string>
     <string name="plans_started_toast">已開始執行排程任務</string>
+    <string name="plans_when_idle_sub">若正在執行其他任務則延後</string>
+    <string name="plans_enabled_sub">關閉可暫停而不刪除</string>
 </resources>

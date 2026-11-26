@@ -42,7 +42,7 @@
     <string name="plans_notify_change">Al cambiar</string>
     <string name="plans_notify_each">Cada vez</string>
     <string name="plans_cooldown_minutes">Minutos mínimos entre ejecuciones (opcional)</string>
-    <string name="plans_when_idle">Ejecutar solo cuando Mika esté libre</string>
+    <string name="plans_when_idle">Esperar a que Mika esté libre</string>
     <string name="plans_execution_window">Periodo de ejecución</string>
     <string name="plans_window_anytime">A cualquier hora</string>
     <string name="plans_window_off_peak">Fuera de horas punta</string>
@@ -52,7 +52,7 @@
     <string name="plans_window_end">Fin del periodo (HH:mm o 24:00)</string>
     <string name="plans_window_custom_hint">Zona horaria: %1$s. Si la hora de fin es anterior a la de inicio, el periodo abarca la medianoche.</string>
     <string name="plans_error_window">Introduce un periodo válido; el inicio y el fin deben ser diferentes</string>
-    <string name="plans_enabled">Activada</string>
+    <string name="plans_enabled">Programación activa</string>
     <string name="plans_error_content">Escribe una tarea o un recordatorio</string>
     <string name="plans_error_content_long">Usa hasta 4.000 caracteres, o 2.000 para un recordatorio</string>
     <string name="plans_error_condition_long">Usa hasta 2.000 caracteres para la condición</string>
@@ -125,4 +125,6 @@
     <string name="plans_use_tomorrow">Usar mañana</string>
     <string name="plans_chat_deleted">Ese chat ya no existe</string>
     <string name="plans_started_toast">Tarea programada iniciada</string>
+    <string name="plans_when_idle_sub">Posponer si ya hay otra tarea en curso</string>
+    <string name="plans_enabled_sub">Desactivar para pausar sin eliminar</string>
 </resources>
