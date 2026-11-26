@@ -103,6 +103,8 @@ class TaskService : Service() {
     internal fun rememberRecord(run: TaskRun, recordId: String) = center.markRecord(run, recordId)
     /** 几个任务共用的屏幕常亮锁。 */
     internal val wakeLock by lazy { SharedWakeLock(ScreenWakeLock(this)) }
+    /** 几个任务(和派发中的工作流步骤)共用的 CPU 锁:熄屏、Doze 里也接着跑;各持一份,见 [KeepAwake]。 */
+    internal val cpuWake by lazy { SharedWakeLock(CpuWakeLock(this, "Mika:run")) }
 
     internal fun reservePackage(pkg: String, runKey: String, stillUsed: () -> Boolean) = center.reserve(pkg, runKey, stillUsed)
     internal fun packageFree(pkg: String, runKey: String, stillUsed: () -> Boolean) = center.appFree(pkg, runKey, stillUsed)
@@ -165,6 +167,7 @@ class TaskService : Service() {
         lastStartId = startId
         // 系统重交旧启动请求、通知按钮或外部入口都可能在完全退出后到这里:不处理动作,也不让服务驻留
         if (FeatureFlags.get(this).quitRequested()) {
+            if (intent?.action == ACTION_START_TRIGGER) TriggerHandoffWake.release()
             stopSelf(startId)
             return START_NOT_STICKY
         }
@@ -182,15 +185,20 @@ class TaskService : Service() {
                 if (thread != null && text.isNotBlank()) queueFollowUp(thread, text, id, source)
             }
             ACTION_DRAIN_FOLLOWUPS -> drainReady(intent.getStringExtra(EXTRA_CONVERSATION))
-            ACTION_START_TRIGGER -> begin(intent.getStringExtra(EXTRA_GOAL).orEmpty(), intent.getStringExtra(EXTRA_CONVERSATION),
-                provenance = RunProvenance(RunOrigin.Trigger, Attendance.Unattended),
-                triggerKey = intent.getStringExtra(EXTRA_TRIGGER_KEY),
-                triggerActionGoal = intent.getStringExtra(EXTRA_TRIGGER_ACTION),
-                triggerThreadId = intent.getStringExtra(EXTRA_TRIGGER_THREAD),
-                triggerCondition = intent.getStringExtra(EXTRA_TRIGGER_CONDITION))
+            // 开跑的任务当场拿上自己那份 CPU 锁([launch]);排队、因暂停不开的也到此为止:派发时撑着的那把都可以放开
+            ACTION_START_TRIGGER -> try {
+                begin(intent.getStringExtra(EXTRA_GOAL).orEmpty(), intent.getStringExtra(EXTRA_CONVERSATION),
+                    provenance = RunProvenance(RunOrigin.Trigger, Attendance.Unattended),
+                    triggerKey = intent.getStringExtra(EXTRA_TRIGGER_KEY),
+                    triggerActionGoal = intent.getStringExtra(EXTRA_TRIGGER_ACTION),
+                    triggerThreadId = intent.getStringExtra(EXTRA_TRIGGER_THREAD),
+                    triggerCondition = intent.getStringExtra(EXTRA_TRIGGER_CONDITION))
+            } finally { TriggerHandoffWake.release() }
             ACTION_START_WORKFLOW -> {
                 workflowStarts.incrementAndGet()
                 keepForeground()
+                // 认领步骤到交给任务之间熄屏也不睡过去;步骤开跑后由任务自己那份接着撑
+                val cpu = cpuWake.lease().also { it.acquire() }
                 scope.launch(start = CoroutineStart.UNDISPATCHED) {
                     val workflows = (application as com.wangzan101.mika.MikaApp).workflows
                     val attemptId = intent.getStringExtra(EXTRA_WORKFLOW_ATTEMPT).orEmpty()
@@ -213,6 +221,7 @@ class TaskService : Service() {
                     } catch (e: Exception) {
                         withContext(Dispatchers.IO) { workflows.complete(attemptId, false, "", "start_failed") }
                     } finally {
+                        cpu.release()
                         if (workflowStarts.decrementAndGet() == 0 && !taskState._busy.value && keeper.page.value == null) stopSelf(lastStartId)
                     }
                 }
@@ -275,6 +284,7 @@ class TaskService : Service() {
 
     override fun onDestroy() {
         pocketGuard.close()
+        TriggerHandoffWake.release()
         scope.cancel()
         // 服务没了就撑不住进程:留着的那一页如实关掉,对话里记下
         keeper.close(KeptPageClose.AppExit)
@@ -498,10 +508,17 @@ class TaskService : Service() {
             checkGoal: String? = null, condition: String? = null) {
             if (FeatureFlags.get(context).quitRequested()) return
             val checking = checkGoal != null
-            context.startForegroundService(Intent(context, TaskService::class.java).setAction(ACTION_START_TRIGGER)
-                .putExtra(EXTRA_GOAL, checkGoal ?: goal).putExtra(EXTRA_CONVERSATION, threadId)
-                .putExtra(EXTRA_TRIGGER_KEY, windowKey).putExtra(EXTRA_TRIGGER_THREAD, threadId)
-                .apply { if (checking) putExtra(EXTRA_TRIGGER_ACTION, goal).putExtra(EXTRA_TRIGGER_CONDITION, condition) })
+            // 闹钟广播一结束系统就不再撑 CPU:撑到服务处理完这次启动(见 [TriggerHandoffWake])
+            TriggerHandoffWake.hold(context)
+            try {
+                context.startForegroundService(Intent(context, TaskService::class.java).setAction(ACTION_START_TRIGGER)
+                    .putExtra(EXTRA_GOAL, checkGoal ?: goal).putExtra(EXTRA_CONVERSATION, threadId)
+                    .putExtra(EXTRA_TRIGGER_KEY, windowKey).putExtra(EXTRA_TRIGGER_THREAD, threadId)
+                    .apply { if (checking) putExtra(EXTRA_TRIGGER_ACTION, goal).putExtra(EXTRA_TRIGGER_CONDITION, condition) })
+            } catch (e: Exception) {
+                TriggerHandoffWake.release()
+                throw e
+            }
         }
 
         /** 渠道交来的任务保留回复地址；消息编号由登记处持久化去重。 */

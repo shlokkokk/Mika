@@ -342,6 +342,7 @@ object ExactAlarmGuide {
     fun shouldPrompt(granted: Boolean, prompted: Boolean): Boolean = !granted && !prompted
 }
 
+/** 闹钟广播的 goAsync 期间系统替 App 撑着 CPU;派发到任务服务那一段由 [TriggerHandoffWake] 接着撑。 */
 class TriggerAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != "com.wangzan101.mika.task.TRIGGER_ALARM") return
