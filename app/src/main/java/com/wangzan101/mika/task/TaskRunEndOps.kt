@@ -99,7 +99,6 @@ internal fun TaskService.onRunEnded(run: TaskRun, store: ConversationStore) {
             return
         }
         stopForeground(STOP_FOREGROUND_REMOVE)
-        cpuWakeLock.release()
         // 先取编号再放开:放开之后才到的新任务会带来更新的编号,这里的 stopSelf 就不会把它停掉
         val id = lastStartId
         taskState._busy.value = false

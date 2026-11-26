@@ -217,7 +217,6 @@ internal fun TaskService.nameConversation(store: ConversationStore, id: String, 
 
 /** 已经在前台(或即将收尾)时再次进入前台:用前台那个任务的进度通知。 */
 internal fun TaskService.keepForeground() {
-    cpuWakeLock.acquire()
     val fg = foreground
     if (fg != null) startInForeground(fg, progressNotification(fg, fg.state.value))
     else startInForeground(null, preparingNotification())
@@ -225,8 +224,11 @@ internal fun TaskService.keepForeground() {
 
 internal fun TaskService.launch(run: TaskRun, store: ConversationStore) {
     val service = this
+    // 这个任务自己的那份 CPU 锁:当场拿上(定时派发撑着的那把随后放开),到收尾([run.job] 结束)才放
+    val cpu = KeepAwake(cpuWake.lease(), scope, keepThroughEnd = true).also { it.onState(run.state.value) }
     val waitingLockWatcher = scope.launch {
         run.state.collectLatest { state ->
+            cpu.onState(state)
             if (LockTriggerPolicy.isWaiting(state)) {
                 pocketGuard.lockWhileWaitingIfCovered {
                     LockTriggerPolicy.isWaiting(run.state.value) && run in center.running() &&
@@ -354,5 +356,5 @@ internal fun TaskService.launch(run: TaskRun, store: ConversationStore) {
         onRunEnded(run, store)
     }
     // 收尾前被取消(服务退出)、放出来还没跑就被停掉时,替它拿着的屏幕锁没交出去也没放开:这里放开
-    run.job?.invokeOnCompletion { waitingLockWatcher.cancel(); run.wakeHandoff?.release(); run.wakeHandoff = null }
+    run.job?.invokeOnCompletion { waitingLockWatcher.cancel(); cpu.close(); run.wakeHandoff?.release(); run.wakeHandoff = null }
 }

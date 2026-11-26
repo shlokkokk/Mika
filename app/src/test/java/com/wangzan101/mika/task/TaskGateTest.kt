@@ -367,4 +367,19 @@ class TaskGateTest {
         assertEquals(TaskState.Held(TaskGate.paused(TaskGate.SHELL_DOWN)), reported.last())
         coroutineContext.cancelChildren()
     }
+
+    /** 锁屏时网页、沙箱步骤照常走,不去解锁;轮到手机步骤才按解锁策略办(无人值守的先试解锁,解不开就失败收尾,不盲目操作)。 */
+    @Test
+    fun lockedScreenBlocksOnlyPhoneStepsAndOnlyThoseTryToUnlock() = runTest {
+        var unlocks = 0
+        val unattended = TaskGate(locked, shellUp, unattendedUnlock = { unlocks++; "credential_required" }) { true }
+        locked.value = true
+        assertFalse(unattended.pass({ false }) { reported += it })
+        assertEquals(0, unlocks)
+        assertEquals(listOf<TaskState?>(null), reported)
+        val failure = runCatching { unattended.pass({ true }) { reported += it } }.exceptionOrNull()
+        assertEquals(1, unlocks)
+        assertTrue(failure is UnattendedLockException)
+        assertEquals("credential_required", (failure as UnattendedLockException).status)
+    }
 }
