@@ -791,7 +791,7 @@ internal fun ScreenOffUnlockDialog(settings: DeviceAccessSettings, onDismiss: ()
                 DeviceAccessSection(settings, localTasks = true)
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(tr(R.string.done)) } },
+        confirmButton = { TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text(tr(R.string.done)) } },
     )
 }
 
@@ -954,7 +954,7 @@ private fun PlanTimePickerDialog(
         },
         confirmButton = {
             TextButton(
-                modifier = Modifier.testTag("plan-time-ok"),
+                modifier = Modifier.fillMaxWidth().testTag("plan-time-ok"),
                 onClick = {
                     val picked = if (use24Hour) LocalTime.of(hour24, minute)
                     else PlanTimeFormat.from12Hour(hour12Index + 1, minute, amPmIndex == 1)
@@ -962,7 +962,7 @@ private fun PlanTimePickerDialog(
                 },
             ) { Text(tr(R.string.save)) }
         },
-        dismissButton = { TextButton(onDismiss) { Text(tr(R.string.cancel)) } },
+        dismissButton = { TextButton(onDismiss, modifier = Modifier.fillMaxWidth()) { Text(tr(R.string.cancel)) } },
     )
 }
 
