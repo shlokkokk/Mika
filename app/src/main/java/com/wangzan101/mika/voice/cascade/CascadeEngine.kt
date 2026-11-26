@@ -13,6 +13,7 @@ import com.wangzan101.mika.frontdesk.deskModel
 import com.wangzan101.mika.settings.VoiceSettings
 import com.wangzan101.mika.voice.Pcm16
 import com.wangzan101.mika.voice.model.CallEngine
+import com.wangzan101.mika.voice.model.SttProtocol
 import com.wangzan101.mika.voice.model.SttSelection
 import com.wangzan101.mika.voice.model.SttSelectionController
 import com.wangzan101.mika.voice.model.VoiceErrorCategory
@@ -48,6 +49,15 @@ class CascadeEngine(private val context: Context, private val environment: Voice
         }
     }
 
+    private fun listenRole(use: CallUse): com.wangzan101.mika.core.model.ModelRole? {
+        if (use == CallUse.Phone && selections.callStt != null) return null
+        return when (selections.stt) {
+            SttSelection.SameAsMain -> com.wangzan101.mika.core.model.ModelRole.Main
+            SttSelection.SameAsLight -> com.wangzan101.mika.core.model.ModelRole.Light
+            else -> null
+        }
+    }
+
     fun speakRef(use: CallUse): VoiceModelRef? = when (use) {
         CallUse.InApp -> selections.tts
         CallUse.Phone -> selections.callTts ?: selections.tts
@@ -63,8 +73,16 @@ class CascadeEngine(private val context: Context, private val environment: Voice
 
     /** The first thing missing, or null when a standard call can start. Reads no secrets. */
     fun blocker(use: CallUse): StandardBlocker? {
-        val listen = listenRef(use) ?: return StandardBlocker.NoListenModel
-        if (!configured(listen)) return StandardBlocker.ListenNotConfigured
+        val role = listenRole(use)
+        if (role != null) {
+            val store = com.wangzan101.mika.settings.ProviderStore.get(context)
+            if (com.wangzan101.mika.voice.model.VoiceFailover.roleSttCandidates(store, role).isEmpty()) {
+                return StandardBlocker.NoListenModel
+            }
+        } else {
+            val listen = listenRef(use) ?: return StandardBlocker.NoListenModel
+            if (!configured(listen)) return StandardBlocker.ListenNotConfigured
+        }
         val speak = speakRef(use) ?: return StandardBlocker.NoSpeakModel
         if (!configured(speak)) return StandardBlocker.SpeakNotConfigured
         if (thinkModel() == null) return StandardBlocker.NoThinkModel
@@ -93,7 +111,10 @@ class CascadeEngine(private val context: Context, private val environment: Voice
         background: DeskBackground? = null,
     ): CascadeVoiceSession {
         blocker(use)?.let { throw VoiceModelError.IncompleteConfig("Standard call is not ready: $it") }
-        val listen = listenRef(use)!!
+        val role = listenRole(use)
+        val listen = if (role == null) listenRef(use)!! else null
+        val store = com.wangzan101.mika.settings.ProviderStore.get(context)
+        val langIso = language?.let(com.wangzan101.mika.voice.SystemSpeech::isoCode)
         val speakRef = speakRef(use)!!
         val think = thinkModel() ?: throw VoiceModelError.IncompleteConfig("No chat model")
         val tts = environment.tts.createTts(context, speakRef, TtsCapabilities())
@@ -106,7 +127,33 @@ class CascadeEngine(private val context: Context, private val environment: Voice
         val s = selections
         return CascadeVoiceSession(
             brain = brain,
-            listen = { feed -> environment.stt.start(context, listen, language, SttHooks(recorder = feed)) },
+            listen = { feed ->
+                if (role != null) {
+                    com.wangzan101.mika.voice.ProviderSpeech(
+                        recorder = feed,
+                        transcribe = { wav -> com.wangzan101.mika.voice.model.VoiceFailover.transcribeRole(store, role, wav, langIso) },
+                    )
+                } else {
+                    val primary = listen!!
+                    val fallbacks = if (use == CallUse.Phone && s.callStt != null) s.callSttFallbacks else s.sttFallbacks
+                    val model = environment.stt.requireModel(primary)
+                    val isBatch = model.model.stt?.protocol in setOf(
+                        SttProtocol.AudioTranscriptions, SttProtocol.ChatInputAudio, SttProtocol.GeminiInline,
+                    )
+                    if (isBatch) {
+                        com.wangzan101.mika.voice.ProviderSpeech(
+                            recorder = feed,
+                            transcribe = { wav ->
+                                com.wangzan101.mika.voice.model.VoiceFailover.transcribeRefs(
+                                    environment, store, listOf(primary) + fallbacks.filter { it != primary }, wav, langIso,
+                                )
+                            },
+                        )
+                    } else {
+                        environment.stt.start(context, primary, language, SttHooks(recorder = feed))
+                    }
+                }
+            },
             speak = { text ->
                 val response = tts.synthesize(TtsRequest(text, voice = voice, speed = speed, format = "wav"))
                 val wav = Pcm16.parseWav(response.bytes)

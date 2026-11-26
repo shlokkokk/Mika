@@ -364,5 +364,11 @@
     <string name="video_footer">يجري الإنشاء في الخلفية وقد يستغرق بضع دقائق. يُحفظ الفيديو الناتج في مساحة العمل ضمن out/video.</string>
     <string name="video_no_compatible">لا تستطيع أي من خدمات النماذج لديك إنشاء مقاطع فيديو. أضف أولًا خدمة تستطيع ذلك: %1$s.</string>
     <string name="video_choice_stale">لم تعد الخدمة التي اخترتها سابقًا قادرة على إنشاء الفيديو (حُذفت أو تغيّر عنوانها). اختر خدمة أخرى أدناه؛ وحتى ذلك الحين لن تنشئ Mika مقاطع فيديو.</string>
-    <string name="tool_video_generate">إنشاء فيديو</string>
+    <string name="tool_video_generate">إنشاء فيديو</string> (feat(voice): add key pool rotation, 5xx overload failover, backup chains, and Same-as-Main/Light STT)
+    <string name="voice_same_as_main">نفس النموذج الرئيسي</string>
+    <string name="voice_same_as_light">نفس النموذج الخفيف</string>
+    <string name="voice_backup_chain_title">النماذج الاحتياطية</string>
+    <string name="voice_pool_count">مجمع المفاتيح · %1$d مفاتيح · تدوير تلقائي</string>
+    <string name="voice_pool_add_key">إضافة مفتاح إلى المجمع</string>
+    <string name="voice_with_backups_count">%1$s · %2$d احتياطي</string>
 </resources>

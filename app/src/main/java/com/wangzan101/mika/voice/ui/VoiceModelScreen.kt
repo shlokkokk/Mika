@@ -250,6 +250,17 @@ private fun MigratedVoiceModelContent(
                 },
                 onTest = { choice -> voiceVm.tryChoice(choice, tr(R.string.voice_try_sample)) },
             )
+            if (selection != null && choices.size > 1) {
+                VoiceBackupChainCard(
+                    title = tr(R.string.voice_backup_chain_title),
+                    primaryRef = selection,
+                    fallbacks = catalog.selections.ttsFallbacks,
+                    options = choices,
+                    snapshot = catalog,
+                    onEnsureInCatalog = { voiceVm.ensureInCatalog(it) },
+                    onUpdateFallbacks = { voiceVm.catalog.setTtsFallbacks(it) },
+                )
+            }
         }
         onOpenServices?.let { VoiceMoreServices(it) }
 

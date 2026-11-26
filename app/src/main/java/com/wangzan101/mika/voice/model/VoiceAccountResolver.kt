@@ -97,9 +97,18 @@ class VoiceAccountResolver(
         }
         is VoiceAccount.VoiceOwned -> {
             val credentials = owned.read(source.secretId) ?: throw VoiceModelError.MissingCredentials()
+            val poolId = "voice:${source.secretId}"
+            if (credentials.apiKey.isNotBlank()) {
+                KeyPoolManager.shared.register(poolId, credentials.apiKey)
+            }
+            val activeKey = if (credentials.apiKey.isNotBlank()) {
+                KeyPoolManager.shared.getActiveKey(poolId)
+                    ?: KeyPoolManager.shared.parseKeys(credentials.apiKey).firstOrNull()
+                    ?: credentials.apiKey
+            } else credentials.apiKey
             ResolvedAccount.VoiceOwned(
                 secretId = source.secretId,
-                credentials = credentials,
+                credentials = VoiceCredentials(apiKey = activeKey, appId = credentials.appId, accessKey = credentials.accessKey),
                 configurationToken = owned.configurationToken(source.secretId),
             )
         }
@@ -115,6 +124,25 @@ class VoiceAccountResolver(
             account = account,
             configurationFingerprint = configurationFingerprint(service, model),
         )
+    }
+
+    fun reportKeyRejected(account: ResolvedAccount, keyUsed: String, status: Int, retryAfterMs: Long? = null) {
+        if (keyUsed.isBlank()) return
+        val poolId = when (account) {
+            is ResolvedAccount.ExistingProvider -> account.provider.id
+            is ResolvedAccount.VoiceOwned -> "voice:${account.secretId}"
+            ResolvedAccount.None -> return
+        }
+        KeyPoolManager.shared.markRejected(poolId, keyUsed, status, retryAfterMs)
+    }
+
+    fun poolCount(service: VoiceService): Int = when (val acc = service.account) {
+        is VoiceAccount.ExistingProvider -> KeyPoolManager.shared.keyCount(acc.providerId)
+        is VoiceAccount.VoiceOwned -> {
+            val raw = owned.read(acc.secretId)?.apiKey.orEmpty()
+            KeyPoolManager.shared.parseKeys(raw).size
+        }
+        VoiceAccount.None -> 0
     }
 
     /**

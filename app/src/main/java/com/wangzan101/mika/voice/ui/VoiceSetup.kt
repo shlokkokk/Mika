@@ -278,6 +278,8 @@ internal fun VoiceHubSection(
     val sttLine = when (val stt = selections.stt) {
         SttSelection.Off -> stringResource(R.string.voice_hub_off)
         SttSelection.Auto -> stringResource(R.string.voice_source_device)
+        SttSelection.SameAsMain -> stringResource(R.string.voice_same_as_main)
+        SttSelection.SameAsLight -> stringResource(R.string.voice_same_as_light)
         is SttSelection.Model -> snapshot.nameOf(stt.ref) ?: stringResource(R.string.voice_hub_none)
     }
     val ttsName = snapshot.nameOf(selections.tts)

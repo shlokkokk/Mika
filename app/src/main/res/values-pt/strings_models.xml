@@ -347,5 +347,11 @@
     <string name="video_footer">A geração corre em segundo plano e pode demorar alguns minutos. O vídeo final é guardado na área de trabalho em out/video.</string>
     <string name="video_no_compatible">Nenhum dos seus serviços de modelos consegue gerar vídeos. Adicione primeiro um que consiga: %1$s.</string>
     <string name="video_choice_stale">O serviço que você escolheu já não consegue gerar vídeos (foi removido ou o endereço mudou). Escolha outro abaixo; até lá, a Mika não vai gerar vídeos.</string>
-    <string name="tool_video_generate">Gerar vídeo</string>
+    <string name="tool_video_generate">Gerar vídeo</string> (feat(voice): add key pool rotation, 5xx overload failover, backup chains, and Same-as-Main/Light STT)
+    <string name="voice_same_as_main">Igual ao modelo principal</string>
+    <string name="voice_same_as_light">Igual ao modelo leve</string>
+    <string name="voice_backup_chain_title">Modelos de backup</string>
+    <string name="voice_pool_count">Pool de chaves · %1$d chaves · rotação automática</string>
+    <string name="voice_pool_add_key">Adicionar chave ao pool</string>
+    <string name="voice_with_backups_count">%1$s · %2$d backups</string>
 </resources>

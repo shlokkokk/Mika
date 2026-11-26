@@ -253,6 +253,7 @@ class LegacyVoiceMigration(
 fun SttSelection.toLegacySelection(snapshot: VoiceCatalogSnapshot): SpeechChoice = when (this) {
     SttSelection.Auto -> SpeechChoice.Auto
     SttSelection.Off -> SpeechChoice.Off
+    SttSelection.SameAsMain, SttSelection.SameAsLight -> SpeechChoice.Auto
     is SttSelection.Model -> {
         if (ref == VoiceModelRef("android-system", "system-stt", VoiceCapability.STT)) {
             SpeechChoice.System
