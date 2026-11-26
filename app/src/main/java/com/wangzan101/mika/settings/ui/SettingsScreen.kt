@@ -88,6 +88,7 @@ import com.wangzan101.mika.ui.components.PageScrolls
 import com.wangzan101.mika.ui.components.PillTone
 import com.wangzan101.mika.ui.components.RowChevron
 import com.wangzan101.mika.ui.components.RowValue
+import com.wangzan101.mika.ui.components.ValueTone
 import com.wangzan101.mika.ui.components.StateCard
 import com.wangzan101.mika.ui.components.StatusPill
 import com.wangzan101.mika.ui.components.TileTone
@@ -123,7 +124,7 @@ import com.wangzan101.mika.workflow.ui.WorkflowsScreen
 private const val SHIZUKU_SETUP_GUIDE_URL = "https://shizuku.rikka.app/guide/setup/"
 
 /** 设置里能进入的子页面;[Home] 是设置首页,[Advanced] 集中放置连接、维护和工程能力。 */
-private enum class SettingsPage { Home, Advanced, AppAccess, SmsLogin, PhoneOps, Calls, Wechat, DuringWork, AppPace, Capsule, Language, Notifications, Recommendations, Checklists, Workflows, Sandbox, Plugins, EnvVars, Recovery, SelfCheck, ComputerAccess, McpServers, Root, Developer, DeviceDirectories, RunStats, Proactive, Backup }
+private enum class SettingsPage { Home, Advanced, AppAccess, SmsLogin, PhoneOps, Calls, Wechat, DuringWork, AppPace, Capsule, Language, Notifications, Recommendations, Checklists, Workflows, Sandbox, Plugins, EnvVars, Recovery, SelfCheck, ComputerAccess, McpServers, Root, Developer, DeviceDirectories, RunStats, Proactive, Backup, Pause }
 
 /**
  * 设置页:总状态卡 + 常用 / 我的数据 / 其他。高级与其他只增加一层,各子页返回来时的页面。
@@ -157,13 +158,22 @@ fun SettingsScreen(
     onOpenPersonas: (() -> Unit)? = null,
     openPhoneOps: Boolean = false,
     onPhoneOpsOpened: () -> Unit = {},
+    /** 别处的「去暂停页」(如助手已暂停的提示)直接打开「暂停 Mika」页。 */
+    openPause: Boolean = false,
+    onPauseOpened: () -> Unit = {},
 ) {
     val configs by store.configs.collectAsState()
     val roles by store.roles.collectAsState()
     val groups by store.groups.collectAsState()
     // 开发者选项里的「看图定位已验证」跟着看图模型(看图用主模型时是主模型那条配置)
     val visionConfig = remember(configs, roles) { store.configFor(ModelRole.Vision) }
-    var page by rememberSaveable { mutableStateOf(if (openPhoneOps) SettingsPage.PhoneOps else SettingsPage.Home) }
+    var page by rememberSaveable { mutableStateOf(
+        when {
+            openPhoneOps -> SettingsPage.PhoneOps
+            openPause -> SettingsPage.Pause
+            else -> SettingsPage.Home
+        },
+    ) }
     // 进子页时当前页离开组合,它自己记的滚动位置随之丢掉;有子页可进的几页在这里记,回来接着刚才的位置
     val pageScrolls = rememberSaveable(saver = PageScrolls.Saver) { PageScrolls() }
     var explaining by remember { mutableStateOf<Problem?>(null) }
@@ -176,10 +186,17 @@ fun SettingsScreen(
             onPhoneOpsOpened()
         }
     }
+    LaunchedEffect(openPause) {
+        if (openPause) {
+            page = SettingsPage.Pause
+            onPauseOpened()
+        }
+    }
 
     fun fix(f: Fix) = when (f) {
         Fix.AddModel -> onOpenModels()
         Fix.OpenPhoneOps -> page = SettingsPage.PhoneOps
+        Fix.OpenPause -> page = SettingsPage.Pause
         else -> onFix(f)
     }
     val onProblem: (Problem) -> Unit = { p -> StatusCopy.directFix(p)?.let(::fix) ?: run { explaining = p } }
@@ -195,6 +212,7 @@ fun SettingsScreen(
     LaunchedEffect(Unit) { root.refresh() }
     val wechat = remember { (context.applicationContext as com.wangzan101.mika.MikaApp).wechat }
     val wechatState by wechat.state.collectAsState()
+    val mikaPaused by com.wangzan101.mika.settings.MikaPause.get(context).state.collectAsState()
     val flags = remember { FeatureFlags.get(context) }
     var personalStart by remember { mutableStateOf(flags.personalStart()) }
     var parallelMax by remember { mutableIntStateOf(flags.parallelMax()) }
@@ -241,6 +259,7 @@ fun SettingsScreen(
     var editingSearch by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { webSearch = withContext(Dispatchers.IO) { searchSettings.get() } }
     val mcp = remember { (context.applicationContext as com.wangzan101.mika.MikaApp).mcp }
+    val mcpServerList = mcpServers?.servers?.collectAsState()?.value
     val mcpNetworkOn by mcp.settings.enabled.collectAsState()
     val mcpUsbOn by mcp.usb.enabled.collectAsState()
     val mcpOn = mcpNetworkOn || mcpUsbOn
@@ -299,6 +318,8 @@ fun SettingsScreen(
             onOpenAutoArchive = { editingAutoArchive = true },
             onOpenMemory = onOpenMemory,
             onOpenBackup = { page = SettingsPage.Backup },
+            onOpenPause = { page = SettingsPage.Pause },
+            mikaPaused = mikaPaused,
             onOpenRecommendations = { page = SettingsPage.Recommendations },
             onOpenPersonas = onOpenPersonas,
             onOpenAdvanced = { page = SettingsPage.Advanced },
@@ -322,7 +343,7 @@ fun SettingsScreen(
             onOpenEnvVars = { page = SettingsPage.EnvVars },
             showRecovery = status.sdkInt >= Prerequisites.MIN_SDK, onOpenRecovery = { page = SettingsPage.Recovery },
             computerAccess = mcpOn, onOpenComputerAccess = { page = SettingsPage.ComputerAccess },
-            mcpServersCount = mcpServers?.servers?.value?.size, onOpenMcpServers = { page = SettingsPage.McpServers },
+            mcpServersCount = mcpServerList?.size, onOpenMcpServers = { page = SettingsPage.McpServers },
             showRoot = rootState.suPresent, rootCommands = rootState.commands, onOpenRoot = { page = SettingsPage.Root },
             showDeveloper = showDeveloper, onOpenDeveloper = { page = SettingsPage.Developer },
             onBack = toHome,
@@ -413,6 +434,7 @@ fun SettingsScreen(
         SettingsPage.RunStats -> RunStatsScreen(remember { RunStore(context).metrics }, onBack = back)
         SettingsPage.Proactive -> com.wangzan101.mika.proactive.ProactiveScreen(onBack = back)
         SettingsPage.Backup -> BackupScreen(onBack = toHome)
+        SettingsPage.Pause -> PauseScreen(onBack = toHome, onFix = ::fix)
     }
 
     if (editingProxy) NetProxyDialog(
@@ -567,6 +589,9 @@ fun SettingsContent(
     onOpenLanguage: () -> Unit = {},
     onOpenMemory: (() -> Unit)? = null,
     onOpenBackup: (() -> Unit)? = null,
+    /** 「暂停 Mika」页的入口;暂停着时首页这一行写「已暂停」。 */
+    onOpenPause: (() -> Unit)? = null,
+    mikaPaused: Boolean = false,
     onOpenRecommendations: () -> Unit = {},
     onOpenPersonas: (() -> Unit)? = null,
     onOpenAdvanced: () -> Unit = {},
@@ -682,6 +707,19 @@ fun SettingsContent(
             ListRow(MikaIcons.Phone, stringResource(R.string.settings_phone_ops), first = true, onClick = onOpenPhoneOps) {
                 PhoneOpsPill(status)
                 RowChevron()
+            }
+            onOpenPause?.let {
+                ListRow(
+                    MikaIcons.Power, stringResource(R.string.pause_title),
+                    stringResource(if (mikaPaused) R.string.pause_row_sub_paused else R.string.pause_row_sub_active),
+                    onClick = it,
+                ) {
+                    RowValue(
+                        stringResource(if (mikaPaused) R.string.pause_helper_paused else R.string.pause_state_active),
+                        if (mikaPaused) ValueTone.Plain else ValueTone.Ok,
+                    )
+                    RowChevron()
+                }
             }
             ListRow(MikaIcons.Clock, stringResource(R.string.drawer_plans), onClick = onOpenPlans) { RowChevron() }
             ListRow(MikaIcons.Paperclip, stringResource(R.string.file_library_title), onClick = onOpenFiles) { RowChevron() }
