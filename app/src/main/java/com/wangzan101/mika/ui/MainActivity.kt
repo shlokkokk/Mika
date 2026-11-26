@@ -74,6 +74,7 @@ import com.wangzan101.mika.memory.MemoryRuntime
 import com.wangzan101.mika.record.RunStore
 import com.wangzan101.mika.knowledge.FileRouteStore
 import com.wangzan101.mika.settings.FeatureFlags
+import com.wangzan101.mika.settings.applyExcludeFromRecents
 import com.wangzan101.mika.settings.Prerequisites
 import com.wangzan101.mika.settings.ProviderStore
 import com.wangzan101.mika.settings.SystemStatusMonitor
@@ -179,6 +180,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        applyExcludeFromRecents(FeatureFlags.get(this).excludeFromRecents())
         if (savedInstanceState == null) {
             (application as MikaApp).chat.cancelPendingSharedDraft()
         }
@@ -316,6 +318,7 @@ class MainActivity : ComponentActivity() {
         monitor.refresh()
         // 回到前台时按最新设置查一次自动归档(启动时也查过,这里照顾长期不退出的进程)
         (application as MikaApp).autoArchiveNow()
+        applyExcludeFromRecents(FeatureFlags.get(this).excludeFromRecents())
     }
 
     override fun onStop() {

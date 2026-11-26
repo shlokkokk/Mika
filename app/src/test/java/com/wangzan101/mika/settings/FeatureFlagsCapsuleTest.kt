@@ -57,6 +57,16 @@ class FeatureFlagsCapsuleTest {
         assertEquals(listOf(CapsuleIdleOpacity.P40, CapsuleIdleOpacity.P100), seen)
     }
 
+    @Test fun excludeFromRecentsDefaultsToFalseAndPersists() {
+        val prefs = MemoryPrefs()
+        val flags = FeatureFlags(prefs)
+        assertEquals(false, flags.excludeFromRecents())
+        flags.setExcludeFromRecents(true)
+        assertEquals(true, flags.excludeFromRecents())
+        flags.setExcludeFromRecents(false)
+        assertEquals(false, flags.excludeFromRecents())
+    }
+
     /** 内存里的设置,改动时同步通知监听者(和系统实现一样在写入后回调)。 */
     internal class MemoryPrefs : SharedPreferences {
         private val values = HashMap<String, Any?>()

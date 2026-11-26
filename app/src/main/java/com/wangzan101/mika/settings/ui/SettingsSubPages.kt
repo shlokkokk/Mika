@@ -1,5 +1,8 @@
 package com.wangzan101.mika.settings.ui
 
+import android.app.Activity
+import com.wangzan101.mika.settings.applyExcludeFromRecents
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.wangzan101.mika.i18n.tr
@@ -88,8 +91,35 @@ fun RoutesScreen(count: Int?, onClear: () -> Unit, onBack: () -> Unit) {
 /** 设置 › 恢复与修复:手机操作的几个授权开关,下面是兼容性自检的入口;[scrollState] 由切页的一方给进来,从自检回来才停在原来的位置。 */
 @Composable
 fun RecoveryScreen(onBack: () -> Unit, onOpenSelfCheck: () -> Unit = {}, scrollState: ScrollState = rememberScrollState()) {
+    val context = LocalContext.current
+    val flags = remember { com.wangzan101.mika.settings.FeatureFlags.get(context) }
+    var excludeFromRecents by remember { mutableStateOf(flags.excludeFromRecents()) }
     PageScaffold(stringResource(R.string.settings_recovery), onBack, scrollState = scrollState) {
         RecoverySwitches()
+        GroupCard {
+            ListRow(
+                MikaIcons.Screens,
+                stringResource(R.string.rec_exclude_from_recents),
+                stringResource(R.string.rec_exclude_from_recents_sub),
+                first = true,
+                onClick = {
+                    val next = !excludeFromRecents
+                    flags.setExcludeFromRecents(next)
+                    excludeFromRecents = next
+                    (context as? Activity)?.applyExcludeFromRecents(next)
+                },
+            ) {
+                MikaSwitch(
+                    excludeFromRecents,
+                    onCheckedChange = { next ->
+                        flags.setExcludeFromRecents(next)
+                        excludeFromRecents = next
+                        (context as? Activity)?.applyExcludeFromRecents(next)
+                    },
+                    modifier = Modifier.testTag("recovery-exclude-from-recents"),
+                )
+            }
+        }
         GroupCard {
             ListRow(
                 MikaIcons.Bug, stringResource(R.string.selfcheck_title), first = true,

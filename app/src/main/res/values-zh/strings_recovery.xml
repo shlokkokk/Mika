@@ -22,4 +22,6 @@
     <string name="rec_not_recovered">上次开机没能自动连上。确认连着信任过的 Wi-Fi、无线调试开着,Mika 会自己连上。</string>
     <string name="rec_needs_pairing">要先配对过无线调试才用得上。现在的助手是用 USB 命令启动的,手机重启后请再运行一次命令。</string>
     <string name="rec_shizuku_no_wireless">选择 Shizuku 后不再使用无线调试。Shizuku 运行起来后，Mika 会通过 Shizuku 重新连接。</string>
+    <string name="rec_exclude_from_recents">排除在多任务卡片之外</string>
+    <string name="rec_exclude_from_recents_sub">清理后台时不显示 Mika，防止误滑关闭导致无障碍服务掉权限</string>
 </resources>
