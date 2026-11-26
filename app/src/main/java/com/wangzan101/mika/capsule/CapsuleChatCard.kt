@@ -132,15 +132,29 @@ private fun TeachShelf(onTeach: () -> Unit, onVoiceChat: () -> Unit) {
  */
 @Composable
 internal fun FooterLinks(actions: CardActions, primary: Pair<String, () -> Unit>?) {
-    Row(
-        Modifier.fillMaxWidth().padding(top = 6.dp),
-        horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
+    Column(
+        Modifier.fillMaxWidth().padding(top = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        primary?.let { (text, onClick) ->
-            TextLink(text, onClick = onClick)
-            Text("·", style = Sub, color = MikaTheme.colors.ink3)
+        if (primary != null) {
+            val (text, onClick) = primary
+            if (text.length <= 16 && CardCopy.HIDE_CAPSULE.length <= 12) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    TextLink(text, onClick = onClick)
+                    Text("·", style = Sub, color = MikaTheme.colors.ink3)
+                    TextLink(CardCopy.HIDE_CAPSULE, MikaTheme.colors.ink3, actions::hideCapsule)
+                }
+            } else {
+                TextLink(text, onClick = onClick)
+                TextLink(CardCopy.HIDE_CAPSULE, MikaTheme.colors.ink3, actions::hideCapsule)
+            }
+        } else {
+            TextLink(CardCopy.HIDE_CAPSULE, MikaTheme.colors.ink3, actions::hideCapsule)
         }
-        TextLink(CardCopy.HIDE_CAPSULE, MikaTheme.colors.ink3, actions::hideCapsule)
     }
 }
 
