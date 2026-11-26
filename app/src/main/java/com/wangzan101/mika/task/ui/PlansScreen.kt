@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.wangzan101.mika.core.trigger.CONDITION_COOLDOWN
+import com.wangzan101.mika.core.run.PauseFlag
 import com.wangzan101.mika.core.trigger.CONDITION_NOT_MET
 import com.wangzan101.mika.core.trigger.CONDITION_PLAN_EDITED
 import com.wangzan101.mika.core.trigger.ConditionNotify
@@ -34,6 +35,7 @@ import com.wangzan101.mika.core.trigger.TriggerWindow
 import com.wangzan101.mika.core.trigger.TriggerWindowState
 import com.wangzan101.mika.core.trigger.canToggle
 import com.wangzan101.mika.core.trigger.toCopyPlanDraft
+import com.wangzan101.mika.core.trigger.upcoming
 import com.wangzan101.mika.task.ExactAlarmGuide
 import com.wangzan101.mika.task.TriggerRuntime
 import com.wangzan101.mika.ui.components.ActionSheet
@@ -245,7 +247,9 @@ private fun PlanRow(plan: TriggerDefinition, last: TriggerWindow?, first: Boolea
         plan.intervalMs != null -> trPlural(R.plurals.plans_every_minutes, (plan.intervalMs!! / 60_000).toInt())
         else -> tr(R.string.plans_once)
     }
-    val when_ = if (plan.enabled) tr(R.string.plans_next, repeat, formatPlanTime(plan.nextAtMs)) else "$repeat · $status"
+    val when_ = if (plan.enabled)
+        tr(R.string.plans_next, repeat, formatPlanTime(upcoming(plan, System.currentTimeMillis(), 1).single()))
+    else "$repeat · $status"
     val subtitle = plan.conditionGoal?.let {
         tr(if (plan.notifyWhen == ConditionNotify.EachTimeMet) R.string.plans_condition_each else R.string.plans_condition, it, when_)
     } ?: when_
@@ -282,6 +286,7 @@ private fun windowLabel(w: TriggerWindow): String = when (w.state) {
         CONDITION_NOT_MET -> tr(R.string.plans_not_met)
         CONDITION_COOLDOWN -> tr(R.string.plans_cooldown)
         CONDITION_PLAN_EDITED -> tr(R.string.trace_cancelled)
+        PauseFlag.REASON -> tr(R.string.plans_skipped_paused)
         else -> tr(R.string.plans_unchanged)
     }
     TriggerWindowState.Failed -> tr(R.string.step_failed)
