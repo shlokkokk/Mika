@@ -345,4 +345,6 @@
     <string name="video_choice_stale">The service you chose before can no longer generate videos (it was removed or its address changed). Pick one below; until then Mika won’t generate videos.</string>
     <string name="video_duration_range" translatable="false">%1$d–%2$d</string>
     <string name="tool_video_generate">Generate video</string>
+    <string name="provider_nickname_label">Account nickname</string>
+    <string name="provider_rename_title">Rename account</string> (feat(models): add optional custom provider nicknames, dynamic placeholders, and app-wide rename wiring)
 </resources>

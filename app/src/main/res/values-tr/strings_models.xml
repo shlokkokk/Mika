@@ -342,4 +342,6 @@
     <string name="video_no_providers">Önce bir model hizmeti ekleyin (video aynı hizmeti ve anahtarı kullanır).</string>
     <string name="video_provider">Hizmet</string>
     <string name="video_resolution">Çözünürlük</string>
+    <string name="provider_nickname_label">Hesap takma adı</string>
+    <string name="provider_rename_title">Hesabı yeniden adlandır</string> (feat(models): add optional custom provider nicknames, dynamic placeholders, and app-wide rename wiring)
 </resources>

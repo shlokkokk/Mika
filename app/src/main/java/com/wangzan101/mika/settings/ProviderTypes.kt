@@ -100,8 +100,11 @@ data class Provider(
     val serviceTiers: Map<String, OpenAiServiceTier> = emptyMap(),
     /** 用户标为 TTS 的模型名，独立于对话用途和服务商模型列表。 */
     val ttsModels: Set<String> = emptySet(),
+    /** 用户自定义别名 / 备注名称（如 Personal、Work、pcgpt），全局覆盖显示名称。 */
+    val customAlias: String? = null,
 ) {
     val key: String get() = ProviderConnection.keyOf(kind, baseUrl, name)
+    val displayName: String get() = customAlias?.trim()?.ifEmpty { null } ?: name
 
     fun supportsServiceTier(model: String, endpoint: ModelEndpoint? = models?.firstOrNull { it.id == model }?.endpoint): Boolean {
         if (kind != ProviderConfig.Kind.OpenAiResponses && kind != ProviderConfig.Kind.ChatGpt) return false

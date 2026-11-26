@@ -43,9 +43,11 @@ fun ProviderStore.connect(
     signIn: String? = null,
     typed: Set<String> = emptySet(),
     untested: Boolean = false,
+    customAlias: String? = null,
 ): Provider {
     return synchronized(this) {
-        val found = findOrAddProvider(name, kind, baseUrl, signIn)
+        val cleanAlias = customAlias?.trim()?.ifEmpty { null }
+        val found = findOrAddProvider(name, kind, baseUrl, signIn, cleanAlias)
         // 跳过测试时没有列表可存:这家之前列过的留着,不要用空表把已有的列表盖掉
         val listed = if (untested && models.isEmpty()) found.models ?: models else models
         val p = found.copy(
@@ -53,12 +55,26 @@ fun ProviderStore.connect(
             verifiedModels = found.verifiedModels + verified, typedModels = found.typedModels + typed,
             // 这次没测、这家也没有核实过的模型、也没列过列表,才是「没测过」;别的情况一律按测过
             savedUntested = untested && verified.isEmpty() && found.verifiedModels.isEmpty() && listed.isEmpty(),
+            customAlias = cleanAlias ?: found.customAlias,
         )
         _providers.value = _providers.value.map { if (it.id == p.id) p else it }
         repairUnavailableReasoningEfforts()
         if (apiKey != null) setKey(p.id, apiKey)
         writeConfig()
         return p
+    }
+}
+
+/** 修改或清除服务商的自定义别名 / 备注名称。 */
+fun ProviderStore.setProviderAlias(providerId: String, alias: String?) {
+    synchronized(this) {
+        val p = provider(providerId) ?: return
+        val clean = alias?.trim()?.ifEmpty { null }
+        if (p.customAlias == clean) return
+        _providers.value = _providers.value.map {
+            if (it.id == providerId) it.copy(customAlias = clean) else it
+        }
+        writeConfig()
     }
 }
 
@@ -126,10 +142,17 @@ fun ProviderStore.removeProvider(providerId: String) {
     }
 }
 
-internal fun ProviderStore.findOrAddProvider(name: String, kind: ProviderConfig.Kind, baseUrl: String, signIn: String? = null): Provider {
+internal fun ProviderStore.findOrAddProvider(
+    name: String,
+    kind: ProviderConfig.Kind,
+    baseUrl: String,
+    signIn: String? = null,
+    customAlias: String? = null,
+): Provider {
     val key = ProviderConnection.keyOf(kind, baseUrl, name)
-    _providers.value.firstOrNull { it.key == key && it.signIn == signIn }?.let { return it }
-    val p = Provider(newId(), name.trim(), kind, baseUrl.trim(), signIn = signIn)
+    val cleanAlias = customAlias?.trim()?.ifEmpty { null }
+    _providers.value.firstOrNull { it.key == key && it.signIn == signIn && it.customAlias == cleanAlias }?.let { return it }
+    val p = Provider(newId(), name.trim(), kind, baseUrl.trim(), signIn = signIn, customAlias = cleanAlias)
     _providers.value = _providers.value + p
     return p
 }

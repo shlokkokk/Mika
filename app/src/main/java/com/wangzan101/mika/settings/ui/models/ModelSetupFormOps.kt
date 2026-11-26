@@ -84,6 +84,11 @@ fun ModelSetupViewModel.setName(name: String) = edit {
     it.copy(name = if (n <= MAX_NAME) name else name.substring(0, name.offsetByCodePoints(0, MAX_NAME)))
 }
 
+fun ModelSetupViewModel.setNickname(nickname: String) = edit {
+    val n = nickname.codePointCount(0, nickname.length)
+    it.copy(nickname = if (n <= MAX_NAME) nickname else nickname.substring(0, nickname.offsetByCodePoints(0, MAX_NAME)))
+}
+
 /** 连接信息变了:进行中的测试和上次的失败原因作废。 */
 internal fun ModelSetupViewModel.edit(change: (AddForm) -> AddForm) {
     testJob?.cancel()
@@ -124,6 +129,7 @@ fun ModelSetupViewModel.testAndSave() {
                 store.connect(
                     f.providerName, f.kind, baseUrl, key, models, f.sessionHeader,
                     typed = setOfNotNull(typed.takeIf { it.isNotEmpty() && models.none { model -> model.id == it } }),
+                    customAlias = f.nickname.trim().ifEmpty { null },
                 )
             }
         } catch (e: CancellationException) {
@@ -178,6 +184,7 @@ fun ModelSetupViewModel.saveWithoutTest() {
             withContext(io) {
                 store.connect(
                     f.providerName, f.kind, baseUrl, key.ifEmpty { null }, emptyList(), f.sessionHeader, untested = true,
+                    customAlias = f.nickname.trim().ifEmpty { null },
                 ).also { p -> if (typed.isNotEmpty()) store.markTyped(p.id, typed) }
             }
         } catch (e: CancellationException) {

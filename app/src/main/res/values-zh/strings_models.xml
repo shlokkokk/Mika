@@ -341,4 +341,6 @@
     <string name="video_no_compatible">你添加的模型服务商都不能生成视频。请先添加一个能生成视频的：%1$s。</string>
     <string name="video_choice_stale">之前选的服务商已不能生成视频（已删除或地址改了）。请在下面重新选择；在此之前 Mika 不会生成视频。</string>
     <string name="tool_video_generate">生成视频</string>
+    <string name="provider_nickname_label">账号备注</string>
+    <string name="provider_rename_title">重命名账号</string> (feat(models): add optional custom provider nicknames, dynamic placeholders, and app-wide rename wiring)
 </resources>

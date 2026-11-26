@@ -147,6 +147,15 @@ internal fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions, stand
                 if (f.urlProblem == null) f.defaultName else ModelSetupCopy.NAME_HINT,
                 modifier = Modifier.testTag("setup-name"),
             )
+        } else {
+            InputRow(
+                stringResource(R.string.provider_nickname_label),
+                f.nickname,
+                actions.setNickname,
+                f.nicknamePlaceholder(),
+                first = !f.urlEditable && !f.isCloudflare,
+                modifier = Modifier.testTag("setup-nickname"),
+            )
         }
         // ── API Key input — multi-line, large, prominent ──────────────────
         val parsedKeys = remember(f.apiKey) { com.wangzan101.mika.core.model.KeyPoolManager.shared.parseKeys(f.apiKey) }

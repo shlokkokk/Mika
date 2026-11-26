@@ -94,7 +94,17 @@ data class AddForm(
     val noList: Boolean = false,
     val name: String = "",
     val manual: Boolean = false,
+    val nickname: String = "",
 ) {
+    fun nicknamePlaceholder(): String = when (preset) {
+        "Gemini" -> "e.g. Personal, Work, Pro"
+        "Cloudflare Workers AI" -> "e.g. Workers 1, pcgpt, Backup"
+        "OpenRouter" -> "e.g. Main Router, Org Key"
+        "Groq" -> "e.g. Fast Free, Work"
+        "DeepSeek" -> "e.g. Main Account, Backup"
+        "Ollama" -> "e.g. Local GPU, Mac Mini"
+        else -> "e.g. Account 2, Personal (optional)"
+    }
     /** 显示「模型名」一栏:没列出模型,或用户要手填。 */
     val showModel: Boolean get() = noList || manual
 

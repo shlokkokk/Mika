@@ -88,6 +88,7 @@ class ProviderDetailActions(
     val setDailyBudget: (Long?) -> Boolean = { false },
     /** 把这家默认的模型设为主模型(账号登录的详情里那一行)。 */
     val useAsMain: () -> Unit = {},
+    val rename: (String?) -> Unit = {},
 )
 
 /**
@@ -168,6 +169,7 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
     var confirmDelete by remember { mutableStateOf(false) }
     var confirmRetest by remember(p.id) { mutableStateOf<String?>(null) }
     var editingBudget by remember { mutableStateOf(false) }
+    var renaming by remember { mutableStateOf(false) }
     var customBudget by remember { mutableStateOf("") }
     var budgetSaveFailed by remember { mutableStateOf(false) }
     var using by remember { mutableStateOf<String?>(null) }
@@ -193,6 +195,17 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
                     }
                 }
                 ListRow(null, ModelsCopy.BASE_URL) { RowValue(ModelsCopy.shortUrl(p.baseUrl)) }
+                ListRow(null, stringResource(R.string.provider_nickname_label), onClick = { renaming = true }) {
+                    RowValue(p.customAlias?.takeIf { it.isNotBlank() } ?: ModelsCopy.UNSET)
+                    RowChevron()
+                }
+            }
+            if (renaming) {
+                ProviderRenameDialog(
+                    provider = p,
+                    onDismiss = { renaming = false },
+                    onConfirm = { alias -> actions.rename(alias); renaming = false },
+                )
             }
             (state as? ListState.Failed)?.let { FooterNote(ModelSetupCopy.failed(it.message), color = c.bad) }
 

@@ -25,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
@@ -110,8 +111,16 @@ private val RoleTileShape = MikaShapes.Chip
 
 /** 服务商一行:左边是名字首字的图标块;[warning] 是要提醒的一句(用提醒色另起一行)。 */
 @Composable
-internal fun ProviderRow(p: Provider, line: String, first: Boolean, warning: String? = null, onClick: () -> Unit) {
+internal fun ProviderRow(
+    p: Provider,
+    line: String,
+    first: Boolean,
+    warning: String? = null,
+    onRename: (() -> Unit)? = null,
+    onClick: () -> Unit,
+) {
     val c = MikaTheme.colors
+    val shownName = ModelsCopy.providerName(p)
     Column {
         if (!first) Hairline()
         Row(
@@ -119,13 +128,21 @@ internal fun ProviderRow(p: Provider, line: String, first: Boolean, warning: Str
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Box(Modifier.size(MikaSize.Tile).background(c.neutralSoft, MikaShapes.Tile), contentAlignment = Alignment.Center) {
-                Text(p.name.take(1).uppercase(), style = MikaType.Caption.copy(fontWeight = FontWeight.Bold), color = c.ink)
+                Text(shownName.take(1).uppercase(), style = MikaType.Caption.copy(fontWeight = FontWeight.Bold), color = c.ink)
             }
             Column(Modifier.weight(1f)) {
-                Text(ModelsCopy.providerName(p), style = MikaType.Body, color = c.ink, maxLines = 1)
+                Text(shownName, style = MikaType.Body, color = c.ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 val poolCount = com.wangzan101.mika.core.model.KeyPoolManager.shared.keyCount(p.id)
                 Text(KeyPoolCopy.providerLine(line, poolCount), Modifier.padding(top = 2.dp), style = MikaType.Caption, color = if (poolCount > 1) c.ok else c.ink3)
                 warning?.let { Text(it, Modifier.padding(top = 2.dp).testTag("provider-warning-${p.name}"), style = MikaType.Caption, color = c.warn) }
+            }
+            if (onRename != null) {
+                Box(
+                    Modifier.size(32.dp).clip(MikaShapes.Pill).clickable(onClick = onRename).testTag("rename-provider-${p.id}"),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(MikaIcons.Edit, contentDescription = stringResource(R.string.provider_rename_title), modifier = Modifier.size(16.dp), tint = c.ink3)
+                }
             }
             RowChevron()
         }

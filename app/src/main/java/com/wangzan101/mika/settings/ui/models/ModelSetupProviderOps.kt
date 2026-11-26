@@ -13,6 +13,7 @@ import com.wangzan101.mika.settings.listModels
 import com.wangzan101.mika.settings.rememberModels
 import com.wangzan101.mika.settings.removeProvider
 import com.wangzan101.mika.settings.removeProviderKey
+import com.wangzan101.mika.settings.setProviderAlias
 import com.wangzan101.mika.settings.signOutAccount
 import com.wangzan101.mika.settings.signOutChatGpt
 import com.wangzan101.mika.settings.updateProviderKey
@@ -24,6 +25,11 @@ import kotlinx.coroutines.withContext
 import com.wangzan101.mika.chat.ui.isActive
 
 // 模型设置:刷新列表、换 Key 与移除服务商
+fun ModelSetupViewModel.renameProvider(providerId: String, alias: String?) {
+    store.setProviderAlias(providerId, alias)
+    sync()
+}
+
 /** 重新列一次这个服务商的模型并记下;失败时记下原因。 */
 fun ModelSetupViewModel.refresh(providerId: String) {
     val p = store.provider(providerId) ?: return

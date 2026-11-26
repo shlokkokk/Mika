@@ -151,7 +151,7 @@ fun ModelSetupScreen(
     val role = picking
     val actions = ModelSetupActions(
         selectPreset = vm::selectPreset, setKind = vm::setKind, setBaseUrl = vm::setBaseUrl, setAccountId = vm::setAccountId, setApiKey = vm::setApiKey,
-        setModel = vm::setModel, setManual = vm::setManual, setName = vm::setName,
+        setModel = vm::setModel, setManual = vm::setManual, setName = vm::setName, setNickname = vm::setNickname, renameProvider = vm::renameProvider,
         testAndSave = vm::testAndSave,
         saveUntested = vm::saveWithoutTest,
         openForm = vm::openForm, closeForm = vm::closeForm,
@@ -231,6 +231,7 @@ fun ModelSetupScreen(
                     },
                     useAsMain = { vm.useAsMain(p.id) },
                     setDailyBudget = { vm.setDailyTokenBudget(p.id, it) },
+                    rename = { vm.renameProvider(p.id, it) },
                 )
                 if (page is ModelSubPage.AllModels) {
                     BackHandler { allModels = false }
@@ -381,6 +382,8 @@ class ModelSetupActions(
     /** 「手动填写模型名」的开和收。 */
     val setManual: (Boolean) -> Unit = {},
     val setName: (String) -> Unit = {},
+    val setNickname: (String) -> Unit = {},
+    val renameProvider: (String, String?) -> Unit = { _, _ -> },
     val testAndSave: () -> Unit = {},
     /** 不测试,直接保存(见 [ModelSetupViewModel.saveWithoutTest])。 */
     val saveUntested: () -> Unit = {},

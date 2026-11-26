@@ -365,4 +365,6 @@
     <string name="video_no_compatible">لا تستطيع أي من خدمات النماذج لديك إنشاء مقاطع فيديو. أضف أولًا خدمة تستطيع ذلك: %1$s.</string>
     <string name="video_choice_stale">لم تعد الخدمة التي اخترتها سابقًا قادرة على إنشاء الفيديو (حُذفت أو تغيّر عنوانها). اختر خدمة أخرى أدناه؛ وحتى ذلك الحين لن تنشئ Mika مقاطع فيديو.</string>
     <string name="tool_video_generate">إنشاء فيديو</string>
+    <string name="provider_nickname_label">اسم مستعار للحساب</string>
+    <string name="provider_rename_title">إعادة تسمية الحساب</string> (feat(models): add optional custom provider nicknames, dynamic placeholders, and app-wide rename wiring)
 </resources>
