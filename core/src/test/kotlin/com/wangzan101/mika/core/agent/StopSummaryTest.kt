@@ -165,5 +165,17 @@ class StopSummaryTest {
         val esText = StopSummary.plain("Enviar mensajes", greeting, null, ::label, ::app, language = "es")
         assertTrue(esText, esText.startsWith("Detenida. Antes de detener:"))
         assertTrue(esText, esText.contains("Visitado: jobs.example.com"))
+
+        // When language is null, language is inferred from the prompt text instead of blindly defaulting to Chinese
+        val inferredEn = StopSummary.plain("open whatsapp say hello to ved", greeting, null, ::label, ::app, language = null)
+        assertTrue(inferredEn, inferredEn.startsWith("Stopped. Actions before stop:"))
+    }
+
+    @Test fun localizeCancelledHeaderHandlesSpacingAndFullWidthPunctuation() {
+        assertEquals("Stopped. Actions before stop:\n- WhatsApp", StopSummary.localizeCancelledHeader("已经停下。停止前:\n- WhatsApp", "en"))
+        assertEquals("Stopped. Actions before stop:\n- WhatsApp", StopSummary.localizeCancelledHeader("已经停下。 停止前:\n- WhatsApp", "en"))
+        assertEquals("Stopped. Actions before stop:\n- WhatsApp", StopSummary.localizeCancelledHeader("已经停下。停止前：\n- WhatsApp", "en"))
+        assertEquals("Stopped before starting any actions.", StopSummary.localizeCancelledHeader("已经停下,还没开始操作。", "en"))
+        assertEquals("已经停下。 停止前:\n- WhatsApp", StopSummary.localizeCancelledHeader("已经停下。 停止前:\n- WhatsApp", "zh"))
     }
 }

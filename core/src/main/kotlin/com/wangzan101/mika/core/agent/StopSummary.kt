@@ -39,18 +39,25 @@ class StopSummary(
         val input = facts(goal, events, draft, label, appLabel, language)
         val messages = listOf(Message(Role.User, listOf(Part.Text(input)), Author.User))
         val rolePrompt = Prompts.role("stop_summary")
-        val phrase = StopPhrases.forLanguage(language)
+        val phrase = StopPhrases.forLanguage(language, goal)
+        val normalizedRolePrompt = rolePrompt.replace("\r\n", "\n")
+        val targetExample = "例:\n已经停下。停止前:\n- 打开了设置,看完了「网络和互联网」「蓝牙」两页:网络页有 WLAN、移动网络、热点,蓝牙页有配对新设备、已连接的设备。\n- 「显示」「声音」两页还没看。"
         val basePrompt = if (phrase.isChinese) {
-            rolePrompt
+            normalizedRolePrompt
         } else {
-            rolePrompt.replace(
-                "例:\n已经停下。停止前:\n- 打开了设置,看完了「网络和互联网」「蓝牙」两页:网络页有 WLAN、移动网络、热点,蓝牙页有配对新设备、已连接的设备。\n- 「显示」「声音」两页还没看。",
-                phrase.example,
+            val replaced = if (normalizedRolePrompt.contains(targetExample)) {
+                normalizedRolePrompt.replace(targetExample, phrase.example)
+            } else {
+                Regex("例:\\s*已经停下[。，][^\n\r]*[\r\n]+(?:-[^\r\n]+[\r\n]*)+").replace(normalizedRolePrompt, phrase.example)
+            }
+            replaced.replace(
+                "lines marked 对外发出 are the ones actually sent or\n  submitted, lines marked 没成功 did not go through;",
+                "lines marked 对外发出 (or sent externally) are the ones actually sent or\n  submitted, lines marked 没成功 (or failed) did not go through;",
             )
         }
-        val systemPrompt = SystemPrompt.languageDirective(language)?.let {
-            "$it\n\n$basePrompt"
-        } ?: basePrompt
+        val effectiveLang = language ?: if (!phrase.isChinese) phrase.example.substringBefore(':').lowercase() else null
+        val directive = SystemPrompt.languageDirective(effectiveLang)
+        val systemPrompt = if (directive.isNotBlank()) "$directive\n\n$basePrompt" else basePrompt
         val written = withTimeoutOrNull(timeoutMs) {
             for (candidate in listOfNotNull(writer, fallback?.takeUnless { it === writer })) {
                 val text = try {
@@ -77,6 +84,17 @@ class StopSummary(
         private const val NOTE_CHARS = 120
         private const val DRAFT_CHARS = 1200
 
+        /** 根据目标语言将停下交代里的硬编码头部替换为对应语言的说明。 */
+        fun localizeCancelledHeader(raw: String, language: String?): String {
+            val phrase = StopPhrases.forLanguage(language)
+            if (phrase.isChinese) return raw
+            return raw
+                .replace(Regex("^已经停下[。，]?\\s*停止前[：:]?\\s*", RegexOption.MULTILINE), phrase.headWithActs + "\n")
+                .replace(Regex("^已经停下[。，]?\\s*停止前做了这些[：:]?\\s*", RegexOption.MULTILINE), phrase.headWithActs + "\n")
+                .replace("已经停下,还没开始操作。", phrase.headEmpty)
+                .replace("已经停下，还没开始操作。", phrase.headEmpty)
+        }
+
         /** 有没有可交代的:做过至少一件事、已经确认过进度,或停下时已经写出了字。都没有就只说「已停止」。 */
         fun worthSaying(events: List<RunEvent>, draft: String?): Boolean =
             events.any { it is RunEvent.Activity || it is RunEvent.Criteria && (it.criteria.isNotEmpty() || it.progress != null) } || !draft.isNullOrBlank()
@@ -90,7 +108,8 @@ class StopSummary(
             label: (String) -> String = { it }, appLabel: (String) -> String = { it },
             language: String? = null,
         ): String {
-            val isZh = language == null || language.startsWith("zh", ignoreCase = true)
+            val phrase = StopPhrases.forLanguage(language, goal)
+            val isZh = phrase.isChinese
             val notes = notes(events)
             val lines = mutableListOf<String>()
             val said = mutableSetOf<Int>()
@@ -144,7 +163,7 @@ class StopSummary(
             val acts = events.filterIsInstance<RunEvent.Activity>()
             val notes = notes(events)
             val lines = mutableListOf<String>()
-            val phrase = StopPhrases.forLanguage(language)
+            val phrase = StopPhrases.forLanguage(language, goal)
             val isZh = phrase.isChinese
             val places = acts.mapNotNull { a -> a.target?.let { placeOf(it, appLabel) } }.distinct()
             val seen = acts.filter { it.kind == "observe" && !it.failed && !it.title.isNullOrBlank() }
@@ -277,8 +296,32 @@ internal data class StopPhrase(
 )
 
 internal object StopPhrases {
-    fun forLanguage(tag: String?): StopPhrase {
-        val t = tag?.trim()?.lowercase().orEmpty()
+    fun forLanguage(tag: String?, text: String? = null): StopPhrase {
+        val raw = tag?.trim()?.lowercase().orEmpty()
+        val t = if (raw.isNotEmpty() && raw != "system") {
+            raw
+        } else if (!text.isNullOrBlank()) {
+            when {
+                text.any { it.code in 0x3040..0x30FF } -> "ja"
+                text.any { it.code in 0xAC00..0xD7AF } -> "ko"
+                text.any { it.code in 0x4E00..0x9FFF } -> "zh"
+                text.any { it in '\u0600'..'\u06FF' } -> "ar"
+                text.any { it in '\u0400'..'\u04FF' } -> "ru"
+                else -> {
+                    try {
+                        java.util.Locale.getDefault().toLanguageTag().lowercase()
+                    } catch (_: Exception) {
+                        "en"
+                    }
+                }
+            }
+        } else {
+            try {
+                java.util.Locale.getDefault().toLanguageTag().lowercase()
+            } catch (_: Exception) {
+                "en"
+            }
+        }
         return when {
             t.startsWith("zh-hant") || t.startsWith("zh-tw") || t.startsWith("zh-hk") -> StopPhrase(
                 isChinese = true,
@@ -295,7 +338,7 @@ internal object StopPhrases {
                 tailIncomplete = { "「$it」還沒做完的部分沒有接著做。" },
                 example = "例:\n已經停下。停止前:\n- 打開了設定，看完了「網路和網際網路」「藍牙」兩頁:網路頁有 WLAN、行動網路、熱點，藍牙頁有配對新設備、已連線的設備。\n- 「顯示」「聲音」兩頁還沒看。",
             )
-            t.startsWith("zh") || t.isEmpty() || t == "system" -> StopPhrase(
+            t.startsWith("zh") -> StopPhrase(
                 isChinese = true,
                 headEmpty = "已经停下,还没开始操作。",
                 headWithActs = "已经停下,停止前做了这些:",
