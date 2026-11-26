@@ -136,3 +136,20 @@ class ScreenWakeLock(context: Context) : WakeLockPort {
         private const val MAX_HOLD_MS = 6 * 60 * 60 * 1000L
     }
 }
+
+/**
+ * Keeps the CPU awake during background/scheduled execution even while the display is off
+ * (e.g., Doze alarm handoff or headless web/sandbox steps).
+ */
+class PartialCpuWakeLock(context: Context, tag: String, private val timeoutMs: Long = DEFAULT_HOLD_MS) : WakeLockPort {
+    private val lock = context.getSystemService(PowerManager::class.java)
+        .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, tag)
+        .apply { setReferenceCounted(false) }
+
+    override fun acquire() = lock.acquire(timeoutMs)
+    override fun release() { if (lock.isHeld) lock.release() }
+
+    companion object {
+        private const val DEFAULT_HOLD_MS = 60 * 60 * 1000L
+    }
+}

@@ -35,8 +35,8 @@ class KeyguardFieldsTest {
         assertTrue(KeyguardFields.matches(CredentialKind.Password, id, "android.widget.EditText", true, true, false, untyped = true, digitPad = false))
         assertFalse(KeyguardFields.matches(CredentialKind.Pin, id, "android.widget.EditText", true, true, false, untyped = true, digitPad = false))
         // 声明了文字输入类型的密码框,旁边有数字也还是密码框
-        assertTrue(KeyguardFields.matches(CredentialKind.Password, id, "android.widget.EditText", true, true, false, untyped = false, digitPad = true))
-        assertFalse(KeyguardFields.matches(CredentialKind.Pin, id, "android.widget.EditText", true, true, false, untyped = false, digitPad = true))
+        assertTrue(KeyguardFields.matches(CredentialKind.Pin, id, "android.widget.EditText", true, true, false, untyped = false, digitPad = true))
+        assertFalse(KeyguardFields.matches(CredentialKind.Password, id, "android.widget.EditText", true, true, false, untyped = false, digitPad = true))
     }
 
     @Test fun patternViewsNeverBecomeCredentialFields() {

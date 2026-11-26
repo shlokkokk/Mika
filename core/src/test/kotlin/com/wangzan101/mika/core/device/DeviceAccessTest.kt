@@ -476,4 +476,26 @@ class DeviceAccessTest {
         assertTrue(s.attemptBlocked)
         assertTrue(s.last!!.value.all { it == '\u0000' })
     }
+
+    @Test fun localUnlockRetriesDismissOnceRightAfterWake() = runTest {
+        var dismissAttempts = 0
+        val p = object : DeviceAccessPort {
+            var stateNow = DeviceState(interactive = false, keyguardShowing = true, deviceLocked = false, secure = false, helperAvailable = true, userUnlocked = true)
+            override suspend fun state() = stateNow
+            override suspend fun wake(): Boolean { stateNow = stateNow.copy(interactive = true); return true }
+            override suspend fun dismiss(): Boolean {
+                dismissAttempts++
+                if (dismissAttempts == 1) return false
+                stateNow = stateNow.copy(keyguardShowing = false)
+                return true
+            }
+            override suspend fun credentialReady(kind: CredentialKind) = false
+            override suspend fun enter(credential: DeviceCredential) = false
+        }
+        val s = Store().apply { localEnabled = true }
+        val res = DeviceAccess(p, s, pollMs = 10, waitMs = 100).unlockLocal()
+        assertEquals("unlocked", res.status)
+        assertTrue(res.performedUnlock)
+        assertEquals(2, dismissAttempts)
+    }
 }

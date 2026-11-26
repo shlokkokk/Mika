@@ -256,6 +256,14 @@ internal suspend fun TaskRun.assembleGate(ph: RunPhone): TaskGate {
         unattendedUnlock = unlockAuthorized?.let { authorized ->
             {
                 // 回锁走无障碍的全局动作、守卫走通知;两样都不在就立不住「锁回去」的义务,不去解锁
+                if (ScreenAccessibility.instance.value == null && provenance.origin == RunOrigin.Trigger) {
+                    // Wait briefly for AccessibilityService to bind after waking from deep sleep.
+                    var waitedMs = 0L
+                    while (ScreenAccessibility.instance.value == null && waitedMs < 2_500L) {
+                        kotlinx.coroutines.delay(150L)
+                        waitedMs += 150L
+                    }
+                }
                 if (ScreenAccessibility.instance.value == null) {
                     states.refresh()
                     "accessibility_unavailable"

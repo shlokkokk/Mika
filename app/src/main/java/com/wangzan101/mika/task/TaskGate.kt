@@ -94,7 +94,7 @@ class TaskGate(
                     }
                     if (shellAvailable.value) movedAway.value = false
                 }
-                locked.value -> {
+                onPhone && locked.value -> {
                     recoveredMidRun = recoveredMidRun || hasPassed
                     setWaiting(TaskState.Held(LOCKED))
                     if (unattendedUnlock == null) {
