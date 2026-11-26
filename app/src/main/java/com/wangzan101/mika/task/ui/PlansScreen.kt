@@ -77,8 +77,12 @@ fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (Strin
     var deleting by remember { mutableStateOf<TriggerDefinition?>(null) }
     var acting by remember { mutableStateOf<TriggerDefinition?>(null) }
     var viewingHistory by remember { mutableStateOf<String?>(null) }
+    var configuringScreenOff by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var segment by rememberSaveable { mutableIntStateOf(0) }
+    val deviceAccess = remember(context) {
+        (context.applicationContext as? com.wangzan101.mika.MikaApp)?.deviceAccess?.settings
+    }
     // 从系统设置回来时重读:刚开了权限,提示就该消失
     var exact by remember { mutableStateOf(TriggerRuntime.canScheduleExactly(context)) }
     LifecycleResumeEffect(Unit) {
@@ -130,6 +134,16 @@ fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (Strin
             }
         }
         FooterNote(tr(R.string.plans_footer))
+        if (deviceAccess != null) {
+            ScreenOffAccessCard(
+                settings = deviceAccess,
+                onOpenSetup = { configuringScreenOff = true },
+            )
+        }
+    }
+
+    if (configuringScreenOff && deviceAccess != null) {
+        ScreenOffUnlockDialog(deviceAccess, onDismiss = { configuringScreenOff = false })
     }
 
     acting?.let { plan ->
@@ -161,6 +175,7 @@ fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (Strin
             onSave = { plan ->
                 if (act { TriggerRuntime.schedule(context, plan) }) creating = null
             },
+            deviceAccess = deviceAccess,
         )
     }
 
@@ -177,6 +192,7 @@ fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (Strin
                 }
             },
             initialDraft = draft,
+            deviceAccess = deviceAccess,
         )
     }
 
@@ -188,6 +204,7 @@ fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (Strin
             onSave = { updated ->
                 if (act { TriggerRuntime.schedule(context, updated, replaceExisting = true) }) editing = null
             },
+            deviceAccess = deviceAccess,
         )
     }
     deleting?.let { plan ->

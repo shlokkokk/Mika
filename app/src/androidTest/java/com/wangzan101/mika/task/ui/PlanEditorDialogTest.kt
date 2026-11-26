@@ -62,8 +62,11 @@ class PlanEditorDialogTest {
             calendarTime = "08:00", calendarZone = "Asia/Shanghai", reminderText = "每天提醒")
         val saved = mutableListOf<TriggerDefinition>()
         show(original, saved)
-        compose.onNodeWithTag("plan-editor-clock").performScrollTo().performTextClearance()
-        compose.onNodeWithTag("plan-editor-clock").performTextInput("08:00, 12:30, 20:00")
+        // Add two more daily times via the time picker
+        compose.onNodeWithTag("plan-editor-clock-add").performScrollTo().performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNodeWithTag("plan-time-ok").performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNodeWithTag("plan-editor-clock-add").performScrollTo().performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNodeWithTag("plan-time-ok").performSemanticsAction(SemanticsActions.OnClick)
         compose.onNodeWithTag("plan-editor-preview-2").performScrollTo().assertIsDisplayed()
         compose.waitForIdle()
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -75,7 +78,7 @@ class PlanEditorDialogTest {
         compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
         assertEquals("multi", saved.single().id)
         assertEquals("owner", saved.single().threadId)
-        assertEquals(listOf("08:00", "12:30", "20:00"), saved.single().calendarClocks())
+        assertEquals(listOf("08:00", "09:00", "10:00"), saved.single().calendarClocks())
     }
 
     @Test fun createsFromVisibleFormWithThreePreviewTimes() {
@@ -109,15 +112,13 @@ class PlanEditorDialogTest {
         compose.onNodeWithTag("plan-editor-content").performTextClearance()
         compose.onNodeWithTag("plan-editor-content").performTextInput("新任务")
         compose.onNodeWithTag("plan-editor-daily").performSemanticsAction(SemanticsActions.OnClick)
-        compose.onNodeWithTag("plan-editor-clock").performScrollTo().performTextClearance()
-        compose.onNodeWithTag("plan-editor-clock").performTextInput("09:30")
         compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
 
         val plan = saved.single()
         assertEquals("existing-id", plan.id)
         assertEquals("existing-thread", plan.threadId)
         assertEquals("新任务", plan.goal)
-        assertEquals("09:30", plan.calendarTime)
+        assertEquals("09:00", plan.calendarTime)
         assertEquals("已经准备好", plan.conditionGoal)
     }
 
