@@ -3,11 +3,31 @@ package com.wangzan101.mika.settings.ui
 import android.app.ActivityManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -56,6 +76,7 @@ import com.wangzan101.mika.settings.setVisionGroundingVerified
 import com.wangzan101.mika.task.ParallelCapability
 import com.wangzan101.mika.ui.components.ButtonKind
 import com.wangzan101.mika.ui.components.ButtonSize
+import com.wangzan101.mika.ui.components.EmptyNote
 import com.wangzan101.mika.ui.components.GroupCard
 import com.wangzan101.mika.ui.components.GroupLabel
 import com.wangzan101.mika.ui.components.ListRow
@@ -282,6 +303,11 @@ fun SettingsScreen(
             onOpenRecommendations = { page = SettingsPage.Recommendations },
             onOpenPersonas = onOpenPersonas,
             onOpenAdvanced = { page = SettingsPage.Advanced },
+            onOpenRecovery = if (status.sdkInt >= Prerequisites.MIN_SDK) ({ page = SettingsPage.Recovery }) else null,
+            onOpenSandbox = { page = SettingsPage.Sandbox },
+            onOpenPlugins = { page = SettingsPage.Plugins },
+            onOpenComputerAccess = { page = SettingsPage.ComputerAccess },
+            onOpenDeveloper = if (showDeveloper) ({ page = SettingsPage.Developer }) else null,
             onOpenBrowser = onOpenBrowser,
             onOpenFiles = onOpenFiles,
             onOpenPersonal = onOpenPersonal,
@@ -470,6 +496,49 @@ fun SettingsScreen(
     }
 }
 
+@Composable
+private fun SearchResultRow(
+    entry: SettingsSearchEntry,
+    query: String,
+    highlightColor: androidx.compose.ui.graphics.Color,
+    first: Boolean,
+    onClick: () -> Unit,
+) {
+    val c = MikaTheme.colors
+    if (!first) {
+        Box(
+            Modifier.fillMaxWidth()
+                .padding(start = 52.dp)
+                .height(0.5.dp)
+                .background(c.ink3.copy(alpha = 0.2f)),
+        )
+    }
+    Row(
+        Modifier.fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (entry.icon != null) {
+            Icon(entry.icon, null, Modifier.size(20.dp), tint = c.ink2)
+            Spacer(Modifier.width(14.dp))
+        }
+        Column(Modifier.weight(1f)) {
+            Text(
+                SettingsSearch.highlightMatch(entry.title, query, highlightColor),
+                style = com.wangzan101.mika.ui.theme.MikaType.Body,
+                color = c.ink,
+            )
+            Text(
+                entry.group,
+                style = com.wangzan101.mika.ui.theme.MikaType.Caption,
+                color = c.ink3,
+            )
+        }
+        RowChevron()
+    }
+}
+
 /** 不带状态的设置首页,便于测试。首页只列常用入口,高级能力统一从 [onOpenAdvanced] 进入。 */
 @Composable
 fun SettingsContent(
@@ -502,6 +571,11 @@ fun SettingsContent(
     onOpenRecommendations: () -> Unit = {},
     onOpenPersonas: (() -> Unit)? = null,
     onOpenAdvanced: () -> Unit = {},
+    onOpenRecovery: (() -> Unit)? = null,
+    onOpenSandbox: (() -> Unit)? = null,
+    onOpenPlugins: (() -> Unit)? = null,
+    onOpenComputerAccess: (() -> Unit)? = null,
+    onOpenDeveloper: (() -> Unit)? = null,
     onOpenBrowser: () -> Unit = {},
     onOpenFiles: () -> Unit = {},
     onOpenPersonal: () -> Unit = {},
@@ -518,7 +592,82 @@ fun SettingsContent(
     scrollState: ScrollState = rememberScrollState(),
 ) {
     val check = Prerequisites.check(status, hasMainModel = mainModel != null)
-    PageScaffold(stringResource(R.string.settings_title), onBack, scrollState = scrollState) {
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
+    if (searchQuery.isNotBlank()) BackHandler { searchQuery = ""; focusManager.clearFocus() }
+    val searchEntries = listOfNotNull(
+        SettingsSearchEntry("models", stringResource(R.string.settings_model), stringResource(R.string.settings_model), "model provider api key openai gemini claude", MikaIcons.Spark, onOpenModels),
+        SettingsSearchEntry("phone_ops", stringResource(R.string.settings_phone_ops), stringResource(R.string.settings_capabilities), "accessibility shizuku adb phone control helper", MikaIcons.Phone, onOpenPhoneOps),
+        SettingsSearchEntry("plans", stringResource(R.string.drawer_plans), stringResource(R.string.settings_capabilities), "schedule timer alarm reminder cron trigger", MikaIcons.Clock, onOpenPlans),
+        SettingsSearchEntry("screen_off", stringResource(R.string.device_local_title), stringResource(R.string.settings_during_work), "screen off lock unlock pin password wake", MikaIcons.Lock, onOpenDuringWork),
+        SettingsSearchEntry("browser", stringResource(R.string.drawer_browser), stringResource(R.string.settings_capabilities), "web browser", MikaIcons.Globe, onOpenBrowser),
+        SettingsSearchEntry("files", stringResource(R.string.file_library_title), stringResource(R.string.settings_capabilities), "files library documents", MikaIcons.Paperclip, onOpenFiles),
+        SettingsSearchEntry("calls", stringResource(R.string.calls_title), stringResource(R.string.settings_capabilities), "voice ai calls phone", MikaIcons.Phone, onOpenCalls),
+        SettingsSearchEntry("wechat", stringResource(R.string.wechat_title), stringResource(R.string.settings_capabilities), "wechat channel", MikaIcons.Chats, onOpenWechat),
+        SettingsSearchEntry("proactive", stringResource(R.string.proactive_title), stringResource(R.string.settings_capabilities), "proactive notifications digest", MikaIcons.Ripple, onOpenProactive),
+        if (personalStart) SettingsSearchEntry("personal", stringResource(R.string.drawer_personal), stringResource(R.string.settings_capabilities), "personal assistant", MikaIcons.Message, onOpenPersonal) else null,
+        SettingsSearchEntry("during_work", stringResource(R.string.settings_during_work), stringResource(R.string.settings_preferences), "autonomous pace step limit mute screen on pocket", MikaIcons.Moon, onOpenDuringWork),
+        SettingsSearchEntry("capsule", CapsuleSettingsCopy.TITLE, stringResource(R.string.settings_preferences), "floating capsule overlay", MikaIcons.Message, onOpenCapsule),
+        SettingsSearchEntry("language", stringResource(R.string.settings_language_appearance), stringResource(R.string.settings_preferences), "language theme dark light appearance", MikaIcons.Globe, onOpenLanguage),
+        onOpenPersonas?.let { SettingsSearchEntry("personas", stringResource(R.string.persona_title), stringResource(R.string.settings_preferences), "persona tone style", MikaIcons.Chats, it) },
+        SettingsSearchEntry("notifications", StatusCopy.NOTIFICATIONS, stringResource(R.string.settings_preferences), "notifications quiet hours", MikaIcons.Bell, onOpenNotifications),
+        onOpenMemory?.let { SettingsSearchEntry("memory", stringResource(R.string.memory_and_skills), stringResource(R.string.settings_data), "memory skills", MikaIcons.Heart, it) },
+        onOpenBackup?.let { SettingsSearchEntry("backup", stringResource(R.string.backup_title), stringResource(R.string.settings_data), "backup restore export", MikaIcons.Archive, it) },
+        SettingsSearchEntry("auto_archive", stringResource(R.string.settings_auto_archive), stringResource(R.string.settings_data), "archive chat history", MikaIcons.Archive, onOpenAutoArchive),
+        SettingsSearchEntry("recommendations", stringResource(R.string.recommendations_title), stringResource(R.string.settings_data), "recommended tasks", MikaIcons.Message, onOpenRecommendations),
+        SettingsSearchEntry("app_access", stringResource(R.string.appaccess_title), stringResource(R.string.settings_data), "app access permissions", MikaIcons.Shield, onOpenAppAccess),
+        SettingsSearchEntry("sms_login", stringResource(R.string.sms_login_title), stringResource(R.string.settings_data), "sms otp login", MikaIcons.Shield, onOpenSmsLogin),
+        onOpenRecovery?.let { SettingsSearchEntry("recovery", stringResource(R.string.settings_recovery), stringResource(R.string.settings_advanced), "recovery repair self check recent apps", MikaIcons.Shield, it) },
+        onOpenSandbox?.let { SettingsSearchEntry("sandbox", stringResource(R.string.settings_sandbox), stringResource(R.string.settings_advanced), "linux sandbox python node", MikaIcons.Wrench, it) },
+        onOpenPlugins?.let { SettingsSearchEntry("plugins", stringResource(R.string.plugins_title), stringResource(R.string.settings_advanced), "plugins extensions", MikaIcons.Apps, it) },
+        onOpenComputerAccess?.let { SettingsSearchEntry("mcp", stringResource(R.string.mcp_title), stringResource(R.string.settings_advanced), "computer access mcp remote", MikaIcons.Desktop, it) },
+        onOpenDeveloper?.let { SettingsSearchEntry("developer", stringResource(R.string.settings_developer), stringResource(R.string.settings_advanced), "developer debug logs stats", MikaIcons.Wrench, it) },
+        SettingsSearchEntry("advanced", stringResource(R.string.settings_advanced), stringResource(R.string.settings_advanced), "proxy web search env vars root", MikaIcons.Wrench, onOpenAdvanced),
+        SettingsSearchEntry("about", stringResource(R.string.settings_about), stringResource(R.string.settings_advanced), "version update feedback", MikaIcons.Info, onOpenAbout),
+    )
+
+    PageScaffold(stringResource(R.string.settings_title), onBack, scrollState = scrollState, viewportModifier = Modifier.imePadding()) {
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            modifier = Modifier.fillMaxWidth().testTag("settings-search-input"),
+            placeholder = { Text(stringResource(R.string.settings_search_hint)) },
+            leadingIcon = { Icon(MikaIcons.Search, null, Modifier.size(androidx.compose.ui.unit.Dp(18f)), tint = MikaTheme.colors.ink3) },
+            trailingIcon = if (searchQuery.isNotEmpty()) {
+                {
+                    IconButton(onClick = { searchQuery = ""; focusManager.clearFocus() }, modifier = Modifier.testTag("settings-search-clear")) {
+                        Icon(MikaIcons.Close, stringResource(R.string.cancel), Modifier.size(androidx.compose.ui.unit.Dp(18f)), tint = MikaTheme.colors.ink3)
+                    }
+                }
+            } else null,
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+            shape = com.wangzan101.mika.ui.theme.MikaShapes.Card,
+        )
+        Spacer(Modifier.height(com.wangzan101.mika.ui.theme.MikaSpace.S8))
+
+        if (searchQuery.isNotBlank()) {
+            val matches = remember(searchQuery, searchEntries) { SettingsSearch.filter(searchEntries, searchQuery) }
+            val highlightColor = MikaTheme.colors.accent
+            if (matches.isEmpty()) {
+                EmptyNote(stringResource(R.string.settings_search_empty))
+            } else {
+                GroupCard {
+                    matches.forEachIndexed { index, entry ->
+                        SearchResultRow(
+                            entry = entry,
+                            query = searchQuery,
+                            highlightColor = highlightColor,
+                            first = index == 0,
+                            onClick = { focusManager.clearFocus(); entry.onOpen() },
+                        )
+                    }
+                }
+            }
+            return@PageScaffold
+        }
+
         StatusSummary(check, onProblem)
 
         GroupLabel(stringResource(R.string.settings_model))
