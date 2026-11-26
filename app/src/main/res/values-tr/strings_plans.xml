@@ -122,4 +122,6 @@
     <string name="plans_next_in">%1$s çalışır (%2$s içinde)</string>
     <string name="plans_time_past_hint">Seçilen zaman geçmişte</string>
     <string name="plans_use_tomorrow">Yarın yap</string>
+    <string name="plans_chat_deleted">Bu sohbet artık mevcut değil</string>
+    <string name="plans_started_toast">Zamanlanmış görev başlatıldı</string>
 </resources>

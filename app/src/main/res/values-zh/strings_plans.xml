@@ -121,4 +121,6 @@
     <string name="plans_next_in">将在 %1$s 运行（%2$s后）</string>
     <string name="plans_time_past_hint">所选时间已过</string>
     <string name="plans_use_tomorrow">改为明天</string>
+    <string name="plans_chat_deleted">原对话已删除</string>
+    <string name="plans_started_toast">已开始执行定时任务</string>
 </resources>

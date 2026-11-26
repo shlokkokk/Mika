@@ -124,4 +124,6 @@
     <string name="plans_next_in">Запуск %1$s (через %2$s)</string>
     <string name="plans_time_past_hint">Выбранное время уже прошло</string>
     <string name="plans_use_tomorrow">На завтра</string>
+    <string name="plans_chat_deleted">Этот чат больше не существует</string>
+    <string name="plans_started_toast">Запланированная задача запущена</string>
 </resources>

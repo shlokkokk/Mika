@@ -4,6 +4,7 @@ import com.wangzan101.mika.R
 import com.wangzan101.mika.i18n.tr
 import com.wangzan101.mika.i18n.trPlural
 import android.content.Context
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -87,6 +88,7 @@ fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (Strin
     var exact by remember { mutableStateOf(TriggerRuntime.canScheduleExactly(context)) }
     LifecycleResumeEffect(Unit) {
         exact = TriggerRuntime.canScheduleExactly(context)
+        snapshot = TriggerRuntime.snapshot(context)
         onPauseOrDispose {}
     }
     fun refresh() { snapshot = TriggerRuntime.snapshot(context) }
@@ -150,11 +152,21 @@ fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (Strin
         ActionSheet(
             plan.reminderText ?: plan.goal,
             listOf(
-                SheetAction(tr(R.string.plans_open_chat)) { onOpenConversation(plan.threadId) },
+                SheetAction(tr(R.string.plans_open_chat)) {
+                    if (ConversationStore.shared(context).exists(plan.threadId)) {
+                        onOpenConversation(plan.threadId)
+                    } else {
+                        Toast.makeText(context, tr(R.string.plans_chat_deleted), Toast.LENGTH_SHORT).show()
+                    }
+                },
                 SheetAction(tr(R.string.plans_run_history)) {
                     if (act()) viewingHistory = plan.id
                 },
-                SheetAction(tr(R.string.plans_run_now)) { act { TriggerRuntime.runNow(context, plan.id) } },
+                SheetAction(tr(R.string.plans_run_now)) {
+                    if (act { TriggerRuntime.runNow(context, plan.id) }) {
+                        Toast.makeText(context, tr(R.string.plans_started_toast), Toast.LENGTH_SHORT).show()
+                    }
+                },
                 SheetAction(tr(R.string.plans_edit_time)) { editing = plan },
                 SheetAction(tr(R.string.plans_copy)) { copying = plan },
                 SheetAction(tr(R.string.confirm_delete), destructive = true) { deleting = plan },
@@ -181,9 +193,13 @@ fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (Strin
 
     copying?.let { plan ->
         val draft = remember(plan.id) { plan.toCopyPlanDraft(System.currentTimeMillis()) }
+        val copyThreadId = remember(plan.id) {
+            val store = ConversationStore.shared(context)
+            if (store.exists(plan.threadId)) plan.threadId else store.newConversation()
+        }
         PlanEditorDialog(
             original = null,
-            newThreadId = plan.threadId,
+            newThreadId = copyThreadId,
             onDismiss = { copying = null },
             onSave = { copy ->
                 if (act { TriggerRuntime.schedule(context, copy) }) {
@@ -263,25 +279,34 @@ private fun PlanRow(plan: TriggerDefinition, last: TriggerWindow?, first: Boolea
         plan.intervalMs != null -> trPlural(R.plurals.plans_every_minutes, (plan.intervalMs!! / 60_000).toInt())
         else -> tr(R.string.plans_once)
     }
-    val when_ = if (plan.enabled)
-        tr(R.string.plans_next, repeat, formatPlanTime(upcoming(plan, System.currentTimeMillis(), 1).single()))
-    else "$repeat · $status"
+    val is24Hour = android.text.format.DateFormat.is24HourFormat(androidx.compose.ui.platform.LocalContext.current)
+    val nextMs = upcoming(plan, System.currentTimeMillis(), 1).firstOrNull() ?: plan.nextAtMs
+    val when_ = if (plan.enabled) tr(R.string.plans_next, repeat, formatPlanTime(nextMs, is24Hour)) else "$repeat · $status"
     val subtitle = plan.conditionGoal?.let {
         tr(if (plan.notifyWhen == ConditionNotify.EachTimeMet) R.string.plans_condition_each else R.string.plans_condition, it, when_)
     } ?: when_
     val sourceSubtitle = "${planSourceLabel(plan.source)} · $subtitle"
     val c = MikaTheme.colors
-    val delivered = last?.state == TriggerWindowState.Delivered
+    val detailColor = when {
+        last?.state == TriggerWindowState.Delivered -> c.ok
+        !plan.enabled && last?.state == TriggerWindowState.Failed -> c.bad
+        !plan.enabled && last?.state == TriggerWindowState.Unknown -> c.warn
+        else -> c.ink3
+    }
     ListRow(
         null, plan.reminderText ?: plan.goal, sourceSubtitle, first = first,
-        detail = last?.let { lastResult(plan, it) } ?: tr(R.string.plans_never_run),
-        detailColor = if (delivered) c.ok else c.ink3,
+        detail = last?.let { lastResult(plan, it, is24Hour) } ?: tr(R.string.plans_never_run),
+        detailColor = detailColor,
         onClick = onClick,
     ) { MikaSwitch(plan.enabled, onToggle, enabled = canToggle) }
 }
 
-private val PLAN_TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-private fun formatPlanTime(ms: Long): String = PLAN_TIME.format(Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()))
+private fun formatPlanTime(ms: Long, use24Hour: Boolean = false): String {
+    val zdt = Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault())
+    val time = PlanTimeFormat.formatDisplayTime(zdt.toLocalTime(), use24Hour = use24Hour, uiLocale())
+    val date = DateTimeFormatter.ofPattern("MMM d", uiLocale()).format(zdt)
+    return "$date, $time"
+}
 
 /** 计划是谁建的,列表里标出来源好追溯。 */
 private fun planSourceLabel(source: TriggerSource): String = when (source) {
@@ -290,10 +315,10 @@ private fun planSourceLabel(source: TriggerSource): String = when (source) {
     TriggerSource.External -> tr(R.string.plans_source_external)
 }
 /** 上次结果:时间、结果;那次检查记下了值时一起显示(检查失败、结果未知的那一次没有值,不拿更早的充数)。 */
-private fun lastResult(plan: TriggerDefinition, w: TriggerWindow): String {
+private fun lastResult(plan: TriggerDefinition, w: TriggerWindow, use24Hour: Boolean): String {
     val value = plan.lastValue?.takeIf { w.state in setOf(TriggerWindowState.Skipped, TriggerWindowState.ActionDispatched, TriggerWindowState.Delivered) }
-    return if (value != null) tr(R.string.plans_last_value, formatPlanTime(w.dueAtMs), windowLabel(w), value)
-    else tr(R.string.plans_last, formatPlanTime(w.dueAtMs), windowLabel(w))
+    return if (value != null) tr(R.string.plans_last_value, formatPlanTime(w.dueAtMs, use24Hour), windowLabel(w), value)
+    else tr(R.string.plans_last, formatPlanTime(w.dueAtMs, use24Hour), windowLabel(w))
 }
 
 private fun windowLabel(w: TriggerWindow): String = when (w.state) {

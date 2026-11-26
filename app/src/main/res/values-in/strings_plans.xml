@@ -121,4 +121,6 @@
     <string name="plans_next_in">Berjalan %1$s (dalam %2$s)</string>
     <string name="plans_time_past_hint">Waktu yang dipilih sudah lewat</string>
     <string name="plans_use_tomorrow">Gunakan besok</string>
+    <string name="plans_chat_deleted">Obrolan itu tidak ada lagi</string>
+    <string name="plans_started_toast">Tugas terjadwal dimulai</string>
 </resources>

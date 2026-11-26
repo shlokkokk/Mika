@@ -121,4 +121,6 @@
     <string name="plans_next_in">%1$s 실행 (%2$s 후)</string>
     <string name="plans_time_past_hint">선택한 시간이 이미 지났습니다</string>
     <string name="plans_use_tomorrow">내일로 변경</string>
+    <string name="plans_chat_deleted">해당 대화가 삭제되었습니다</string>
+    <string name="plans_started_toast">예약된 작업을 시작했습니다</string>
 </resources>

@@ -122,4 +122,6 @@
     <string name="plans_next_in">Runs %1$s (in %2$s)</string>
     <string name="plans_time_past_hint">Selected time is in the past</string>
     <string name="plans_use_tomorrow">Use tomorrow</string>
+    <string name="plans_chat_deleted">That chat no longer exists</string>
+    <string name="plans_started_toast">Scheduled task started</string>
 </resources>

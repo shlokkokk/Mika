@@ -126,4 +126,6 @@
     <string name="plans_next_in">يعمل %1$s (خلال %2$s)</string>
     <string name="plans_time_past_hint">الوقت المحدد في الماضي</string>
     <string name="plans_use_tomorrow">استخدام الغد</string>
+    <string name="plans_chat_deleted">لم تعد هذه المحادثة موجودة</string>
+    <string name="plans_started_toast">بدأت المهمة المجدولة</string>
 </resources>

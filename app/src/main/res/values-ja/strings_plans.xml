@@ -121,4 +121,6 @@
     <string name="plans_next_in">%1$s に実行（あと %2$s）</string>
     <string name="plans_time_past_hint">選択した時刻は過去です</string>
     <string name="plans_use_tomorrow">明日にする</string>
+    <string name="plans_chat_deleted">このチャットは削除されました</string>
+    <string name="plans_started_toast">スケジュールタスクを開始しました</string>
 </resources>

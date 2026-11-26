@@ -123,4 +123,6 @@
     <string name="plans_next_in">Executa %1$s (em %2$s)</string>
     <string name="plans_time_past_hint">O horário selecionado já passou</string>
     <string name="plans_use_tomorrow">Usar amanhã</string>
+    <string name="plans_chat_deleted">Essa conversa não existe mais</string>
+    <string name="plans_started_toast">Tarefa agendada iniciada</string>
 </resources>

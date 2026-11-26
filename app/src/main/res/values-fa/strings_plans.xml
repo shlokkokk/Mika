@@ -122,4 +122,6 @@
     <string name="plans_next_in">اجرا %1$s (%2$s دیگر)</string>
     <string name="plans_time_past_hint">زمان انتخاب‌شده در گذشته است</string>
     <string name="plans_use_tomorrow">تنظیم برای فردا</string>
+    <string name="plans_chat_deleted">این گفتگو دیگر وجود ندارد</string>
+    <string name="plans_started_toast">کار زمان‌بندی‌شده آغاز شد</string>
 </resources>
