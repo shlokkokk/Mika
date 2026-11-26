@@ -736,6 +736,7 @@ private fun MikaRoot(
     // 全局换页套滑动推入过渡;页内一律用 route 不用 nav.current:过渡动画期间旧页还在渲染,读实时状态会瞬间变脸
     NavSlide(nav.stack, depth = { it.size }) { stack ->
     val route = stack.last()
+    screenStates.SaveableStateProvider(route.name) {
     when (route) {
         Route.PhoneSetup -> PhoneSetupScreen(status, setupRepair, onFix, onboarding = onboarding == OnboardingStep.Phone) {
             phoneSetup.markGuideSeen()
@@ -755,7 +756,7 @@ private fun MikaRoot(
                 },
             )
         }
-        Route.Chat, Route.Personal -> screenStates.SaveableStateProvider(route.name) {
+        Route.Chat, Route.Personal -> {
             // 对话页重新看得见(回到前台、从别的页面回来):补上别处存进来的轮次,接上别处开始的任务
             LifecycleStartEffect(Unit) {
                 app.chat.refresh()
@@ -992,6 +993,7 @@ private fun MikaRoot(
         Route.Calls -> CallSettingsScreen(app.calls, onBack = back, initialHistoryCallId = focusedCallHistoryId,
             openStandbyChecklist = requestedCallStandby, onStandbyChecklistOpened = onCallStandbyOpened,
             onOpenVoiceCatalog = { nav.push(Route.VoiceServices) })
+    }
     }
     }
         }

@@ -30,6 +30,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -188,6 +189,7 @@ fun ModelSetupScreen(
     // 换页动画期间旧页还在渲染:服务商刚删掉时详情页也能从缓存里拿到数据画完退出
     var heldProviders by remember { mutableStateOf(ui.providers) }
     if (ui.providers.isNotEmpty()) heldProviders = ui.providers
+    val pageStates = rememberSaveableStateHolder()
     NavSlide(subPage, depth = { it.depth }) { page ->
     when (page) {
         is ModelSubPage.AddProvider -> {
@@ -260,7 +262,7 @@ fun ModelSetupScreen(
                 onSetContext = vm::setModelContext,
             )
         }
-        is ModelSubPage.Providers -> {
+        is ModelSubPage.Providers -> pageStates.SaveableStateProvider("providers") {
             BackHandler { showProviders = false }
             Page(ModelsCopy.PROVIDERS, onBack = { showProviders = false }) {
                 ProvidersSection(ui, actions)
@@ -322,7 +324,7 @@ fun ModelSetupScreen(
                 onBack = { picking = null },
             )
         }
-        is ModelSubPage.Main -> {
+        is ModelSubPage.Main -> pageStates.SaveableStateProvider("main") {
             if (ui.chatGptWelcome) ChatGptWelcome(vm::dismissChatGptWelcome)
             BackHandler(onBack = onBack)
             ModelSetupContent(ui, onboarding, actions, voiceChoice = voiceChoice, readAloudOn = voiceState?.enabled ?: false,
