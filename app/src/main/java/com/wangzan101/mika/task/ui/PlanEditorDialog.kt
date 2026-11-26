@@ -74,6 +74,7 @@ import com.wangzan101.mika.core.trigger.ConditionNotify
 import com.wangzan101.mika.core.trigger.PlanDraft
 import com.wangzan101.mika.core.trigger.PlanExecutionWindow
 import com.wangzan101.mika.core.trigger.PlanRepeat
+import com.wangzan101.mika.core.trigger.formatPlanClock
 import com.wangzan101.mika.core.trigger.PlanValidation
 import com.wangzan101.mika.core.trigger.PlanValidationException
 import com.wangzan101.mika.core.trigger.TriggerDefinition
