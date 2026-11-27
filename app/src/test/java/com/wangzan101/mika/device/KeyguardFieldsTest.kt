@@ -25,6 +25,12 @@ class KeyguardFieldsTest {
         assertFalse(KeyguardFields.matches(CredentialKind.Password, id, cls, true, true, false))
     }
 
+    @Test fun editableOemPinEntryEditTextWithDigitPadIsOnlyAPin() {
+        val id = "com.android.systemui:id/pinEntry"
+        assertTrue(KeyguardFields.matches(CredentialKind.Pin, id, "android.widget.EditText", true, true, false, untyped = false, digitPad = true))
+        assertFalse(KeyguardFields.matches(CredentialKind.Password, id, "android.widget.EditText", true, true, false, untyped = false, digitPad = true))
+    }
+
     @Test fun stockAndroid17PinEntryTextViewUsesTheDigitPad() {
         val id = "com.android.systemui:id/pinEntry"
         assertTrue(KeyguardFields.matches(CredentialKind.Pin, id,
