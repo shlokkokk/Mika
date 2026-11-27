@@ -606,21 +606,26 @@ private fun PresetResult(
                 ListRow(null, voiceModelDisplayName(model), capabilityLine(setOf(ref.capability)), first = index == 0) {
                     MikaButton(
                         stringResource(
-                            when (ref.capability) {
+                            if (probe.isActive) R.string.chat_audio_stop
+                            else when (ref.capability) {
                                 VoiceCapability.STT -> R.string.voice_try_stt
                                 VoiceCapability.TTS -> R.string.voice_try_tts
                                 VoiceCapability.REALTIME -> R.string.voice_try_realtime
                             },
                         ),
                         onClick = {
-                            when (ref.capability) {
-                                VoiceCapability.STT -> viewModel.verifyStt(ref)
-                                VoiceCapability.TTS -> viewModel.verifyTts(ref, com.wangzan101.mika.core.model.TtsRequest(sample))
-                                VoiceCapability.REALTIME -> viewModel.verifyRealtime(ref)
+                            if (probe.isActive) {
+                                viewModel.stopProbe(ref)
+                            } else {
+                                when (ref.capability) {
+                                    VoiceCapability.STT -> viewModel.verifyStt(ref)
+                                    VoiceCapability.TTS -> viewModel.verifyTts(ref, com.wangzan101.mika.core.model.TtsRequest(sample))
+                                    VoiceCapability.REALTIME -> viewModel.verifyRealtime(ref)
+                                }
                             }
                         },
-                        kind = ButtonKind.Tonal, size = ButtonSize.Small,
-                        enabled = probe !is VoiceProbeUi.Running && probe !is VoiceProbeUi.Listening,
+                        kind = if (probe.isActive) ButtonKind.Secondary else ButtonKind.Tonal,
+                        size = ButtonSize.Small,
                     )
                 }
                 Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -628,7 +633,8 @@ private fun PresetResult(
                         VoiceProbeUi.Idle -> null
                         VoiceProbeUi.Running -> stringResource(R.string.voice_catalog_testing)
                         is VoiceProbeUi.Listening -> probe.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) }
-                        is VoiceProbeUi.Failed -> probe.error.detail
+                        VoiceProbeUi.Playing -> stringResource(R.string.voice_playing)
+                        is VoiceProbeUi.Failed -> voiceErrorText(probe.error)
                         VoiceProbeUi.Verified -> stringResource(R.string.voice_catalog_verified)
                     }
                     Text(

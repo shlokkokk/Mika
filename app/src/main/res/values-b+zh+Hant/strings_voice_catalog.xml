@@ -43,6 +43,7 @@
     <string name="voice_catalog_unverified">未驗證</string>
     <string name="voice_catalog_testing">測試中…</string>
     <string name="voice_catalog_listening">正在聽，請說一句…</string>
+    <string name="voice_catalog_no_speech">未偵測到語音</string>
     <string name="voice_catalog_incomplete">請先填寫帳號資訊</string>
     <string name="voice_catalog_protocol_stt_android_system">Android 系統</string>
     <string name="voice_catalog_protocol_stt_audio_transcriptions">音訊轉錄</string>

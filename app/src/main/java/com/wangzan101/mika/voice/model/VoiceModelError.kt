@@ -51,6 +51,9 @@ sealed class VoiceModelError(
     class Cancelled(cause: Throwable? = null) :
         VoiceModelError(VoiceErrorCategory.CANCELLED, "Voice operation cancelled", cause)
 
+    class NoSpeechDetected :
+        VoiceModelError(VoiceErrorCategory.SYSTEM_UNAVAILABLE, "No speech detected")
+
     /** 选中的(或备援链里的)本机语音包没装、文件不全,或清单里已经没有它;界面提示「需要下载」。 */
     class PackMissing(val packId: String) :
         VoiceModelError(VoiceErrorCategory.INCOMPLETE_CONFIG, "Voice pack is not installed: $packId")

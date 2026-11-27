@@ -43,6 +43,7 @@
     <string name="voice_catalog_unverified">Belum diverifikasi</string>
     <string name="voice_catalog_testing">Menguji…</string>
     <string name="voice_catalog_listening">Mendengarkan, katakan sesuatu…</string>
+    <string name="voice_catalog_no_speech">Tidak ada ucapan terdeteksi</string>
     <string name="voice_catalog_incomplete">Isi detail akun yang diperlukan terlebih dahulu.</string>
     <string name="voice_catalog_protocol_stt_android_system">Sistem Android</string>
     <string name="voice_catalog_protocol_stt_audio_transcriptions">Transkripsi audio</string>

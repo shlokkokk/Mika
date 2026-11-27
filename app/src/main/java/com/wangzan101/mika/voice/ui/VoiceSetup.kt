@@ -97,9 +97,11 @@ internal fun rememberVoiceCatalogViewModel(voiceModels: VoiceModelEnvironment): 
             probe = probe,
             scope = scope,
             playAudio = { bytes, mime -> player.play(bytes, mime) },
+            playAudioWithStatus = { bytes, mime, onStarted -> player.playAndAwait(bytes, mime, onStarted) },
+            onStopAudio = { player.stop() },
         )
     }
-    DisposableEffect(viewModel) { onDispose { player.stop() } }
+    DisposableEffect(viewModel) { onDispose { viewModel.stopAllProbes() } }
     return viewModel
 }
 
@@ -204,6 +206,7 @@ internal fun VoiceOptionList(
                             VoiceProbeUi.Idle -> if (choice.verified) Text(stringResource(R.string.voice_catalog_verified), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ok)
                             VoiceProbeUi.Running -> Text(stringResource(R.string.voice_catalog_testing), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink3)
                             is VoiceProbeUi.Listening -> Text(probe.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) }, Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink2)
+                            VoiceProbeUi.Playing -> Text(stringResource(R.string.voice_playing), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink2)
                             is VoiceProbeUi.Failed -> Text(voiceErrorText(probe.error), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.bad)
                             VoiceProbeUi.Verified -> Text(stringResource(R.string.voice_catalog_verified), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ok)
                         }
@@ -211,8 +214,10 @@ internal fun VoiceOptionList(
                 },
                 trailing = {
                     MikaButton(
-                        testLabel, onClick = { onTest(choice) }, kind = ButtonKind.Tonal, size = ButtonSize.Small,
-                        enabled = probe !is VoiceProbeUi.Running && probe !is VoiceProbeUi.Listening,
+                        if (probe.isActive) stringResource(R.string.chat_audio_stop) else testLabel,
+                        onClick = { if (probe.isActive) viewModel.stopProbe(choice.ref) else onTest(choice) },
+                        kind = if (probe.isActive) ButtonKind.Secondary else ButtonKind.Tonal,
+                        size = ButtonSize.Small,
                         modifier = Modifier.testTag("voice-try-${choice.ref.serviceId}-${choice.ref.modelId}"),
                     )
                 },
@@ -263,6 +268,7 @@ internal fun VoicePickerSheet(
 internal fun voiceErrorText(error: VoiceModelError): String = when (error) {
     is VoiceModelError.PackMissing -> stringResource(R.string.voice_pack_needs_download)
     is VoiceModelError.OnDeviceFailed -> stringResource(onDeviceFailureText(error))
+    is VoiceModelError.NoSpeechDetected -> stringResource(R.string.voice_catalog_no_speech)
     else -> error.detail
 }
 

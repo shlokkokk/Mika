@@ -43,6 +43,7 @@
     <string name="voice_catalog_unverified">未验证</string>
     <string name="voice_catalog_testing">测试中…</string>
     <string name="voice_catalog_listening">正在听，请说一句…</string>
+    <string name="voice_catalog_no_speech">未检测到语音</string>
     <string name="voice_catalog_incomplete">请先填写账号信息</string>
     <string name="voice_catalog_protocol_stt_android_system">Android 系统</string>
     <string name="voice_catalog_protocol_stt_audio_transcriptions">音频转写</string>
