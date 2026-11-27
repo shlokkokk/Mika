@@ -47,6 +47,28 @@ import com.wangzan101.mika.voice.model.settingsProtocol
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import com.wangzan101.mika.settings.ui.models.Page
+import java.util.Locale
+
+internal fun sampleVoicePhrase(voiceLocale: Locale? = null): String {
+    val lang = (voiceLocale ?: Locale.getDefault()).language.lowercase()
+    return when (lang) {
+        "zh" -> "你好，我是 Mika。这是一段声音测试。"
+        "es" -> "¡Hola! Soy Mika. Esta es una prueba de voz."
+        "fr" -> "Bonjour ! Je suis Mika. Ceci est un test vocal."
+        "de" -> "Hallo! Ich bin Mika. Dies ist ein Sprachtest."
+        "ja" -> "こんにちは、Mikaです。これは音声テストです。"
+        "ko" -> "안녕하세요, 미카입니다. 음성 테스트입니다。"
+        "ru" -> "Привет! Я Mika. Это проверка голоса."
+        "hi" -> "नमस्ते! मैं मीका हूँ। यह एक आवाज़ परीक्षण है।"
+        "pt" -> "Olá! Eu sou a Mika. Este é um teste de voz."
+        "it" -> "Ciao! Sono Mika. Questa è una prova vocale."
+        "ar" -> "مرحباً! أنا ميكا. هذا اختبار صوتي."
+        "sq" -> "Përshëndetje! Unë jam Mika. Ky është një test zëri."
+        "as" -> "নমস্কাৰ! মই মিকা। এইটো এটা শব্দ পৰীক্ষা।"
+        "bn" -> "হ্যালো! আমি মিকা। এটি একটি শব্দ পরীক্ষা।"
+        else -> "Hello! I am Mika. This is a voice test."
+    }
+}
 
 /**
  * 设置 › 模型 › 声音模型:选服务商、模型、接口、音色、语速;打开朗读/自动朗读/主动说话。
@@ -170,7 +192,7 @@ internal fun VoiceModelContent(store: ProviderStore, settings: VoiceSettings, on
                         player.play(
                             tts,
                             TtsRequest(
-                                "你好，我是 Mika。这是一段声音测试。",
+                                sampleVoicePhrase(null),
                                 choice.voice.ifBlank { null },
                                 choice.speed,
                                 "wav",
@@ -255,28 +277,38 @@ private fun MigratedVoiceModelContent(
 
         selectedModel?.let { model ->
             GroupCard {
-                val pickable = if (model.tts?.protocol == com.wangzan101.mika.voice.model.TtsProtocol.AndroidSystem) {
-                    SystemTtsRows(voiceModels, settings, onChanged = { test = null })
-                    true
-                } else {
-                    val voices = VoiceVoices.tts(model)
-                    val pickable = voices.isNotEmpty() || model.tts != null
-                    if (pickable) {
-                        ListRow(null, tr(R.string.voice_voice), first = true, onClick = { voicesOpen = true },
-                            modifier = Modifier.testTag("tts-voice")) {
-                            RowValue(state.voice.ifBlank { tr(R.string.voice_voice_default) }.let { VoiceVoices.label(model, it) })
-                            RowChevron()
-                        }
+                val voices = VoiceVoices.tts(model)
+                val pickable = voices.isNotEmpty() || model.tts != null
+                if (pickable) {
+                    ListRow(null, tr(R.string.voice_voice), first = true, onClick = { voicesOpen = true },
+                        modifier = Modifier.testTag("tts-voice")) {
+                        RowValue(state.voice.ifBlank { tr(R.string.voice_voice_default) }.let { VoiceVoices.label(model, it) })
+                        RowChevron()
                     }
-                    if (voicesOpen) {
-                        VoicePickerSheet(
-                            VoiceVoices.withCurrent(voices, state.voice),
-                            onPick = { settings.setVoice(it); test = null },
-                            onDismiss = { voicesOpen = false },
-                            model = model,
-                        )
-                    }
-                    pickable
+                }
+                if (voicesOpen) {
+                    VoicePickerSheet(
+                        VoiceVoices.withCurrent(voices, state.voice),
+                        onPick = { settings.setVoice(it); test = null },
+                        onDismiss = { voicesOpen = false },
+                        model = model,
+                        onAudition = { voiceId ->
+                            val ref = selection ?: return@VoicePickerSheet
+                            val protocol = model.tts?.protocol ?: return@VoicePickerSheet
+                            val caps = settings.capabilities(protocol.settingsProtocol() ?: return@VoicePickerSheet)
+                            val ttsModel = runCatching { tts.createTts(context, ref, caps) }.getOrNull() ?: return@VoicePickerSheet
+                            previewScope.launch {
+                                runCatching {
+                                    player.stop()
+                                    player.play(
+                                        ttsModel,
+                                        TtsRequest(sampleVoicePhrase(null), voiceId, state.speed, "wav"),
+                                        streaming = state.streaming,
+                                    ) {}
+                                }
+                            }
+                        },
+                    )
                 }
                 InputRow(
                     tr(R.string.voice_speed), speed, first = !pickable,
@@ -342,7 +374,7 @@ private fun MigratedVoiceModelContent(
                         player.play(
                             model,
                             TtsRequest(
-                                "你好，我是 Mika。这是一段声音测试。",
+                                sampleVoicePhrase(null),
                                 state.voice.ifBlank { null },
                                 state.speed,
                                 "wav",
