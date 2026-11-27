@@ -9,6 +9,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -52,10 +53,12 @@ class PlanEditorDialogTest {
     private fun show(original: TriggerDefinition? = null, saved: MutableList<TriggerDefinition>) {
         compose.setContent {
             MikaTheme(dark = false, reduceMotion = true) {
-                PlanEditorDialog(original, "new-thread", onDismiss = {}, onSave = saved::add)
+                PlanEditorDialog(original, "new-thread", onDismiss = {}, onSave = saved::add, use24Hour = use24Hour)
             }
         }
     }
+
+    private var use24Hour = true
 
     @Test fun multipleDailyClocksShowThreeOccurrencesAndSurviveEditing() {
         val original = TriggerDefinition("multi", "owner", "每天提醒", System.currentTimeMillis() + 3_600_000,
@@ -172,21 +175,33 @@ class PlanEditorDialogTest {
         assertEquals(saved.single().executionWindowZone, saved.single().toPlanDraft().zone)
     }
 
-    @Test fun invalidTimeStaysInEditorUntilCorrected() {
+    /** 一次性计划的时间已过:不让保存,提示可改到明天同一时间,改完能保存。 */
+    @Test fun pastOneShotTimeStaysInEditorUntilMovedToTomorrow() {
+        val past = System.currentTimeMillis() - 3_600_000
+        val original = TriggerDefinition("past-id", "past-thread", "测试", past)
+        val saved = mutableListOf<TriggerDefinition>()
+        show(original, saved)
+        compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNodeWithTag("plan-editor-error").performScrollTo().assertExists()
+        assertTrue(saved.isEmpty())
+
+        compose.onNodeWithTag("plan-editor-use-tomorrow").performScrollTo().performClick()
+        compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
+        val plan = saved.single()
+        assertTrue(plan.nextAtMs > System.currentTimeMillis())
+        assertEquals("past-thread", plan.threadId)
+    }
+
+    /** 快捷时间从点下去那一刻算:「15 分钟后」落在现在之后 14～16 分钟。 */
+    @Test fun quickChipUsesTheTimeOfTheTap() {
         val saved = mutableListOf<TriggerDefinition>()
         show(saved = saved)
         compose.onNodeWithTag("plan-editor-content").performTextInput("测试")
-        compose.onNodeWithTag("plan-editor-first-at").performTextClearance()
-        compose.onNodeWithTag("plan-editor-first-at").performTextInput("2020-01-01 00:00")
+        val before = System.currentTimeMillis()
+        compose.onNodeWithTag("plan-quick-15m").performScrollTo().performClick()
         compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
-
-        compose.onNodeWithTag("plan-editor-error").assertExists()
-        assertTrue(saved.isEmpty())
-
-        compose.onNodeWithTag("plan-editor-first-at").performTextClearance()
-        compose.onNodeWithTag("plan-editor-first-at").performTextInput("2099-01-01 00:00")
-        compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
-        assertEquals(1, saved.size)
+        val delta = saved.single().nextAtMs - before
+        assertTrue("$delta", delta in 14 * 60_000L..16 * 60_000L)
     }
 
     /** 新增时刻不用打字:默认从最后一个时刻往后一小时,加完点叉还能删掉。 */
@@ -197,12 +212,51 @@ class PlanEditorDialogTest {
         compose.onNodeWithTag("plan-editor-daily").performSemanticsAction(SemanticsActions.OnClick)
         compose.onNodeWithTag("plan-editor-clock-add").performScrollTo().performClick()
         compose.onNodeWithTag("plan-time-ok").performClick()
-        compose.onNodeWithTag("plan-editor-clock").assertTextContains("09:00, 10:00")
+        compose.onNodeWithTag("plan-editor-clock-0").assertTextContains("09:00", substring = true)
+        compose.onNodeWithTag("plan-editor-clock-1").assertTextContains("10:00", substring = true)
         compose.onNodeWithTag("plan-editor-clock-remove-1").performScrollTo().performClick()
-        compose.onNodeWithTag("plan-editor-clock").assertTextContains("09:00")
+        compose.onNodeWithTag("plan-editor-clock-1").assertDoesNotExist()
         compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
 
         assertEquals(listOf("09:00"), saved.single().calendarClocks())
+    }
+
+    /** 系统是 12 小时制时:中文把「上午/下午」滚轮放在小时前面,选「下午 8:30」存成 20:30。 */
+    @Test fun twelveHourPickerFollowsTheLanguageAndSavesTwentyFourHourClock() {
+        use24Hour = false
+        val saved = mutableListOf<TriggerDefinition>()
+        show(saved = saved)
+        compose.onNodeWithTag("plan-editor-content").performTextInput("测试")
+        compose.onNodeWithTag("plan-editor-daily").performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNodeWithTag("plan-editor-clock-0").performScrollTo().performClick()
+        compose.onNodeWithTag("plan-time-hour").assertDoesNotExist()
+        val period = compose.onNodeWithTag("plan-time-ampm").fetchSemanticsNode().boundsInRoot
+        val hour = compose.onNodeWithTag("plan-time-hour12").fetchSemanticsNode().boundsInRoot
+        assertTrue(period.left < hour.left)
+        compose.onNodeWithTag("plan-time-ampm-1").performScrollTo().performClick()
+        compose.onNodeWithTag("plan-time-hour12-7").performScrollTo().performClick()
+        compose.onNodeWithTag("plan-time-minute-30").performScrollTo().performClick()
+        compose.onNodeWithTag("plan-time-ok").performClick()
+        compose.onNodeWithTag("plan-editor-clock-0").assertTextContains("下午8:30", substring = true)
+        compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
+        assertEquals(listOf("20:30"), saved.single().calendarClocks())
+    }
+
+    /** 时区可按偏移搜:「+9」只列 +9 的时区,选东京后计划存成东京时区。 */
+    @Test fun timezonePickerSearchesByOffsetAndSavesTheZone() {
+        val saved = mutableListOf<TriggerDefinition>()
+        show(saved = saved)
+        compose.onNodeWithTag("plan-editor-content").performTextInput("测试")
+        compose.onNodeWithTag("plan-editor-daily").performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNodeWithTag("plan-editor-zone").performScrollTo().performClick()
+        compose.waitUntil(5_000) {
+            compose.onAllNodesWithTag("plan-zone-list").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("plan-zone-search").performTextInput("+9")
+        compose.onNodeWithTag("plan-zone-Europe/London").assertDoesNotExist()
+        compose.onNodeWithTag("plan-zone-Asia/Tokyo").performScrollTo().performClick()
+        compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
+        assertEquals("Asia/Tokyo", saved.single().calendarZone)
     }
 
     @Test fun swipingWheelSavesTheCenteredMinuteAndCancelKeepsIt() {
@@ -220,11 +274,11 @@ class PlanEditorDialogTest {
         assertTrue(minute > 0)
         compose.onNodeWithTag("plan-time-ok").performClick()
         val selected = "09:%02d".format(java.util.Locale.ROOT, minute)
-        compose.onNodeWithTag("plan-editor-clock").assertTextContains(selected)
+        compose.onNodeWithTag("plan-editor-clock-0").assertTextContains(selected, substring = true)
         compose.onNodeWithTag("plan-editor-clock-0").performScrollTo().performClick()
         compose.onNodeWithTag("plan-time-hour-23").performScrollTo().performClick()
         InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
-        compose.onNodeWithTag("plan-editor-clock").assertTextContains(selected)
+        compose.onNodeWithTag("plan-editor-clock-0").assertTextContains(selected, substring = true)
         compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
         assertEquals(listOf(selected), saved.single().calendarClocks())
     }
@@ -234,61 +288,33 @@ class PlanEditorDialogTest {
         show(saved = saved)
         compose.onNodeWithTag("plan-editor-content").performTextInput("测试")
         compose.onNodeWithTag("plan-editor-weekly").performSemanticsAction(SemanticsActions.OnClick)
-        compose.onNodeWithTag("plan-editor-clock").performScrollTo().performTextClearance()
-        compose.onNodeWithTag("plan-editor-clock").performTextInput("08:00, 12:30")
+        compose.onNodeWithTag("plan-editor-clock-add").performScrollTo().performClick()
+        compose.onNodeWithTag("plan-time-ok").performClick()
         compose.onNodeWithTag("plan-editor-clock-1").performScrollTo().performClick()
-        compose.onNodeWithTag("plan-time-hour-8").performScrollTo().performClick()
+        compose.onNodeWithTag("plan-time-hour-9").performScrollTo().performClick()
         compose.onNodeWithTag("plan-time-minute-0").performScrollTo().performClick()
         compose.onNodeWithTag("plan-time-ok").performClick()
-        compose.onNodeWithTag("plan-editor-clock").assertTextContains("08:00")
+        compose.onNodeWithTag("plan-editor-clock-0").assertTextContains("09:00", substring = true)
         compose.onNodeWithTag("plan-editor-clock-1").assertDoesNotExist()
         compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
         assertEquals(listOf("08:00"), saved.single().calendarClocks())
         assertEquals(1, saved.single().calendarDays.size)
     }
 
-    @Test fun addingClockPreservesInvalidTextUntilCorrected() {
+    /** 首次执行走日期 + 时间两块点按区:选中的 23:59 要写回草稿并显示在时间块上。 */
+    @Test fun dateAndTimePickersWriteTheFirstRunTime() {
         val saved = mutableListOf<TriggerDefinition>()
         show(saved = saved)
-        compose.onNodeWithTag("plan-editor-content").performTextInput("测试")
-        compose.onNodeWithTag("plan-editor-daily").performSemanticsAction(SemanticsActions.OnClick)
-        compose.onNodeWithTag("plan-editor-clock").performScrollTo().performTextClearance()
-        compose.onNodeWithTag("plan-editor-clock").performTextInput("08:00, invalid")
-        compose.onNodeWithTag("plan-editor-clock-add").performScrollTo().performClick()
-        compose.onNodeWithTag("plan-time-ok").performClick()
-        compose.onNodeWithTag("plan-editor-clock").assertTextContains("08:00, invalid, 09:00")
-        compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
-        compose.onNodeWithTag("plan-editor-error").assertExists()
-        assertTrue(saved.isEmpty())
-    }
-
-    /** 首次执行走日期 + 时间选择器:选中的 23:59 要写回编辑框。 */
-    @Test fun dateAndTimePickersWriteTheFirstRunTime() {
-        show(saved = mutableListOf())
         compose.onNodeWithTag("plan-editor-content").performTextInput("检查天气")
-        compose.onNodeWithTag("plan-editor-first-at-pick").performClick()
+        compose.onNodeWithTag("plan-editor-first-date-pick").performClick()
         compose.onNodeWithTag("plan-date-picker").assertExists()
         compose.onNodeWithTag("plan-date-ok").performClick()
+        compose.onNodeWithTag("plan-editor-first-time-pick").performClick()
         compose.onNodeWithTag("plan-time-hour-23").performScrollTo().performClick()
         compose.onNodeWithTag("plan-time-minute-59").performScrollTo().performClick()
         compose.onNodeWithTag("plan-time-ok").performClick()
 
-        compose.onNodeWithTag("plan-editor-first-at").assertTextContains("23:59", substring = true)
-    }
-
-    @Test fun invalidFirstTimeCanBeReplacedWithMidnightUsingPickers() {
-        show(saved = mutableListOf())
-        compose.onNodeWithTag("plan-editor-content").performTextInput("测试")
-        compose.onNodeWithTag("plan-editor-first-at").performTextClearance()
-        compose.onNodeWithTag("plan-editor-first-at").performTextInput("invalid")
-        compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
-        compose.onNodeWithTag("plan-editor-error").assertExists()
-        compose.onNodeWithTag("plan-editor-first-at-pick").performScrollTo().performClick()
-        compose.onNodeWithTag("plan-date-ok").performClick()
-        compose.onNodeWithTag("plan-time-hour-0").performScrollTo().performClick()
-        compose.onNodeWithTag("plan-time-minute-0").performScrollTo().performClick()
-        compose.onNodeWithTag("plan-time-ok").performClick()
-        compose.onNodeWithTag("plan-editor-first-at").assertTextContains("00:00", substring = true)
+        compose.onNodeWithTag("plan-editor-first-time-pick").assertTextContains("23:59", substring = true)
     }
 
     @Test fun clockPickerWorksInDarkRtlWithLargeText() {
@@ -300,7 +326,7 @@ class PlanEditorDialogTest {
                 LocalDensity provides Density(density.density, fontScale = 1.5f),
             ) {
                 MikaTheme(dark = true, reduceMotion = true) {
-                    PlanEditorDialog(null, "new-thread", onDismiss = {}, onSave = saved::add)
+                    PlanEditorDialog(null, "new-thread", onDismiss = {}, onSave = saved::add, use24Hour = true)
                 }
             }
         }
@@ -313,7 +339,7 @@ class PlanEditorDialogTest {
         compose.onNodeWithTag("plan-time-hour-23").performScrollTo().performClick()
         compose.onNodeWithTag("plan-time-minute-59").performScrollTo().performClick()
         compose.onNodeWithTag("plan-time-ok").assertIsDisplayed().performClick()
-        compose.onNodeWithTag("plan-editor-clock").assertTextContains("09:00, 23:59")
+        compose.onNodeWithTag("plan-editor-clock-1").assertTextContains("23:59", substring = true)
         compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
         assertEquals(listOf("09:00", "23:59"), saved.single().calendarClocks())
     }
@@ -326,8 +352,9 @@ class PlanEditorDialogTest {
             id, "window-list-$id", goal, Instant.parse("2099-01-01T02:00:00Z").toEpochMilli(),
             executionWindowZone = "UTC", executionWindows = listOf(ExecutionWindow(10 * 60, 11 * 60)),
         )
-        val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-        fun format(ms: Long) = formatter.format(Instant.ofEpochMilli(ms).atZone(java.time.ZoneId.systemDefault()))
+        // 和计划页同一个格式:界面语言的日期 + 系统的 12/24 小时制
+        val is24Hour = android.text.format.DateFormat.is24HourFormat(context)
+        fun format(ms: Long) = formatPlanTime(ms, is24Hour)
         try {
             TriggerRuntime.schedule(context, plan)
             compose.setContent {
@@ -353,8 +380,9 @@ class PlanEditorDialogTest {
             id, "due-window-list-$id", goal, before - 3_600_000,
             executionWindowZone = "UTC", executionWindows = listOf(ExecutionWindow(0, 24 * 60)),
         )
-        val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-        fun format(ms: Long) = formatter.format(Instant.ofEpochMilli(ms).atZone(java.time.ZoneId.systemDefault()))
+        // 和计划页同一个格式:界面语言的日期 + 系统的 12/24 小时制
+        val is24Hour = android.text.format.DateFormat.is24HourFormat(context)
+        fun format(ms: Long) = formatPlanTime(ms, is24Hour)
         try {
             TriggerRuntime.schedule(context, plan)
             compose.setContent {

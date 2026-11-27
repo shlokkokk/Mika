@@ -1,5 +1,7 @@
 package com.wangzan101.mika.task.ui
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import com.wangzan101.mika.R
 import com.wangzan101.mika.i18n.tr
 import com.wangzan101.mika.i18n.trPlural
@@ -15,12 +17,10 @@ import com.wangzan101.mika.ui.components.MikaDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -62,6 +62,7 @@ import java.time.Instant
 import com.wangzan101.mika.i18n.uiLocale
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import com.wangzan101.mika.chat.ui.draft
 import com.wangzan101.mika.settings.ui.models.refresh
 
@@ -79,7 +80,6 @@ fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (Strin
     var deleting by remember { mutableStateOf<TriggerDefinition?>(null) }
     var acting by remember { mutableStateOf<TriggerDefinition?>(null) }
     var viewingHistory by remember { mutableStateOf<String?>(null) }
-    var configuringScreenOff by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var segment by rememberSaveable { mutableIntStateOf(0) }
     val deviceAccess = remember(context) {
@@ -137,29 +137,15 @@ fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (Strin
             }
         }
         FooterNote(tr(R.string.plans_footer))
-        if (deviceAccess != null) {
-            ScreenOffAccessCard(
-                settings = deviceAccess,
-                onOpenSetup = { configuringScreenOff = true },
-            )
-        }
-    }
-
-    if (configuringScreenOff && deviceAccess != null) {
-        ScreenOffUnlockDialog(deviceAccess, onDismiss = { configuringScreenOff = false })
+        // 精确闹钟没开时顶上已有提示卡,这里只列电池和解锁
+        if (deviceAccess != null) ScreenOffSetupCard(deviceAccess, showAlarm = false)
     }
 
     acting?.let { plan ->
         ActionSheet(
             plan.reminderText ?: plan.goal,
             listOf(
-                SheetAction(tr(R.string.plans_open_chat)) {
-                    if (ConversationStore.shared(context).exists(plan.threadId)) {
-                        onOpenConversation(plan.threadId)
-                    } else {
-                        Toast.makeText(context, tr(R.string.plans_chat_deleted), Toast.LENGTH_SHORT).show()
-                    }
-                },
+                SheetAction(tr(R.string.plans_open_chat)) { onOpenConversation(plan.threadId) },
                 SheetAction(tr(R.string.plans_run_history)) {
                     if (act()) viewingHistory = plan.id
                 },
@@ -194,13 +180,9 @@ fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (Strin
 
     copying?.let { plan ->
         val draft = remember(plan.id) { plan.toCopyPlanDraft(System.currentTimeMillis()) }
-        val copyThreadId = remember(plan.id) {
-            val store = ConversationStore.shared(context)
-            if (store.exists(plan.threadId)) plan.threadId else store.newConversation()
-        }
         PlanEditorDialog(
             original = null,
-            newThreadId = copyThreadId,
+            newThreadId = plan.threadId,
             onDismiss = { copying = null },
             onSave = { copy ->
                 if (act { TriggerRuntime.schedule(context, copy) }) {
@@ -236,6 +218,7 @@ fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (Strin
 @Composable
 private fun PlanRunHistoryDialog(snapshot: TriggerSnapshot, planId: String, onDismiss: () -> Unit) {
     val windows = remember(snapshot, planId) { snapshot.recentWindows(planId, 10) }
+    val is24Hour = systemUses24Hour()
     MikaDialog(
         onDismissRequest = onDismiss,
         title = { Text(tr(R.string.plans_run_history)) },
@@ -247,7 +230,7 @@ private fun PlanRunHistoryDialog(snapshot: TriggerSnapshot, planId: String, onDi
                     windows.forEachIndexed { index, window ->
                         ListRow(
                             icon = null,
-                            title = formatPlanTime(window.claimedAtMs),
+                            title = formatPlanTime(window.claimedAtMs, is24Hour),
                             subtitle = windowLabel(window),
                             first = index == 0,
                         )
@@ -280,7 +263,7 @@ private fun PlanRow(plan: TriggerDefinition, last: TriggerWindow?, first: Boolea
         plan.intervalMs != null -> trPlural(R.plurals.plans_every_minutes, (plan.intervalMs!! / 60_000).toInt())
         else -> tr(R.string.plans_once)
     }
-    val is24Hour = android.text.format.DateFormat.is24HourFormat(androidx.compose.ui.platform.LocalContext.current)
+    val is24Hour = systemUses24Hour()
     val nextMs = upcoming(plan, System.currentTimeMillis(), 1).firstOrNull() ?: plan.nextAtMs
     val when_ = if (plan.enabled) tr(R.string.plans_next, repeat, formatPlanTime(nextMs, is24Hour)) else "$repeat · $status"
     val subtitle = plan.conditionGoal?.let {
@@ -302,11 +285,11 @@ private fun PlanRow(plan: TriggerDefinition, last: TriggerWindow?, first: Boolea
     ) { MikaSwitch(plan.enabled, onToggle, enabled = canToggle) }
 }
 
-private fun formatPlanTime(ms: Long, use24Hour: Boolean = false): String {
+/** 列表里的时间:日期用界面语言的中等格式,钟点跟系统的 12/24 小时制。 */
+internal fun formatPlanTime(ms: Long, use24Hour: Boolean): String {
     val zdt = Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault())
-    val time = PlanTimeFormat.formatDisplayTime(zdt.toLocalTime(), use24Hour = use24Hour, uiLocale())
-    val date = DateTimeFormatter.ofPattern("MMM d", uiLocale()).format(zdt)
-    return "$date, $time"
+    val date = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(uiLocale()).format(zdt)
+    return "$date ${PlanTimeFormat.formatTime(zdt.toLocalTime(), use24Hour, uiLocale())}"
 }
 
 /** 计划是谁建的,列表里标出来源好追溯。 */
