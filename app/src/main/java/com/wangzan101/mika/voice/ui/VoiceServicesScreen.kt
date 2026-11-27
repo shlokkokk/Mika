@@ -553,7 +553,16 @@ private fun PresetForm(kind: PresetKind, onBack: () -> Unit, onSave: (VoicePrese
             }
             PresetKind.SelfHosted -> {
                 GroupCard {
-                    InputRow(stringResource(R.string.voice_field_url), url, { url = it }, "192.168.1.5:10095", first = true, keyboard = KeyboardType.Uri)
+                    InputRow(
+                        stringResource(R.string.voice_field_url),
+                        url,
+                        { url = it },
+                        stringResource(R.string.speech_funasr_enter_address),
+                        first = true,
+                        keyboard = KeyboardType.Uri,
+                        onClear = { url = "" },
+                        clearDescription = stringResource(R.string.clear),
+                    )
                     // 识别语言:默认「自动」,不指定、由服务自己判断;服务能认哪些语言看它跑的模型
                     AsrLanguageRow(AsrLanguage.of(language), { language = it.code })
                 }
