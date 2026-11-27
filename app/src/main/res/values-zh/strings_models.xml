@@ -341,4 +341,17 @@
     <string name="video_no_compatible">你添加的模型服务商都不能生成视频。请先添加一个能生成视频的：%1$s。</string>
     <string name="video_choice_stale">之前选的服务商已不能生成视频（已删除或地址改了）。请在下面重新选择；在此之前 Mika 不会生成视频。</string>
     <string name="tool_video_generate">生成视频</string>
+    <string name="model_fallback_view_list">列表</string>
+    <string name="model_fallback_view_flow">流程</string>
+    <string name="model_fallback_arrow_hint">限流或出错时</string>
+    <string name="model_fallback_move_up">上移</string>
+    <string name="model_fallback_move_down">下移</string>
+    <string name="model_fallback_edge_short">触限时</string>
+    <string name="model_fallback_flow_reset">重置</string>
+    <string name="model_fallback_flow_hint">拖动平移 · 双指缩放 · 点击节点编辑</string>
+    <string name="model_fallback_move_title">调整备用顺序？</string>
+    <string name="model_fallback_move_body">确定将 %1$s（备用 #%2$d）移到 %4$s（备用 #%5$d）%3$s吗？移动后将成为备用 #%5$d。</string>
+    <string name="model_fallback_move_before">之前</string>
+    <string name="model_fallback_move_after">之后</string>
+    <string name="model_fallback_move_confirm">移动</string>
 </resources>

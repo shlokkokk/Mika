@@ -365,4 +365,17 @@
     <string name="video_no_compatible">لا تستطيع أي من خدمات النماذج لديك إنشاء مقاطع فيديو. أضف أولًا خدمة تستطيع ذلك: %1$s.</string>
     <string name="video_choice_stale">لم تعد الخدمة التي اخترتها سابقًا قادرة على إنشاء الفيديو (حُذفت أو تغيّر عنوانها). اختر خدمة أخرى أدناه؛ وحتى ذلك الحين لن تنشئ Mika مقاطع فيديو.</string>
     <string name="tool_video_generate">إنشاء فيديو</string>
+    <string name="model_fallback_view_list">قائمة</string>
+    <string name="model_fallback_view_flow">تدفق</string>
+    <string name="model_fallback_arrow_hint">عند الحد أو الخطأ</string>
+    <string name="model_fallback_move_up">تحريك لأعلى</string>
+    <string name="model_fallback_move_down">تحريك لأسفل</string>
+    <string name="model_fallback_edge_short">عند الحد</string>
+    <string name="model_fallback_flow_reset">إعادة</string>
+    <string name="model_fallback_flow_hint">اسحب للتحريك · قرّب بإصبعين · انقر للتعديل</string>
+    <string name="model_fallback_move_title">إعادة ترتيب النسخة الاحتياطية؟</string>
+    <string name="model_fallback_move_body">نقل %1$s (الاحتياطي #%2$d) %3$s %4$s (الاحتياطي #%5$d)؟ سيصبح الاحتياطي #%5$d.</string>
+    <string name="model_fallback_move_before">قبل</string>
+    <string name="model_fallback_move_after">بعد</string>
+    <string name="model_fallback_move_confirm">نقل</string>
 </resources>

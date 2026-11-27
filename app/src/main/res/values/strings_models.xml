@@ -345,4 +345,17 @@
     <string name="video_choice_stale">The service you chose before can no longer generate videos (it was removed or its address changed). Pick one below; until then Mika won’t generate videos.</string>
     <string name="video_duration_range" translatable="false">%1$d–%2$d</string>
     <string name="tool_video_generate">Generate video</string>
+    <string name="model_fallback_view_list">List</string>
+    <string name="model_fallback_view_flow">Flow</string>
+    <string name="model_fallback_arrow_hint">On limit or error</string>
+    <string name="model_fallback_move_up">Move up</string>
+    <string name="model_fallback_move_down">Move down</string>
+    <string name="model_fallback_edge_short">on limit</string>
+    <string name="model_fallback_flow_reset">Reset</string>
+    <string name="model_fallback_flow_hint">Drag to pan · Pinch to zoom · Tap node to edit</string>
+    <string name="model_fallback_move_title">Reorder backup?</string>
+    <string name="model_fallback_move_body">Move %1$s (Backup #%2$d) %3$s %4$s (Backup #%5$d)? It will become Backup #%5$d.</string>
+    <string name="model_fallback_move_before">before</string>
+    <string name="model_fallback_move_after">after</string>
+    <string name="model_fallback_move_confirm">Move</string>
 </resources>

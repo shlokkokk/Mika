@@ -22,6 +22,7 @@ import com.wangzan101.mika.settings.ensureConfigId
 import com.wangzan101.mika.settings.isMainModel
 import com.wangzan101.mika.settings.markTyped
 import com.wangzan101.mika.settings.markVerified
+import com.wangzan101.mika.settings.moveFallback
 import com.wangzan101.mika.settings.saveGroup
 import com.wangzan101.mika.settings.setDailyTokenBudget
 import com.wangzan101.mika.settings.setFallback
@@ -140,6 +141,10 @@ internal fun ModelSetupViewModel.listed(p: Provider, model: String): Boolean = p
 /** 备援里手填的模型名:先试调用一次(见 [verifyTyped]),通了才设上;没通过这一位不动。 */
 fun ModelSetupViewModel.pickFallbackManual(role: ModelRole, slot: Int, providerId: String, model: String, onPicked: () -> Unit = {}) =
     saveFallback(role, slot, providerId, model, onPicked) { p, name -> verifyTyped(p, name, role) }
+
+fun ModelSetupViewModel.moveFallback(role: ModelRole, fromIndex: Int, toIndex: Int) {
+    if (store.moveFallback(role, fromIndex, toIndex)) sync()
+}
 
 internal fun ModelSetupViewModel.saveFallback(
     role: ModelRole, slot: Int, providerId: String, model: String, onPicked: () -> Unit,

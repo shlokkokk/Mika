@@ -107,6 +107,35 @@ fun ProviderStore.setFallback(role: ModelRole, slot: Int, configId: String?): Bo
 /** 保持旧方法签名完全兼容 */
 fun ProviderStore.setMainFallback(slot: Int, configId: String?): Boolean = synchronized(this) { setFallback(ModelRole.Main, slot, configId) }
 
+/** 在备援链内部把 [fromIndex] 移动到 [toIndex]（原地调整顺序，不删除其它位）。 */
+fun ProviderStore.moveFallback(role: ModelRole, fromIndex: Int, toIndex: Int): Boolean {
+    return synchronized(this) {
+        val current = _roles.value.fallbacks(role).toMutableList()
+        if (fromIndex !in current.indices || toIndex !in current.indices) return false
+        if (fromIndex == toIndex) return true
+        val item = current.removeAt(fromIndex)
+        current.add(toIndex, item)
+        _roles.value = _roles.value.withFallbacks(role, current)
+        writeConfig()
+        return true
+    }
+}
+
+/** 原地交换备援链上的两个位置。 */
+fun ProviderStore.swapFallback(role: ModelRole, slotA: Int, slotB: Int): Boolean {
+    return synchronized(this) {
+        val current = _roles.value.fallbacks(role).toMutableList()
+        if (slotA !in current.indices || slotB !in current.indices) return false
+        if (slotA == slotB) return true
+        val tmp = current[slotA]
+        current[slotA] = current[slotB]
+        current[slotB] = tmp
+        _roles.value = _roles.value.withFallbacks(role, current)
+        writeConfig()
+        return true
+    }
+}
+
 /** 这个组;不存在为 null。 */
 fun ProviderStore.group(id: String): ModelGroup? = _groups.value.firstOrNull { it.id == id }
 

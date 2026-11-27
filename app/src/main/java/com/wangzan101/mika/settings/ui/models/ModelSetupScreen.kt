@@ -164,6 +164,7 @@ fun ModelSetupScreen(
         pickFallback = { pickingFallbackRole = ModelRole.Main; pickingFallbackSlot = it },
         pickRoleFallback = { r, s -> pickingFallbackRole = r; pickingFallbackSlot = s },
         clearFallback = vm::clearFallback,
+        moveFallback = vm::moveFallback,
         openProviders = { showProviders = true },
         openGroups = { groupsOpen = true },
         next = onDone, openSpeech = onOpenSpeech,
@@ -391,6 +392,7 @@ class ModelSetupActions(
     val pickFallback: (Int) -> Unit = {},
     val pickRoleFallback: (ModelRole, Int) -> Unit = { _, _ -> },
     val clearFallback: (ModelRole, Int) -> Unit = { _, _ -> },
+    val moveFallback: (ModelRole, Int, Int) -> Unit = { _, _, _ -> },
     /** 打开「服务商」页(已连接的服务商 + 添加表单)。 */
     val openProviders: () -> Unit = {},
     /** 打开「语音转文字」的选择页;为 null 时不显示这张卡(上手流程)。 */
@@ -500,9 +502,9 @@ fun ModelSetupContent(
                                 first = true, onClick = openDecision) { RowChevron() }
                         }
                     }
-                    FallbackSection(ui, ModelRole.Main, actions.pickRoleFallback, actions.clearFallback)
-                    FallbackSection(ui, ModelRole.Vision, actions.pickRoleFallback, actions.clearFallback)
-                    FallbackSection(ui, ModelRole.Light, actions.pickRoleFallback, actions.clearFallback)
+                    FallbackSection(ui, ModelRole.Main, actions.pickRoleFallback, actions.clearFallback, actions.moveFallback)
+                    FallbackSection(ui, ModelRole.Vision, actions.pickRoleFallback, actions.clearFallback, actions.moveFallback)
+                    FallbackSection(ui, ModelRole.Light, actions.pickRoleFallback, actions.clearFallback, actions.moveFallback)
                 }
                 Spacer(Modifier.height(16.dp))
             }

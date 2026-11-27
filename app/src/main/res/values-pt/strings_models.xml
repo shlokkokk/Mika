@@ -348,4 +348,17 @@
     <string name="video_no_compatible">Nenhum dos seus serviços de modelos consegue gerar vídeos. Adicione primeiro um que consiga: %1$s.</string>
     <string name="video_choice_stale">O serviço que você escolheu já não consegue gerar vídeos (foi removido ou o endereço mudou). Escolha outro abaixo; até lá, a Mika não vai gerar vídeos.</string>
     <string name="tool_video_generate">Gerar vídeo</string>
+    <string name="model_fallback_view_list">Lista</string>
+    <string name="model_fallback_view_flow">Fluxo</string>
+    <string name="model_fallback_arrow_hint">Em limite ou erro</string>
+    <string name="model_fallback_move_up">Mover para cima</string>
+    <string name="model_fallback_move_down">Mover para baixo</string>
+    <string name="model_fallback_edge_short">no limite</string>
+    <string name="model_fallback_flow_reset">Redefinir</string>
+    <string name="model_fallback_flow_hint">Arraste para mover · Pince para zoom · Toque para editar</string>
+    <string name="model_fallback_move_title">Reordenar backup?</string>
+    <string name="model_fallback_move_body">Mover %1$s (Backup #%2$d) %3$s %4$s (Backup #%5$d)? Ele passará a ser o Backup #%5$d.</string>
+    <string name="model_fallback_move_before">antes de</string>
+    <string name="model_fallback_move_after">depois de</string>
+    <string name="model_fallback_move_confirm">Mover</string>
 </resources>

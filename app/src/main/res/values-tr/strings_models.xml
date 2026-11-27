@@ -342,4 +342,17 @@
     <string name="video_no_providers">Önce bir model hizmeti ekleyin (video aynı hizmeti ve anahtarı kullanır).</string>
     <string name="video_provider">Hizmet</string>
     <string name="video_resolution">Çözünürlük</string>
+    <string name="model_fallback_view_list">Liste</string>
+    <string name="model_fallback_view_flow">Akış</string>
+    <string name="model_fallback_arrow_hint">Limit veya hata durumunda</string>
+    <string name="model_fallback_move_up">Yukarı taşı</string>
+    <string name="model_fallback_move_down">Aşağı taşı</string>
+    <string name="model_fallback_edge_short">limitte</string>
+    <string name="model_fallback_flow_reset">Sıfırla</string>
+    <string name="model_fallback_flow_hint">Kaydırmak için sürükleyin · Yakınlaştırın · Düzenlemek için dokunun</string>
+    <string name="model_fallback_move_title">Yedek sırası değiştirilsin mi?</string>
+    <string name="model_fallback_move_body">%1$s (Yedek #%2$d) modelini %4$s (Yedek #%5$d) %3$s taşınsın mı? Yeni konumu Yedek #%5$d olacak.</string>
+    <string name="model_fallback_move_before">önüne</string>
+    <string name="model_fallback_move_after">arkasına</string>
+    <string name="model_fallback_move_confirm">Taşı</string>
 </resources>
