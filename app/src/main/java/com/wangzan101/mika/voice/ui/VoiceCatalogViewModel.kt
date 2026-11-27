@@ -258,7 +258,9 @@ class VoiceCatalogViewModel(
                                         ProbeResult.Failed(
                                             VoiceModelError.Protocol(
                                                 com.wangzan101.mika.voice.model.VoiceErrorCategory.SYSTEM_UNAVAILABLE,
-                                                "No speech detected",
+                                                runCatching {
+                                                    com.wangzan101.mika.i18n.tr(com.wangzan101.mika.R.string.voice_catalog_no_speech)
+                                                }.getOrElse { "No speech detected" },
                                             ),
                                         ),
                                     )
@@ -308,7 +310,9 @@ class VoiceCatalogViewModel(
                                     ProbeResult.Failed(
                                         VoiceModelError.Protocol(
                                             com.wangzan101.mika.voice.model.VoiceErrorCategory.SYSTEM_UNAVAILABLE,
-                                            "No speech detected",
+                                            runCatching {
+                                                com.wangzan101.mika.i18n.tr(com.wangzan101.mika.R.string.voice_catalog_no_speech)
+                                            }.getOrElse { "No speech detected" },
                                         ),
                                     ),
                                 )

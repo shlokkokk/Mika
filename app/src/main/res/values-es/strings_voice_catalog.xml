@@ -43,6 +43,7 @@
     <string name="voice_catalog_unverified">Sin verificar</string>
     <string name="voice_catalog_testing">Probando…</string>
     <string name="voice_catalog_listening">Escuchando, di algo…</string>
+    <string name="voice_catalog_no_speech">No se detectó voz</string>
     <string name="voice_catalog_incomplete">Completa primero los datos de la cuenta.</string>
     <string name="voice_catalog_protocol_stt_android_system">Sistema de Android</string>
     <string name="voice_catalog_protocol_stt_audio_transcriptions">Transcripciones de audio</string>

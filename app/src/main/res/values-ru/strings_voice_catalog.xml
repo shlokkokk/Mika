@@ -43,6 +43,7 @@
     <string name="voice_catalog_unverified">Не проверено</string>
     <string name="voice_catalog_testing">Проверка…</string>
     <string name="voice_catalog_listening">Слушаю, скажите что-нибудь…</string>
+    <string name="voice_catalog_no_speech">Речь не обнаружена</string>
     <string name="voice_catalog_incomplete">Сначала заполните данные аккаунта.</string>
     <string name="voice_catalog_protocol_stt_android_system">Система Android</string>
     <string name="voice_catalog_protocol_stt_audio_transcriptions">Расшифровка аудио</string>

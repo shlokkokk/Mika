@@ -43,6 +43,7 @@
     <string name="voice_catalog_unverified">검증 안 됨</string>
     <string name="voice_catalog_testing">테스트 중…</string>
     <string name="voice_catalog_listening">듣는 중입니다. 말씀해 주세요…</string>
+    <string name="voice_catalog_no_speech">음성이 감지되지 않았습니다</string>
     <string name="voice_catalog_incomplete">먼저 계정 정보를 입력하세요</string>
     <string name="voice_catalog_protocol_stt_android_system">Android 시스템</string>
     <string name="voice_catalog_protocol_stt_audio_transcriptions">오디오 전사</string>
