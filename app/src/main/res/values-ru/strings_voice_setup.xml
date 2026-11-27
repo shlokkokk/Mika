@@ -93,4 +93,9 @@
     <string name="calls_audio_unchecked">Не проверено</string>
     <string name="voice_stt_footer">Встроенное распознавание телефона бесплатно. Онлайн-варианты берутся из ваших голосовых сервисов; скажите фразу, чтобы проверить перед выбором.</string>
     <string name="voice_audition">Прослушать %1$s</string>
+    <string name="voice_fallback_footer_stt">Если голосовой ввод упёрся в лимит, сервис перегружен или не отвечает вовремя, Mika по порядку отправляет ту же запись следующей модели. Резервными могут быть только модели, которые распознают речь после того, как вы закончили говорить.</string>
+    <string name="voice_fallback_footer_tts">Если чтение вслух упёрлось в лимит, сервис перегружен или не отвечает вовремя, Mika по порядку пробует следующую модель до начала воспроизведения. Резервные модели используют свой голос по умолчанию.</string>
+    <string name="voice_fallback_pick_title">Резерв для: %1$s</string>
+    <string name="voice_fallback_none">Пока нет другой модели, которая может быть резервной</string>
+    <string name="voice_fallback_pick_option">%1$s · %2$s</string>
 </resources>

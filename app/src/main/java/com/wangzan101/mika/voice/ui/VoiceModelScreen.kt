@@ -276,6 +276,7 @@ private fun MigratedVoiceModelContent(
                 onTest = { choice -> voiceVm.tryChoice(choice, tr(R.string.voice_try_sample)) },
             )
         }
+        VoiceFallbackSection(VoiceCapability.TTS, catalog, providers, voiceVm)
         onOpenServices?.let { VoiceMoreServices(it) }
 
         selectedModel?.let { model ->

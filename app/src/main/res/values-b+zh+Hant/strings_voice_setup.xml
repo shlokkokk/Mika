@@ -93,4 +93,9 @@
     <string name="calls_audio_unchecked">未確認</string>
     <string name="voice_stt_footer">手機內建的辨識免費；線上的選項來自語音服務，選之前可以先說一句試試。</string>
     <string name="voice_audition">試聽 %1$s</string>
+    <string name="voice_fallback_footer_stt">語音輸入被限流、服務過載或遲遲沒有回應時，Mika 會把同一段錄音依序交給下一個模型。只有說完再轉寫的模型能當備援。</string>
+    <string name="voice_fallback_footer_tts">朗讀被限流、服務過載或遲遲沒有回應時，Mika 會在開始播放前依序換下一個模型。備援用它自己的預設音色。</string>
+    <string name="voice_fallback_pick_title">%1$s的備援</string>
+    <string name="voice_fallback_none">還沒有別的模型能當備援</string>
+    <string name="voice_fallback_pick_option">%1$s · %2$s</string>
 </resources>

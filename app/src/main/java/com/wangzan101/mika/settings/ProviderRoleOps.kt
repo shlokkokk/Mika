@@ -109,9 +109,9 @@ fun ProviderStore.setMainFallback(slot: Int, configId: String?): Boolean = synch
 
 /**
  * 备援链里第 [from] 位挪到第 [to] 位,其余按原来的先后排;越界为 null,原地不动返回原链。
- * 纯函数,[ProviderStore.moveFallback] 和界面的上移/下移都按它算。
+ * 纯函数,[ProviderStore.moveFallback]、语音备援链(`VoiceFallbacks.moved`)和界面的上移/下移都按它算。
  */
-internal fun movedFallbacks(chain: List<String>, from: Int, to: Int): List<String>? {
+internal fun <T> movedFallbacks(chain: List<T>, from: Int, to: Int): List<T>? {
     if (from !in chain.indices || to !in chain.indices) return null
     if (from == to) return chain
     return chain.toMutableList().apply { add(to, removeAt(from)) }

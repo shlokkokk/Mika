@@ -93,4 +93,9 @@
     <string name="calls_audio_unchecked">لم يُتحقق</string>
     <string name="voice_stt_footer">التعرّف المدمج في الهاتف مجاني. تأتي الخيارات عبر الإنترنت من خدمات الصوت لديك؛ قل جملة لتجربة أحدها قبل اختياره.</string>
     <string name="voice_audition">استمع إلى %1$s</string>
+    <string name="voice_fallback_footer_stt">إذا تم تقييد الإدخال الصوتي أو كانت الخدمة مثقلة أو لم ترد في الوقت المناسب، يرسل Mika التسجيل نفسه إلى النموذج التالي بالترتيب. لا يمكن أن تكون احتياطية إلا النماذج التي تنسخ بعد انتهائك من الكلام.</string>
+    <string name="voice_fallback_footer_tts">إذا تم تقييد القراءة بصوت عالٍ أو كانت الخدمة مثقلة أو لم ترد في الوقت المناسب، يجرّب Mika النموذج التالي بالترتيب قبل بدء التشغيل. تستخدم النماذج الاحتياطية صوتها الافتراضي.</string>
+    <string name="voice_fallback_pick_title">احتياطي لـ %1$s</string>
+    <string name="voice_fallback_none">لا يوجد نموذج آخر يمكن أن يكون احتياطيًا بعد</string>
+    <string name="voice_fallback_pick_option">%1$s · %2$s</string>
 </resources>

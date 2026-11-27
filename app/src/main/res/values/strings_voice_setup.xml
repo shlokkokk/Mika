@@ -93,4 +93,9 @@
     <string name="calls_audio_unchecked">Not checked</string>
     <string name="voice_stt_footer">The phone\'s own recognition is free. Online options come from your voice services; say a sentence to try one before you choose it.</string>
     <string name="voice_audition">Listen to %1$s</string>
+    <string name="voice_fallback_footer_stt">If voice input is rate-limited, the service is overloaded or it doesn\'t answer in time, Mika sends the same recording to the next model in order. Only models that transcribe after you finish speaking can be backups.</string>
+    <string name="voice_fallback_footer_tts">If reading aloud is rate-limited, the service is overloaded or it doesn\'t answer in time, Mika tries the next model in order before playback starts. Backups use their own default voice.</string>
+    <string name="voice_fallback_pick_title">Backup for %1$s</string>
+    <string name="voice_fallback_none">No other model can be a backup yet</string>
+    <string name="voice_fallback_pick_option">%1$s · %2$s</string>
 </resources>

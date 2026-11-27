@@ -215,7 +215,7 @@ class ProviderStoreTest {
         assertNull(movedFallbacks(chain, 0, -1))
         assertNull(movedFallbacks(chain, 2, 3))
         assertNull(movedFallbacks(chain, -1, 0))
-        assertNull(movedFallbacks(emptyList(), 0, 0))
+        assertNull(movedFallbacks(emptyList<String>(), 0, 0))
     }
 
     @Test fun moveFallbackPersistsAndOnlyTouchesThatRole() {

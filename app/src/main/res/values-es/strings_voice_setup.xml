@@ -93,4 +93,9 @@
     <string name="calls_audio_unchecked">Sin comprobar</string>
     <string name="voice_stt_footer">El reconocimiento del propio teléfono es gratis. Las opciones en línea vienen de tus servicios de voz; di una frase para probar una antes de elegirla.</string>
     <string name="voice_audition">Escuchar %1$s</string>
+    <string name="voice_fallback_footer_stt">Si la entrada de voz tiene límite de uso, el servicio está saturado o no responde a tiempo, Mika envía la misma grabación al siguiente modelo en orden. Solo los modelos que transcriben cuando terminas de hablar pueden ser de respaldo.</string>
+    <string name="voice_fallback_footer_tts">Si la lectura en voz alta tiene límite de uso, el servicio está saturado o no responde a tiempo, Mika prueba el siguiente modelo en orden antes de empezar a reproducir. Los respaldos usan su propia voz predeterminada.</string>
+    <string name="voice_fallback_pick_title">Respaldo de %1$s</string>
+    <string name="voice_fallback_none">Todavía no hay otro modelo que pueda ser de respaldo</string>
+    <string name="voice_fallback_pick_option">%1$s · %2$s</string>
 </resources>

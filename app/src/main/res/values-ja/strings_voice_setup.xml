@@ -93,4 +93,9 @@
     <string name="calls_audio_unchecked">未確認</string>
     <string name="voice_stt_footer">端末内蔵の認識は無料です。オンラインの選択肢は音声サービスから来ます。選ぶ前に一言話して試せます。</string>
     <string name="voice_audition">%1$s を試聴</string>
+    <string name="voice_fallback_footer_stt">音声入力がレート制限された、サービスが過負荷、または時間内に応答がない場合、Mika は同じ録音を順番に次のモデルへ送ります。話し終えてから文字起こしするモデルだけがバックアップになれます。</string>
+    <string name="voice_fallback_footer_tts">読み上げがレート制限された、サービスが過負荷、または時間内に応答がない場合、Mika は再生が始まる前に順番に次のモデルを試します。バックアップはそれぞれのデフォルトの声を使います。</string>
+    <string name="voice_fallback_pick_title">%1$s のバックアップ</string>
+    <string name="voice_fallback_none">バックアップにできるほかのモデルはまだありません</string>
+    <string name="voice_fallback_pick_option">%1$s · %2$s</string>
 </resources>

@@ -93,4 +93,9 @@
     <string name="calls_audio_unchecked">Kontrol edilmedi</string>
     <string name="voice_stt_footer">Telefonun kendi tanıması ücretsizdir. Çevrim içi seçenekler ses hizmetlerinizden gelir; seçmeden önce bir cümle söyleyerek deneyin.</string>
     <string name="voice_audition">%1$s sesini dinle</string>
+    <string name="voice_fallback_footer_stt">Sesle giriş hız sınırına takılırsa, hizmet aşırı yüklüyse ya da zamanında yanıt vermezse Mika aynı kaydı sırayla bir sonraki modele gönderir. Yalnızca konuşmanız bittikten sonra yazıya döken modeller yedek olabilir.</string>
+    <string name="voice_fallback_footer_tts">Sesli okuma hız sınırına takılırsa, hizmet aşırı yüklüyse ya da zamanında yanıt vermezse Mika oynatma başlamadan önce sırayla bir sonraki modeli dener. Yedekler kendi varsayılan seslerini kullanır.</string>
+    <string name="voice_fallback_pick_title">%1$s için yedek</string>
+    <string name="voice_fallback_none">Henüz yedek olabilecek başka bir model yok</string>
+    <string name="voice_fallback_pick_option">%1$s · %2$s</string>
 </resources>

@@ -580,7 +580,7 @@ class TaskRun(
             val protocol = voiceModels.tts.requireModel(ref).model.tts?.protocol
                 ?.let { it.settingsProtocol() } ?: return null
             val caps = audioSettings.capabilities(protocol)
-            val model = voiceModels.tts.createTts(service, ref, caps)
+            val model = voiceModels.tts.createSpeaker(service, ref, caps)
             buildAudioPort(model, caps, state.voice, state.speed)
         } catch (_: com.wangzan101.mika.voice.model.VoiceModelError) {
             null

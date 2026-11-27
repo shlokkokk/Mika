@@ -69,9 +69,33 @@ class TtsSelectionController(private val environment: VoiceModelEnvironment) {
         return environment.accountResolver.resolve(service, model)
     }
 
+    /** 只建 [ref] 这一个模型(试听、测试用它:试的是哪个就是哪个,不悄悄换别的)。 */
     fun createTts(context: Context, ref: VoiceModelRef, capabilities: TtsCapabilities): TtsModel {
         val model = requireModel(ref)
         return environment.registry.tts(model).create(context, model, capabilities)
+    }
+
+    /**
+     * 真正朗读时用:[backups](一般是 [backupsFor])不为空、或借用的对话账号有多把密钥时,包成 [FallbackTtsModel]
+     * 按备援链和密钥池依次试;否则和 [createTts] 一样。链头没配好照常抛。
+     */
+    fun createSpeaker(
+        context: Context,
+        ref: VoiceModelRef,
+        capabilities: TtsCapabilities,
+        backups: List<VoiceModelRef> = backupsFor(ref),
+    ): TtsModel {
+        val model = requireModel(ref)
+        val chain = listOf(ref) + backups.filter { it != ref }.take(VoiceFallbacks.MAX)
+        val create = { resolved: ResolvedVoiceModel -> environment.registry.tts(resolved).create(context, resolved, capabilities) }
+        if (chain.size == 1 && !environment.accountResolver.pooled(model)) return create(model)
+        return FallbackTtsModel.of(chain, model, ::requireModel, environment.accountResolver, create)
+    }
+
+    /** [ref] 的备援链:它是朗读选中的那个模型时是 [VoiceSelections.ttsFallbacks],否则(比如 AI 电话自己选的朗读模型)没有。 */
+    fun backupsFor(ref: VoiceModelRef): List<VoiceModelRef> {
+        val selections = environment.catalog.state.value.selections
+        return if (selections.tts == ref) selections.ttsFallbacks else emptyList()
     }
 
     companion object {
