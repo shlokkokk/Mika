@@ -19,6 +19,8 @@ import com.wangzan101.mika.ui.components.ListRow
 import com.wangzan101.mika.ui.components.RowChevron
 import com.wangzan101.mika.ui.components.RowValue
 import com.wangzan101.mika.ui.components.SheetAction
+import com.wangzan101.mika.ui.components.SheetTrailing
+import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.voice.SystemTtsDiscovery
 import com.wangzan101.mika.voice.SystemTtsEngineInfo
 import com.wangzan101.mika.voice.SystemTtsVoiceInfo
@@ -50,9 +52,16 @@ internal fun engineLabels(engines: List<SystemTtsEngineInfo>): Map<String, Strin
 /**
  * 内置系统朗读的「引擎」「音色」两行。引擎列手机上登记的语音合成引擎,音色列所选引擎已装好的音色,
  * 都在后台查,查不到时只给「默认」。行和面板只认公开接口给的名字,不对任何厂商的引擎特殊处理。
+ * 给了 [onAudition] 时音色面板每项带试听按钮;播放归调用方,面板关掉时调 [onVoicesClosed] 让它停下。
  */
 @Composable
-internal fun SystemTtsRows(voiceModels: VoiceModelEnvironment, settings: VoiceSettings, onChanged: () -> Unit) {
+internal fun SystemTtsRows(
+    voiceModels: VoiceModelEnvironment,
+    settings: VoiceSettings,
+    onChanged: () -> Unit,
+    onAudition: ((SystemTtsVoiceInfo) -> Unit)? = null,
+    onVoicesClosed: () -> Unit = {},
+) {
     val context = LocalContext.current
     val state by settings.state.collectAsState()
     val catalog by voiceModels.catalog.state.collectAsState()
@@ -91,15 +100,21 @@ internal fun SystemTtsRows(voiceModels: VoiceModelEnvironment, settings: VoiceSe
         RowChevron()
     }
     if (voicesOpen) {
-        val actions = listOf(SheetAction(tr(R.string.voice_voice_default)) {
+        val actions = listOf(SheetAction(tr(R.string.voice_voice_default), searchable = false) {
             settings.setVoice("")
             onChanged()
         }) + voices.orEmpty().map { voice ->
-            SheetAction(voice.displayName) {
+            SheetAction(
+                voice.displayName,
+                trailing = onAudition?.let { play -> SheetTrailing(MikaIcons.Sound, tr(R.string.voice_audition, voice.displayName)) { play(voice) } },
+            ) {
                 settings.setVoice(voice.name)
                 onChanged()
             }
         }
-        ActionSheet(tr(R.string.voice_voice), actions) { voicesOpen = false }
+        ActionSheet(tr(R.string.voice_voice), actions, searchHint = tr(R.string.search)) {
+            voicesOpen = false
+            onVoicesClosed()
+        }
     }
 }

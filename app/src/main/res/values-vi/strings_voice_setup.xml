@@ -92,4 +92,5 @@
     <string name="calls_audio_checked">Đã kiểm tra</string>
     <string name="calls_audio_unchecked">Chưa kiểm tra</string>
     <string name="voice_stt_footer">Nhận dạng của chính điện thoại là miễn phí. Các tùy chọn trực tuyến đến từ dịch vụ giọng nói của bạn; hãy nói một câu để thử một tùy chọn trước khi chọn nó.</string>
+    <string name="voice_audition">Nghe thử %1$s</string>
 </resources>
