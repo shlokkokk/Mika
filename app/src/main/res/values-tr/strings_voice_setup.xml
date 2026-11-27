@@ -31,6 +31,8 @@
     <string name="voice_settings_of">%1$s ayarları</string>
     <string name="voice_voice">Ses tonu</string>
     <string name="voice_voice_default">Varsayılan</string>
+    <string name="voice_tts_engine">TTS motoru</string>
+    <string name="voice_engine_default">Sistem varsayılanı</string>
     <string name="realtime_lead">Mika ile konuşun ve istediğiniz an sözünü kesin. Yapay zekâ telefon aramaları kendi seçimini yapmadıkça aynı seçimi kullanır.</string>
     <string name="realtime_empty">Henüz sesli arama modeli yok</string>
     <string name="realtime_empty_note">Aşağıdan birini seçin veya arama destekleyen bir ses hizmeti bağlayın.</string>
@@ -59,7 +61,6 @@
     <string name="voice_region_beijing">Pekin</string>
     <string name="voice_region_singapore">Singapur</string>
     <string name="voice_compat_lead">OpenAI ses API\'lerini destekleyen hizmetler için. İstediğiniz modelleri doldurun, diğerlerini boş bırakın.</string>
-    <string name="voice_compat_models">Modeller</string>
     <string name="voice_compat_models_note">Hizmetin sunmadığı modeli boş bırakın.</string>
     <string name="voice_selfhosted_lead">Kendi ağınızdaki akışlı tanıma sunucusu. Adresini girin; hesap gerekmez.</string>
     <string name="voice_field_api_key">API anahtarı</string>

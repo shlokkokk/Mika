@@ -312,6 +312,35 @@ fun InputRow(
     }
 }
 
+/**
+ * 卡片里和 [InputRow] 排成一列的选择行:左边同样宽的标题,现在选的值从输入框里文字的位置起排,行尾一个小箭头;
+ * 点了由调用方弹出选择。同一张卡片里既有输入行又有选择行时用它,两种行的内容上下对齐。
+ */
+@Composable
+fun PickRow(
+    label: String,
+    value: String,
+    onClick: () -> Unit,
+    first: Boolean = false,
+    labelWidth: Dp = 84.dp,
+    modifier: Modifier = Modifier,
+) {
+    val c = MikaTheme.colors
+    Row(
+        modifier.fillMaxWidth().topHairline(first, TextStartPlain, c.hair)
+            .clickable(role = Role.Button, onClick = onClick)
+            .heightIn(min = MikaSize.RowMin).padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, Modifier.width(labelWidth), style = MikaType.Body, color = c.ink)
+        Text(
+            value, Modifier.weight(1f), style = MikaType.Body, color = c.ink,
+            maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+        )
+        RowChevron()
+    }
+}
+
 /** 输入框末尾的叉:点一下清空。和搜索框的清空按钮同一套大小和颜色,只在有内容时由调用方放出来。 */
 @Composable
 fun FieldClearButton(description: String, onClick: () -> Unit, modifier: Modifier = Modifier) {

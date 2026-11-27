@@ -49,10 +49,14 @@ class SttSelectionController(private val environment: VoiceModelEnvironment) {
     fun start(context: Context, ref: VoiceModelRef, language: String?, hooks: SttHooks): SpeechSession {
         val model = requireModel(ref)
         val binding = model.model.stt ?: throw VoiceModelError.Unsupported(VoiceCapability.STT)
-        val configuredLanguage = binding.language.takeIf {
-            it.isNotBlank() && binding.protocol in EXPLICIT_ASR_LANGUAGE_PROTOCOLS
+        val spoken = when (binding.protocol) {
+            // 语言是这个服务自己的设置(接入时在表单里选),不跟界面语言走;空 = 自动,往下传空串就是不指定
+            in SERVICE_LANGUAGE_PROTOCOLS -> binding.language
+            // 还没有选语言的地方:设过的(旧设置迁移来的)用设的,没设的跟调用方给的语言
+            in EXPLICIT_ASR_LANGUAGE_PROTOCOLS -> binding.language.ifBlank { null } ?: language
+            else -> language
         }
-        return environment.registry.stt(model).start(context, model, configuredLanguage ?: language, hooks)
+        return environment.registry.stt(model).start(context, model, spoken, hooks)
     }
 
     /** Only batch protocols can transcribe an existing file; system and streaming selections return null. */
@@ -78,9 +82,10 @@ class SttSelectionController(private val environment: VoiceModelEnvironment) {
             SttProtocol.ChatInputAudio,
             SttProtocol.GeminiInline,
         )
-        private val EXPLICIT_ASR_LANGUAGE_PROTOCOLS = setOf(
-            SttProtocol.FunAsrStreaming,
-            SttProtocol.BailianStreaming,
-        )
+        /** The service's own language setting decides, blank meaning automatic; the app language is never used. */
+        private val SERVICE_LANGUAGE_PROTOCOLS = setOf(SttProtocol.FunAsrStreaming)
+
+        /** A language set on the binding wins; blank follows the caller's language. */
+        private val EXPLICIT_ASR_LANGUAGE_PROTOCOLS = setOf(SttProtocol.BailianStreaming)
     }
 }

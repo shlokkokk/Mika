@@ -245,7 +245,7 @@ private fun MigratedVoiceModelContent(
             VoiceOptionList(
                 choices, selection, tr(R.string.voice_try_tts), voiceVm,
                 onPick = { choice ->
-                    tts.select(voiceVm.ensureInCatalog(choice))
+                    selectReadAloud(voiceModels, settings, voiceVm.ensureInCatalog(choice))
                     test = null
                 },
                 onTest = { choice -> voiceVm.tryChoice(choice, tr(R.string.voice_try_sample)) },
@@ -255,22 +255,28 @@ private fun MigratedVoiceModelContent(
 
         selectedModel?.let { model ->
             GroupCard {
-                val voices = VoiceVoices.tts(model)
-                val pickable = voices.isNotEmpty() || model.tts?.protocol.let { it != null && it != com.wangzan101.mika.voice.model.TtsProtocol.AndroidSystem }
-                if (pickable) {
-                    ListRow(null, tr(R.string.voice_voice), first = true, onClick = { voicesOpen = true },
-                        modifier = Modifier.testTag("tts-voice")) {
-                        RowValue(state.voice.ifBlank { tr(R.string.voice_voice_default) }.let { VoiceVoices.label(model, it) })
-                        RowChevron()
+                val pickable = if (model.tts?.protocol == com.wangzan101.mika.voice.model.TtsProtocol.AndroidSystem) {
+                    SystemTtsRows(voiceModels, settings, onChanged = { test = null })
+                    true
+                } else {
+                    val voices = VoiceVoices.tts(model)
+                    val pickable = voices.isNotEmpty() || model.tts != null
+                    if (pickable) {
+                        ListRow(null, tr(R.string.voice_voice), first = true, onClick = { voicesOpen = true },
+                            modifier = Modifier.testTag("tts-voice")) {
+                            RowValue(state.voice.ifBlank { tr(R.string.voice_voice_default) }.let { VoiceVoices.label(model, it) })
+                            RowChevron()
+                        }
                     }
-                }
-                if (voicesOpen) {
-                    VoicePickerSheet(
-                        VoiceVoices.withCurrent(voices, state.voice),
-                        onPick = { settings.setVoice(it); test = null },
-                        onDismiss = { voicesOpen = false },
-                        model = model,
-                    )
+                    if (voicesOpen) {
+                        VoicePickerSheet(
+                            VoiceVoices.withCurrent(voices, state.voice),
+                            onPick = { settings.setVoice(it); test = null },
+                            onDismiss = { voicesOpen = false },
+                            model = model,
+                        )
+                    }
+                    pickable
                 }
                 InputRow(
                     tr(R.string.voice_speed), speed, first = !pickable,

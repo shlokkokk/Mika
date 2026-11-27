@@ -121,6 +121,11 @@ data class TtsBinding(
     val voices: List<String> = emptyList(),
     /** Readable names for opaque voice ids (fetched from the vendor), keyed by id. */
     val voiceNames: Map<String, String> = emptyMap(),
+    /**
+     * Package of the device text-to-speech engine ([TtsProtocol.AndroidSystem] only); empty uses the device's
+     * default engine. Engine choice is model configuration, the voice the user picks stays a usage preference.
+     */
+    val engine: String = "",
 )
 
 @Serializable

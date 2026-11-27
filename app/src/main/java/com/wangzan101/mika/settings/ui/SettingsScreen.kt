@@ -4,6 +4,10 @@ import android.app.ActivityManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -103,7 +107,7 @@ import com.wangzan101.mika.workflow.ui.WorkflowsScreen
 private const val SHIZUKU_SETUP_GUIDE_URL = "https://shizuku.rikka.app/guide/setup/"
 
 /** 设置里能进入的子页面;[Home] 是设置首页,[Advanced] 集中放置连接、维护和工程能力。 */
-private enum class SettingsPage { Home, Advanced, AppAccess, SmsLogin, PhoneOps, Calls, Wechat, DuringWork, AppPace, Capsule, Language, Notifications, Recommendations, Checklists, Workflows, Sandbox, Plugins, EnvVars, Recovery, SelfCheck, ComputerAccess, McpServers, Root, Developer, DeviceDirectories, RunStats, Proactive, Backup, Pause }
+internal enum class SettingsPage { Home, Advanced, AppAccess, SmsLogin, PhoneOps, Calls, Wechat, DuringWork, AppPace, Capsule, Language, Notifications, Recommendations, Checklists, Workflows, Sandbox, Plugins, EnvVars, Recovery, SelfCheck, ComputerAccess, McpServers, Root, Developer, DeviceDirectories, RunStats, Proactive, Backup, Pause }
 
 /**
  * 设置页:总状态卡 + 常用 / 我的数据 / 其他。高级与其他只增加一层,各子页返回来时的页面。
@@ -269,6 +273,32 @@ fun SettingsScreen(
 
     if (page != SettingsPage.Home) BackHandler { back() }
 
+    // 设置搜索:搜索框的字记在这里,从结果点进子页再回来还在;能力条件和下面各入口的显示条件一致
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    val searchAvailable = buildSet {
+        if (status.sdkInt >= Prerequisites.MIN_SDK) add(SettingsRequirement.Recovery)
+        if (sandboxStatus !is SandboxStatus.Unsupported) add(SettingsRequirement.Sandbox)
+        if (mcpServers != null) add(SettingsRequirement.McpServers)
+        if (rootState.suPresent) add(SettingsRequirement.Root)
+        if (showDeveloper) add(SettingsRequirement.Developer)
+        if (personalStart) add(SettingsRequirement.PersonalStart)
+        if (onOpenPersonas != null) add(SettingsRequirement.Personas)
+        if (onOpenMemory != null) add(SettingsRequirement.Memory)
+    }
+    val openSearchResult: (SettingsDestination) -> Unit = { d ->
+        when (d) {
+            is SettingsDestination.Page -> page = d.page
+            SettingsDestination.Models -> onOpenModels()
+            SettingsDestination.Plans -> onOpenPlans()
+            SettingsDestination.Files -> onOpenFiles()
+            SettingsDestination.Personal -> onOpenPersonal()
+            SettingsDestination.Personas -> onOpenPersonas?.invoke()
+            SettingsDestination.Memory -> onOpenMemory?.invoke()
+            SettingsDestination.AutoArchive -> editingAutoArchive = true
+            SettingsDestination.About -> onOpenAbout()
+        }
+    }
+
     val visiblePage = when {
         !showDeveloper && (page == SettingsPage.Developer || page == SettingsPage.DeviceDirectories || page == SettingsPage.RunStats) -> SettingsPage.Home
         page == SettingsPage.Root && !rootState.suPresent -> SettingsPage.Advanced
@@ -307,6 +337,8 @@ fun SettingsScreen(
             onOpenPersonal = onOpenPersonal,
             onOpenPlans = onOpenPlans,
             versionName = BuildConfig.VERSION_NAME, updateVersion = updateVersion, onOpenAbout = onOpenAbout,
+            searchQuery = searchQuery, onSearchQuery = { searchQuery = it },
+            searchAvailable = searchAvailable, onOpenSearchResult = openSearchResult,
             scrollState = pageScrolls.of(SettingsPage.Home),
         )
         SettingsPage.Advanced -> AdvancedSettingsContent(
@@ -493,7 +525,7 @@ fun SettingsScreen(
 
 /** 不带状态的设置首页,便于测试。首页只列常用入口,高级能力统一从 [onOpenAdvanced] 进入。 */
 @Composable
-fun SettingsContent(
+internal fun SettingsContent(
     status: SystemStatus,
     androidRelease: String,
     /** 当前主模型的名字;没有可用的主模型时为空。 */
@@ -538,11 +570,25 @@ fun SettingsContent(
     /** 自动归档:多久没有新消息的对话自动归档;0 表示关闭。 */
     autoArchiveDays: Int = 0,
     onOpenAutoArchive: () -> Unit = {},
+    /** 顶上搜索框里的字;非空时这一页换成搜索结果,返回键先清空它。状态由切页的一方持有,从结果点进子页再回来还在。 */
+    searchQuery: String = "",
+    onSearchQuery: (String) -> Unit = {},
+    /** 此刻具备的能力:要某种能力的入口(见 [SettingsSearchIndex])在设置里不显示时,搜索里也不出现。 */
+    searchAvailable: Set<SettingsRequirement> = emptySet(),
+    onOpenSearchResult: (SettingsDestination) -> Unit = {},
     /** 这一页的滚动状态;切页的一方给进来,从子页回来才停得住。 */
     scrollState: ScrollState = rememberScrollState(),
 ) {
     val check = Prerequisites.check(status, hasMainModel = mainModel != null)
-    PageScaffold(stringResource(R.string.settings_title), onBack, scrollState = scrollState) {
+    if (searchQuery.isNotEmpty()) BackHandler { onSearchQuery("") }
+    PageScaffold(stringResource(R.string.settings_title), onBack, scrollState = scrollState, viewportModifier = Modifier.imePadding()) {
+        SettingsSearchBar(searchQuery, onSearchQuery)
+        Spacer(Modifier.height(12.dp))
+        if (searchQuery.isNotBlank()) {
+            SettingsSearchResults(searchQuery, remember(searchAvailable) { SettingsSearchIndex.available(searchAvailable) }, onOpenSearchResult)
+            return@PageScaffold
+        }
+
         StatusSummary(check, onProblem)
 
         GroupLabel(stringResource(R.string.settings_model))
