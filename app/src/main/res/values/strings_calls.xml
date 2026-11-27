@@ -162,4 +162,7 @@
     <string name="calls_delete_digit">Delete</string>
     <string name="calls_clear_draft">Clear draft</string>
     <string name="calls_reset_history_filters">Reset filters</string>
+    <string name="calls_default_greeting">Hello, I\'m Mika, an AI phone assistant. Is there anything you\'d like me to pass along?</string>
+    <string name="calls_task_greeting">Hello, I\'m Mika, an AI phone assistant. Is now a good time to talk?</string>
+    <string name="calls_closing_line">Our time is almost up, let\'s wrap up here. Goodbye.</string>
 </resources>

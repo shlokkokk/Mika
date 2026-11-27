@@ -162,4 +162,7 @@
     <string name="calls_delete_digit">حذف</string>
     <string name="calls_clear_draft">پاک کردن پیش‌نویس</string>
     <string name="calls_reset_history_filters">بازنشانی فیلترها</string>
+    <string name="calls_default_greeting">سلام، من میکا، دستیار تلفنی هوش مصنوعی هستم. پیامی هست که بخواهید برسانم؟</string>
+    <string name="calls_task_greeting">سلام، من میکا، دستیار تلفنی هوش مصنوعی هستم. الان وقت مناسبی برای صحبت است؟</string>
+    <string name="calls_closing_line">زمان ما تقریباً به پایان رسیده، همین‌جا تمام می‌کنیم. خداحافظ.</string>
 </resources>

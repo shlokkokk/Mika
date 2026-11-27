@@ -162,4 +162,7 @@
     <string name="calls_delete_digit">Xóa</string>
     <string name="calls_clear_draft">Xóa bản nháp</string>
     <string name="calls_reset_history_filters">Đặt lại bộ lọc</string>
+    <string name="calls_default_greeting">Xin chào, tôi là Mika, trợ lý điện thoại AI. Bạn có muốn tôi chuyển lời gì không?</string>
+    <string name="calls_task_greeting">Xin chào, tôi là Mika, trợ lý điện thoại AI. Bây giờ có tiện nói chuyện không?</string>
+    <string name="calls_closing_line">Thời gian của chúng ta sắp hết rồi, mình kết thúc ở đây nhé. Tạm biệt.</string>
 </resources>

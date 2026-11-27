@@ -37,4 +37,31 @@ class CallFarewellPolicyTest {
             "再见".repeat(60),
         ).forEach { assertFalse(it, CallFarewellPolicy.isExplicitCallerFarewell(it)) }
     }
+
+    @Test fun recognizesMultilingualClosingsAndRejectsNegationsOrQuestions() {
+        listOf(
+            "Goodbye!", "Bye, thank you!", "Okay, thanks, bye bye.", "I'm hanging up now, bye!",
+            "You can hang up now, thank you.", "That's all, see you later!",
+            "Gracias, adiós.", "Au revoir, merci!", "Vielen Dank, auf Wiedersehen!",
+            "Obrigado, tchau!", "Grazie, arrivederci!", "До свидания, спасибо!",
+            "ありがとうございました。失礼します。", "감사합니다. 안녕히 계세요.",
+            "धन्यवाद, अलविदा।", "شكرا، مع السلامة", "Terima kasih, sampai jumpa!",
+            "Teşekkürler, hoşça kalın!", "Cảm ơn, tạm biệt!", "ขอบคุณครับ ลาก่อน",
+        ).forEach { assertTrue(it, CallFarewellPolicy.isExplicitCallerFarewell(it)) }
+
+        listOf(
+            "Goodbye?", "Can I hang up?", "Don't hang up!", "Wait, hold on, bye!",
+            "Bye, one more question", "Okay, thank you.", "Sounds good.",
+            "Ne raccroche pas!", "Nicht auflegen, bitte!", "रुको, फ़ोन मत काटो",
+            "He said goodbye.", "\"Goodbye\"", "'Goodbye'",
+        ).forEach { assertFalse(it, CallFarewellPolicy.isExplicitCallerFarewell(it)) }
+
+        assertTrue(CallFarewellPolicy.isAssistantClosing("Our time is almost up, let's wrap up here. Goodbye."))
+        assertTrue(CallFarewellPolicy.isAssistantClosing("Have a great day!"))
+        assertTrue(CallFarewellPolicy.isAssistantClosing("時間差不多了，那我們先這樣吧"))
+        assertTrue(CallFarewellPolicy.isAssistantClosing("زمان ما تقریباً به پایان رسیده، همین‌جا تمام می‌کنیم. خداحافظ."))
+        assertTrue(CallFarewellPolicy.isAssistantClosing("Bye~"))
+        assertFalse(CallFarewellPolicy.isAssistantClosing("Could you say goodbye?"))
+        assertFalse(CallFarewellPolicy.isExplicitCallerFarewell("x".repeat(5000)))
+    }
 }

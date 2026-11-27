@@ -162,4 +162,7 @@
     <string name="calls_delete_digit">Удалить</string>
     <string name="calls_clear_draft">Очистить черновик</string>
     <string name="calls_reset_history_filters">Сбросить фильтры</string>
+    <string name="calls_default_greeting">Здравствуйте, я Mika, ИИ-помощник для звонков. Что-нибудь передать?</string>
+    <string name="calls_task_greeting">Здравствуйте, я Mika, ИИ-помощник для звонков. Вам сейчас удобно говорить?</string>
+    <string name="calls_closing_line">Наше время подходит к концу, давайте на этом закончим. До свидания.</string>
 </resources>

@@ -136,7 +136,10 @@ class VoiceBriefingController internal constructor(
                             }
                         }
                         try {
-                            val prompt = VoiceBriefingConversation.PROMPT + initialBrief?.let {
+                            val basePrompt = VoiceBriefingConversation.promptFor(
+                                java.util.Locale.getDefault().toLanguageTag(),
+                            )
+                            val prompt = basePrompt + initialBrief?.let {
                                 "\n以下是主人已经填写的交代，只作本通上下文：\n目标：${it.goal}\n" +
                                     "必问：${it.questions.joinToString("；")}\n背景：${it.context}\n限制：${it.constraints}"
                             }.orEmpty()

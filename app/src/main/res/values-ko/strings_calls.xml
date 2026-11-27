@@ -162,4 +162,7 @@
     <string name="calls_delete_digit">삭제</string>
     <string name="calls_clear_draft">초안 지우기</string>
     <string name="calls_reset_history_filters">필터 초기화</string>
+    <string name="calls_default_greeting">안녕하세요, AI 전화 비서 Mika입니다. 전해드릴 말씀이 있을까요?</string>
+    <string name="calls_task_greeting">안녕하세요, AI 전화 비서 Mika입니다. 지금 통화 가능하실까요?</string>
+    <string name="calls_closing_line">시간이 다 되어 이만 마무리하겠습니다. 안녕히 계세요.</string>
 </resources>

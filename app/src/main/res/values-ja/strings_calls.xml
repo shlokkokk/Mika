@@ -162,4 +162,7 @@
     <string name="calls_delete_digit">削除</string>
     <string name="calls_clear_draft">下書きを消去</string>
     <string name="calls_reset_history_filters">絞り込みをリセット</string>
+    <string name="calls_default_greeting">こんにちは、AI電話アシスタントのMikaです。お伝えしたいご用件はありますか？</string>
+    <string name="calls_task_greeting">こんにちは、AI電話アシスタントのMikaです。今お話ししてもよろしいでしょうか？</string>
+    <string name="calls_closing_line">そろそろお時間ですので、このあたりで失礼いたします。</string>
 </resources>

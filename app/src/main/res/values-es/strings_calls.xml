@@ -162,4 +162,7 @@
     <string name="calls_delete_digit">Borrar</string>
     <string name="calls_clear_draft">Borrar borrador</string>
     <string name="calls_reset_history_filters">Restablecer filtros</string>
+    <string name="calls_default_greeting">Hola, soy Mika, asistente telefónico de IA. ¿Hay algo que quieras que transmita?</string>
+    <string name="calls_task_greeting">Hola, soy Mika, asistente telefónico de IA. ¿Es un buen momento para hablar ahora?</string>
+    <string name="calls_closing_line">Se nos acaba el tiempo, así que lo dejamos aquí. Adiós.</string>
 </resources>

@@ -6,11 +6,14 @@ import com.wangzan101.mika.calls.VolcRealtimeEvent
 /** Control is recognized only from a complete current owner turn, never model text. */
 internal object VoiceBriefingAuthorization {
     const val PHRASE = "我说完了，你去打"
+    private val zhPattern = Regex("我说完了[，,、\\s]*你去打[。.!！]?")
+    private val enPattern = Regex("(?i)(?:i'?m|i am)?\\s*done[,\\s]+make the call[.!]?")
     fun matches(event: VolcRealtimeEvent.UserTranscript): Boolean {
         if (!event.isFinal || !event.isCompleteFinal || !event.isCurrentTurn) return false
         // Ignore only ordinary whitespace and punctuation separating these two exact clauses.
         // Quotes, extra words, negation, conditional statements and quoted examples all fail closed.
-        return event.text.trim().matches(Regex("我说完了[，,、\\s]*你去打[。.!！]?"))
+        val text = event.text.trim()
+        return text.matches(zhPattern) || text.matches(enPattern)
     }
 }
 
@@ -76,6 +79,17 @@ internal class VoiceBriefingConversation(initialBrief: CallTaskBrief?) {
             "不得自称已拨号或已办妥，不执行任何电话控制。主人只有单独说出‘我说完了，你去打’才会授权，" +
             "不要替主人说这句，也不要让主人用别的确认词代替。先说：请交代这通电话要办的事，我在听。"
         const val GREETING = "请交代这通电话要办的事，我在听。"
+
+        fun promptFor(languageTag: String?): String {
+            val locale = languageTag?.takeIf { it.isNotBlank() }?.let(java.util.Locale::forLanguageTag)
+            if (locale == null || locale.language.equals("zh", ignoreCase = true)) return PROMPT
+            val lang = locale.getDisplayLanguage(java.util.Locale.ENGLISH).ifBlank { "English" }
+            return "You are phone assistant Mika. Right now you are only taking a pre-call briefing from the phone owner; no call has been dialed yet. " +
+                "Speak concisely in $lang. Ask only one truly missing question at a time about goal, must-ask questions, context, or constraints. " +
+                "Owner corrections override earlier statements. Never claim you already dialed or completed anything. " +
+                "Wait until the owner says \"I'm done, make the call\" on its own to authorize dialing; never say it for them or suggest shortcuts. " +
+                "Start by saying: Please tell me what this call is for, I'm listening."
+        }
     }
 }
 

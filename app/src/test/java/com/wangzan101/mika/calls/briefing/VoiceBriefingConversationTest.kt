@@ -86,4 +86,13 @@ class VoiceBriefingConversationTest {
             fail("must not save partial instructions as a complete task")
         } catch (_: VoiceBriefingFailure) { }
     }
+
+    @Test fun `authorizes on English completion phrase and provides English briefing prompt`() {
+        listOf("I'm done, make the call", "i am done, make the call.", "Done, make the call!").forEach {
+            assertTrue(it, VoiceBriefingAuthorization.matches(final(it)))
+        }
+        assertFalse(VoiceBriefingAuthorization.matches(final("I'm done, make the call").copy(isFinal = false)))
+        assertTrue(VoiceBriefingConversation.promptFor("en").contains("Speak concisely in English"))
+        assertEquals(VoiceBriefingConversation.PROMPT, VoiceBriefingConversation.promptFor("zh-CN"))
+    }
 }

@@ -186,4 +186,20 @@ class CallPolicyTest {
         assertNull(CallPolicy.closingDelayMs(10_000))
         assertEquals(5_000L, CallPolicy.closingDelayMs(CallPolicy.CLOSING_LEAD_MS + 5_000L))
     }
+
+    @Test fun promptUsesUserLanguageWhenNonChinese() {
+        val enPrompt = CallPolicy.prompt("", CallDirection.OUTGOING, languageTag = "en")
+        assertTrue(enPrompt.contains("Default spoken language for this call is English"))
+        assertFalse(enPrompt.contains("使用简短、自然的中文"))
+
+        val zhPrompt = CallPolicy.prompt("", CallDirection.OUTGOING, languageTag = "zh-CN")
+        assertTrue(zhPrompt.contains("使用简短、自然的中文"))
+    }
+
+    @Test fun spokenGreetingUsesEnglishFallbackForNonChineseLocale() {
+        val enGreeting = CallPolicy.spokenGreeting(CallPolicy.DEFAULT_GREETING, hasTask = true, languageTag = "en")
+        assertTrue(enGreeting.contains("Hello, I'm Mika"))
+        val zhGreeting = CallPolicy.spokenGreeting(CallPolicy.DEFAULT_GREETING, hasTask = true, languageTag = "zh-CN")
+        assertEquals(CallPolicy.TASK_GREETING, zhGreeting)
+    }
 }

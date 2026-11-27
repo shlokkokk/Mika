@@ -162,4 +162,7 @@
     <string name="calls_delete_digit">Apagar</string>
     <string name="calls_clear_draft">Limpar rascunho</string>
     <string name="calls_reset_history_filters">Redefinir filtros</string>
+    <string name="calls_default_greeting">Olá, sou a Mika, assistente telefônica de IA. Gostaria que eu desse algum recado?</string>
+    <string name="calls_task_greeting">Olá, sou a Mika, assistente telefônica de IA. Agora é um bom momento para conversar?</string>
+    <string name="calls_closing_line">Nosso tempo está quase acabando, vamos encerrar por aqui. Tchau.</string>
 </resources>

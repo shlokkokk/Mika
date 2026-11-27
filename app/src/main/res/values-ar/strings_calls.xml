@@ -162,4 +162,7 @@
     <string name="calls_delete_digit">حذف</string>
     <string name="calls_clear_draft">مسح المسودة</string>
     <string name="calls_reset_history_filters">إعادة ضبط الفلاتر</string>
+    <string name="calls_default_greeting">مرحباً، أنا ميكا، مساعد المكالمات بالذكاء الاصطناعي. هل هناك أي شيء تود أن أنقله؟</string>
+    <string name="calls_task_greeting">مرحباً، أنا ميكا، مساعد المكالمات بالذكاء الاصطناعي. هل الوقت مناسب للتحدث الآن؟</string>
+    <string name="calls_closing_line">لقد أوشك وقتنا على الانتهاء، لنختتم المكالمة هنا. مع السلامة.</string>
 </resources>

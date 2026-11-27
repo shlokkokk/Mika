@@ -162,4 +162,7 @@
     <string name="calls_delete_digit">Hapus</string>
     <string name="calls_clear_draft">Kosongkan draf</string>
     <string name="calls_reset_history_filters">Setel ulang filter</string>
+    <string name="calls_default_greeting">Halo, saya Mika, asisten telepon AI. Ada pesan yang ingin saya sampaikan?</string>
+    <string name="calls_task_greeting">Halo, saya Mika, asisten telepon AI. Apakah sekarang waktu yang tepat untuk berbicara?</string>
+    <string name="calls_closing_line">Waktu kita hampir habis, mari kita akhiri di sini. Sampai jumpa.</string>
 </resources>

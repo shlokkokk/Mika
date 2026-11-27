@@ -94,7 +94,8 @@ internal suspend fun CallRuntime.runWork(w: Work) {
         val migrated = realtimeController.migrated
         val standard = standardCalls
         // 标准通话:所属任务的状态每轮作为尾随附注给电话前台,系统提示保持字节不变
-        val ownerBackground = w.ownerTask?.let(PhoneDesk::background)
+        val languageTag = java.util.Locale.getDefault().toLanguageTag()
+        val ownerBackground = w.ownerTask?.let { PhoneDesk.background(it, languageTag = languageTag) }
         val provider = if (standard) CascadeCallProvider(cascade, CallUse.Phone, background = ownerBackground,
             meter = w.ownerConversationId?.let(app.conversations::meter)) else if (migrated) {
             try {
@@ -131,10 +132,11 @@ internal suspend fun CallRuntime.runWork(w: Work) {
         validateTarget(w)
         // 现有电话提示在前,电话前台说明在后;实时通话把开场时所属任务的状态写进提示,之后变了再推
         val systemPrompt = PhoneDesk.systemPrompt(
-            CallPolicy.prompt(w.config.systemPrompt, w.direction, ownerRules, task = w.task) + PHONE_DTMF_PROMPT,
+            CallPolicy.prompt(w.config.systemPrompt, w.direction, ownerRules, task = w.task, languageTag = languageTag) + PHONE_DTMF_PROMPT,
             task = w.task.takeIf { w.direction == CallDirection.OUTGOING },
-            openingOwnerTask = if (standard) null else PhoneDesk.renderOwnerTask(w.ownerTask?.value),
+            openingOwnerTask = if (standard) null else PhoneDesk.renderOwnerTask(w.ownerTask?.value, languageTag = languageTag),
             canCue = PhoneDesk.canCue(standard, profile.protocol),
+            languageTag = languageTag,
         )
         try {
             provider.validate(profile, systemPrompt, enablePhoneDtmf = true)

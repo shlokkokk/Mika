@@ -162,4 +162,7 @@
     <string name="calls_delete_digit">退格</string>
     <string name="calls_clear_draft">清空草稿</string>
     <string name="calls_reset_history_filters">重設篩選</string>
+    <string name="calls_default_greeting">您好，我是 Mika AI 電話助手。請問有什麼需要我轉告？</string>
+    <string name="calls_task_greeting">您好，我是 Mika AI 電話助手。請問現在方便通話嗎？</string>
+    <string name="calls_closing_line">時間差不多了，那我們先這樣吧</string>
 </resources>

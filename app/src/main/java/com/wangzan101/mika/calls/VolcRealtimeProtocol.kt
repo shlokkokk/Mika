@@ -124,7 +124,7 @@ internal object VolcRealtimeProtocol {
     fun phoneTools() = JsonArray(listOf(buildJsonObject {
         put("type", "function")
         put("name", DTMF_FUNCTION)
-        put("description", "在电话语音菜单明确要求按键时，发送真正的电话DTMF按键；说出数字不能代替按键。仅按本次任务和听到的菜单选择，不猜测密码或验证码。等待工具结果，失败时不得声称按键成功。")
+        put("description", "Send real telephone DTMF keypad tones when an automated phone menu explicitly asks for keypad input; speaking digits aloud cannot replace keypad tones. Only choose options matching the current task and heard menu, never guess passwords or verification codes, and wait for the tool result without claiming success on failure.")
         putJsonObject("parameters") {
             put("type", "object")
             putJsonObject("properties") {
@@ -133,7 +133,7 @@ internal object VolcRealtimeProtocol {
                     put("pattern", "^[0-9*#]{1,32}$")
                     put("minLength", 1)
                     put("maxLength", MAX_DTMF_DIGITS)
-                    put("description", "按顺序发送的电话按键，只能含0-9、*、#，最多32个。")
+                    put("description", "Sequential telephone keypad digits to send; only 0-9, *, and # are allowed, up to 32 characters.")
                 }
             }
             put("required", JsonArray(listOf(JsonPrimitive("digits"))))
