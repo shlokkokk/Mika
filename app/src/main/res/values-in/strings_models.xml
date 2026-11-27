@@ -338,17 +338,8 @@
     <string name="video_no_compatible">Tidak ada layanan model Anda yang bisa membuat video. Tambahkan dulu layanan yang bisa: %1$s.</string>
     <string name="video_choice_stale">Layanan yang Anda pilih sebelumnya tidak bisa lagi membuat video (dihapus atau alamatnya berubah). Pilih ulang di bawah; sampai saat itu Mika tidak akan membuat video.</string>
     <string name="tool_video_generate">Buat video</string>
-    <string name="model_fallback_view_list">Daftar</string>
-    <string name="model_fallback_view_flow">Alur</string>
-    <string name="model_fallback_arrow_hint">Saat batas atau galat</string>
     <string name="model_fallback_move_up">Naikkan</string>
     <string name="model_fallback_move_down">Turunkan</string>
-    <string name="model_fallback_edge_short">saat limit</string>
-    <string name="model_fallback_flow_reset">Reset</string>
-    <string name="model_fallback_flow_hint">Geser untuk pan · Cubit untuk zoom · Ketuk node untuk edit</string>
-    <string name="model_fallback_move_title">Ubah urutan cadangan?</string>
-    <string name="model_fallback_move_body">Pindahkan %1$s (Cadangan #%2$d) %3$s %4$s (Cadangan #%5$d)? Ini akan menjadi Cadangan #%5$d.</string>
-    <string name="model_fallback_move_before">sebelum</string>
-    <string name="model_fallback_move_after">sesudah</string>
-    <string name="model_fallback_move_confirm">Pindahkan</string>
+    <string name="model_fallback_move_up_desc">Naikkan cadangan #%1$d</string>
+    <string name="model_fallback_move_down_desc">Turunkan cadangan #%1$d</string>
 </resources>

@@ -149,6 +149,49 @@ class ProviderStoreTest {
         assertEquals(listOf("a", "b"), s.roles.value.mainFallbacks)
     }
 
+    @Test fun movedFallbacksIsBoundedAndKeepsOthersInOrder() {
+        val chain = listOf("a", "b", "c")
+        assertEquals(listOf("b", "a", "c"), movedFallbacks(chain, 1, 0))
+        assertEquals(listOf("a", "c", "b"), movedFallbacks(chain, 1, 2))
+        assertEquals(listOf("b", "c", "a"), movedFallbacks(chain, 0, 2))
+        assertEquals(chain, movedFallbacks(chain, 1, 1))
+        assertNull(movedFallbacks(chain, 0, -1))
+        assertNull(movedFallbacks(chain, 2, 3))
+        assertNull(movedFallbacks(chain, -1, 0))
+        assertNull(movedFallbacks(emptyList(), 0, 0))
+    }
+
+    @Test fun moveFallbackPersistsAndOnlyTouchesThatRole() {
+        val s = store()
+        s.saveAsMain(cfg("m"), "sk-m")
+        // 没人用的配置下一次写入时会被清掉:存一个、马上放进链
+        listOf("a", "b", "c").forEachIndexed { i, id -> s.save(cfg(id), "sk-$id"); assertTrue(s.setFallback(ModelRole.Main, i, id)) }
+        listOf("va", "vb").forEachIndexed { i, id ->
+            s.save(cfg(id, vision = true), "sk-$id"); assertTrue(s.setFallback(ModelRole.Vision, i, id))
+        }
+        assertTrue(s.setFallback(ModelRole.Light, 0, "a"))
+        assertTrue(s.setFallback(ModelRole.Light, 1, "b"))
+
+        assertTrue(s.moveFallback(ModelRole.Main, 2, 1))
+        assertEquals(listOf("a", "c", "b"), s.roles.value.fallbacks(ModelRole.Main))
+        assertEquals(listOf("va", "vb"), s.roles.value.fallbacks(ModelRole.Vision))
+        assertEquals(listOf("a", "b"), s.roles.value.fallbacks(ModelRole.Light))
+
+        assertTrue(s.moveFallback(ModelRole.Light, 0, 1))
+        assertEquals(listOf("b", "a"), s.roles.value.fallbacks(ModelRole.Light))
+        assertEquals(listOf("a", "c", "b"), s.roles.value.fallbacks(ModelRole.Main))
+
+        // 越界什么也不改
+        assertFalse(s.moveFallback(ModelRole.Vision, 1, 2))
+        assertFalse(s.moveFallback(ModelRole.Main, -1, 0))
+        assertEquals(listOf("va", "vb"), s.roles.value.fallbacks(ModelRole.Vision))
+
+        val reloaded = store()
+        assertEquals(listOf("a", "c", "b"), reloaded.roles.value.fallbacks(ModelRole.Main))
+        assertEquals(listOf("va", "vb"), reloaded.roles.value.fallbacks(ModelRole.Vision))
+        assertEquals(listOf("b", "a"), reloaded.roles.value.fallbacks(ModelRole.Light))
+    }
+
     @Test fun mainFallbackRejectsUnknownConfig() {
         val s = store()
         assertFalse(s.setMainFallback(0, "nope"))

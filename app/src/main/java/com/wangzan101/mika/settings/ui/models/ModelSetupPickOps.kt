@@ -142,8 +142,9 @@ internal fun ModelSetupViewModel.listed(p: Provider, model: String): Boolean = p
 fun ModelSetupViewModel.pickFallbackManual(role: ModelRole, slot: Int, providerId: String, model: String, onPicked: () -> Unit = {}) =
     saveFallback(role, slot, providerId, model, onPicked) { p, name -> verifyTyped(p, name, role) }
 
-fun ModelSetupViewModel.moveFallback(role: ModelRole, fromIndex: Int, toIndex: Int) {
-    if (store.moveFallback(role, fromIndex, toIndex)) sync()
+/** 备援链里挪一位(上移/下移),见 [com.wangzan101.mika.settings.moveFallback]。 */
+fun ModelSetupViewModel.moveFallback(role: ModelRole, from: Int, to: Int) {
+    if (store.moveFallback(role, from, to)) sync()
 }
 
 internal fun ModelSetupViewModel.saveFallback(

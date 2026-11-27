@@ -342,17 +342,8 @@
     <string name="video_no_compatible">هیچ‌کدام از سرویس‌های مدل شما نمی‌تواند ویدیو بسازد. اول سرویسی اضافه کنید که بتواند: %1$s.</string>
     <string name="video_choice_stale">سرویسی که قبلاً انتخاب کرده بودید دیگر نمی‌تواند ویدیو بسازد (حذف شده یا نشانی‌اش تغییر کرده). از پایین دوباره انتخاب کنید؛ تا آن موقع Mika ویدیو نمی‌سازد.</string>
     <string name="tool_video_generate">ساخت ویدیو</string>
-    <string name="model_fallback_view_list">فهرست</string>
-    <string name="model_fallback_view_flow">جریان</string>
-    <string name="model_fallback_arrow_hint">در محدودیت یا خطا</string>
     <string name="model_fallback_move_up">انتقال به بالا</string>
     <string name="model_fallback_move_down">انتقال به پایین</string>
-    <string name="model_fallback_edge_short">در محدودیت</string>
-    <string name="model_fallback_flow_reset">بازنشانی</string>
-    <string name="model_fallback_flow_hint">بکشید برای جابجایی · زوم با دو انگشت · لمس برای ویرایش</string>
-    <string name="model_fallback_move_title">تغییر ترتیب پشتیبان؟</string>
-    <string name="model_fallback_move_body">آیا %1$s (پشتیبان #%2$d) %3$s %4$s (پشتیبان #%5$d) منتقل شود؟ جایگاه آن پشتیبان #%5$d خواهد شد.</string>
-    <string name="model_fallback_move_before">قبل از</string>
-    <string name="model_fallback_move_after">بعد از</string>
-    <string name="model_fallback_move_confirm">جابجایی</string>
+    <string name="model_fallback_move_up_desc">انتقال پشتیبان شمارهٔ %1$d به بالا</string>
+    <string name="model_fallback_move_down_desc">انتقال پشتیبان شمارهٔ %1$d به پایین</string>
 </resources>

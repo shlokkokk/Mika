@@ -355,17 +355,8 @@
     <string name="video_no_compatible">Ни один из ваших сервисов моделей не умеет создавать видео. Сначала добавьте подходящий: %1$s.</string>
     <string name="video_choice_stale">Выбранный ранее сервис больше не может создавать видео (он удалён или его адрес изменился). Выберите другой ниже; до этого Mika не будет создавать видео.</string>
     <string name="tool_video_generate">Создать видео</string>
-    <string name="model_fallback_view_list">Список</string>
-    <string name="model_fallback_view_flow">Поток</string>
-    <string name="model_fallback_arrow_hint">При лимите или сбое</string>
     <string name="model_fallback_move_up">Вверх</string>
     <string name="model_fallback_move_down">Вниз</string>
-    <string name="model_fallback_edge_short">при лимите</string>
-    <string name="model_fallback_flow_reset">Сброс</string>
-    <string name="model_fallback_flow_hint">Тяните для перемещения · Щипок для масштаба · Нажмите для правки</string>
-    <string name="model_fallback_move_title">Изменить порядок резервов?</string>
-    <string name="model_fallback_move_body">Переместить %1$s (Резерв #%2$d) %3$s %4$s (Резерв #%5$d)? Он станет Резервом #%5$d.</string>
-    <string name="model_fallback_move_before">перед</string>
-    <string name="model_fallback_move_after">после</string>
-    <string name="model_fallback_move_confirm">Переместить</string>
+    <string name="model_fallback_move_up_desc">Переместить резерв №%1$d вверх</string>
+    <string name="model_fallback_move_down_desc">Переместить резерв №%1$d вниз</string>
 </resources>
