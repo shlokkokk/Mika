@@ -36,6 +36,27 @@ class TtsSelectionController(private val environment: VoiceModelEnvironment) {
         }
     }
 
+    /** Package of the device engine the built-in system TTS uses; empty is the device default. */
+    fun systemEngine(): String = systemModel()?.tts?.engine.orEmpty()
+
+    /**
+     * Points the built-in system TTS at another device engine (empty = device default). Returns whether the engine
+     * changed; a failed catalog write throws and leaves the old engine. Callers reset the picked voice only after this
+     * returns true, because voice names belong to one engine.
+     */
+    fun setSystemEngine(engine: String): Boolean {
+        val model = systemModel() ?: throw VoiceModelError.IncompleteConfig("System TTS is not registered")
+        val binding = model.tts ?: throw VoiceModelError.Unsupported(VoiceCapability.TTS)
+        val next = engine.trim()
+        if (binding.engine == next) return false
+        environment.catalog.upsertModel(model.copy(tts = binding.copy(engine = next)))
+        return true
+    }
+
+    private fun systemModel(): VoiceModel? = environment.catalog.state.value.models.firstOrNull {
+        it.serviceId == SYSTEM_TTS_REF.serviceId && it.id == SYSTEM_TTS_REF.modelId
+    }
+
     fun requireModel(ref: VoiceModelRef): ResolvedVoiceModel {
         val snapshot = environment.catalog.state.value
         if (snapshot.error != null) throw VoiceModelError.IncompleteConfig("Voice catalog is not readable")

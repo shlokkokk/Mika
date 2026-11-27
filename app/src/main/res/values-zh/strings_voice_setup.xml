@@ -31,6 +31,8 @@
     <string name="voice_settings_of">%1$s 的设置</string>
     <string name="voice_voice">音色</string>
     <string name="voice_voice_default">默认</string>
+    <string name="voice_tts_engine">语音合成引擎</string>
+    <string name="voice_engine_default">系统默认</string>
     <string name="realtime_lead">和 Mika 直接对话，随时可以打断。AI 接打电话默认也用这个选择，也可以单独指定。</string>
     <string name="realtime_empty">还没有语音通话模型</string>
     <string name="realtime_empty_note">在下面选一个，或接入支持通话的语音服务。</string>
@@ -59,7 +61,6 @@
     <string name="voice_region_beijing">北京</string>
     <string name="voice_region_singapore">新加坡</string>
     <string name="voice_compat_lead">给支持 OpenAI 语音接口的服务用。填你要用的模型，其余留空。</string>
-    <string name="voice_compat_models">模型</string>
     <string name="voice_compat_models_note">服务不提供的就留空。</string>
     <string name="voice_selfhosted_lead">部署在你自己网络里的流式识别服务。填地址即可，不需要账号。</string>
     <string name="voice_field_api_key">API Key</string>
