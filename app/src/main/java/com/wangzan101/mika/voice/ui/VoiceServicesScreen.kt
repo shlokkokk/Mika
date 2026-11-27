@@ -2,6 +2,7 @@ package com.wangzan101.mika.voice.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -76,8 +77,23 @@ import com.wangzan101.mika.settings.ui.models.Page
 import com.wangzan101.mika.settings.ui.models.pick
 import com.wangzan101.mika.settings.ui.models.refresh
 import com.wangzan101.mika.settings.ui.models.use
+import com.wangzan101.mika.ui.NavSlide
+import com.wangzan101.mika.ui.rememberPageStates
 
 private enum class PresetKind { Compatible, SelfHosted }
+
+private sealed interface VoiceServicePage {
+    val depth: Int
+    val key: String
+    data object Home : VoiceServicePage { override val depth = 0; override val key = "list" }
+    data class Detail(val serviceId: String) : VoiceServicePage { override val depth = 1; override val key = "detail:$serviceId" }
+    data class Vendor(val vendorId: String, val fromDetail: Boolean) : VoiceServicePage {
+        override val depth = if (fromDetail) 2 else 1
+        override val key = "vendor:$vendorId"
+    }
+    data class Preset(val kind: PresetKind) : VoiceServicePage { override val depth = 1; override val key = "preset:${kind.name}" }
+    data class Result(val refs: List<VoiceModelRef>) : VoiceServicePage { override val depth = 2; override val key = "result" }
+}
 
 /**
  * 「语音服务」: every account voice draws on. Built-in vendors ask for their own fields once and bring all their
@@ -112,25 +128,35 @@ fun VoiceServicesScreen(store: ProviderStore, onBack: () -> Unit, onOpenCustom: 
         listedThisRun.remove(plan.service.id)
     }
     BackHandler(enabled = vendorForm != null || detail != null || preset != null || results != null) { back() }
-    when {
-        results != null -> PresetResult(snapshot, results, viewModel, voiceModels, onDone = {
-            // 存完回到这家服务商的详情,看它带来的全部模型
-            detail = results.firstOrNull()?.serviceId ?: detail
-            saved = null; preset = null; vendorForm = null
-        })
-        preset != null -> PresetForm(requireNotNull(preset), back, ::apply)
-        vendorForm != null -> VoiceVendors.byId(requireNotNull(vendorForm))?.let { VendorForm(it, back, ::apply) } ?: back()
-        detail != null -> {
-            val service = snapshot.services.firstOrNull { it.id == detail }
-            if (service == null) back()
-            else VendorDetail(snapshot, service, voiceModels, back,
-                onChangeKey = VoiceVendors.forService(service.id)?.takeIf { it.builds(service.id) }?.let { vendor -> { vendorForm = vendor.id } } ?: onOpenCustom,
-                onTest = { saved = listOf(encodeRef(it)) })
+    val pageStates = rememberPageStates()
+    val currentPage: VoiceServicePage = when {
+        results != null -> VoiceServicePage.Result(results)
+        preset != null -> VoiceServicePage.Preset(requireNotNull(preset))
+        vendorForm != null -> VoiceServicePage.Vendor(requireNotNull(vendorForm), fromDetail = detail != null)
+        detail != null -> VoiceServicePage.Detail(requireNotNull(detail))
+        else -> VoiceServicePage.Home
+    }
+    NavSlide(currentPage, depth = { it.depth }, states = pageStates, pageKey = { it.key }) { page ->
+        when (page) {
+            is VoiceServicePage.Result -> PresetResult(snapshot, page.refs, viewModel, voiceModels, onDone = {
+                // 存完回到这家服务商的详情,看它带来的全部模型
+                detail = page.refs.firstOrNull()?.serviceId ?: detail
+                saved = null; preset = null; vendorForm = null
+            })
+            is VoiceServicePage.Preset -> PresetForm(page.kind, back, ::apply)
+            is VoiceServicePage.Vendor -> VoiceVendors.byId(page.vendorId)?.let { VendorForm(it, back, ::apply) } ?: back()
+            is VoiceServicePage.Detail -> {
+                val service = snapshot.services.firstOrNull { it.id == page.serviceId }
+                if (service == null) back()
+                else VendorDetail(snapshot, service, voiceModels, back,
+                    onChangeKey = VoiceVendors.forService(service.id)?.takeIf { it.builds(service.id) }?.let { vendor -> { vendorForm = vendor.id } } ?: onOpenCustom,
+                    onTest = { saved = listOf(encodeRef(it)) })
+            }
+            VoiceServicePage.Home -> ServiceList(
+                snapshot, providers, back,
+                onVendor = { vendorForm = it.id }, onService = { detail = it }, onPreset = { preset = it }, onOpenCustom = onOpenCustom,
+            )
         }
-        else -> ServiceList(
-            snapshot, providers, back,
-            onVendor = { vendorForm = it.id }, onService = { detail = it }, onPreset = { preset = it }, onOpenCustom = onOpenCustom,
-        )
     }
 }
 
@@ -215,12 +241,12 @@ private fun ServiceList(
         }
         GroupLabel(stringResource(R.string.voice_add_advanced))
         GroupCard {
-            ListRow(MikaIcons.Key, stringResource(R.string.voice_preset_compat), subtitle = stringResource(R.string.voice_preset_compat_sub), first = true,
+            ListRow(null, stringResource(R.string.models_voice_catalog), subtitle = stringResource(R.string.models_voice_catalog_sub), first = true,
+                onClick = onOpenCustom, modifier = Modifier.testTag("voice-service-add")) { RowChevron() }
+            ListRow(MikaIcons.Key, stringResource(R.string.voice_preset_compat), subtitle = stringResource(R.string.voice_preset_compat_sub),
                 onClick = { onPreset(PresetKind.Compatible) }, modifier = Modifier.testTag("preset-compat")) { RowChevron() }
             ListRow(MikaIcons.Key, stringResource(R.string.voice_preset_selfhosted), subtitle = stringResource(R.string.voice_preset_selfhosted_sub),
                 onClick = { onPreset(PresetKind.SelfHosted) }, modifier = Modifier.testTag("preset-selfhosted")) { RowChevron() }
-            ListRow(null, stringResource(R.string.voice_add_custom),
-                onClick = onOpenCustom, modifier = Modifier.testTag("voice-service-add")) { RowChevron() }
         }
         FooterNote(stringResource(R.string.voice_services_footer), Modifier.padding(top = 6.dp))
     }
@@ -564,6 +590,7 @@ private fun PresetResult(
 ) {
     val c = MikaTheme.colors
     val probes by viewModel.probes.collectAsState()
+    val transcripts by viewModel.transcripts.collectAsState()
     val voiceSettings = VoiceSettings.get(LocalContext.current)
     val sample = stringResource(R.string.voice_try_sample)
     Page(stringResource(R.string.voice_result_title), onDone) {
@@ -571,39 +598,63 @@ private fun PresetResult(
         GroupCard {
             refs.forEachIndexed { index, ref ->
                 val model = snapshot.modelOf(ref) ?: return@forEachIndexed
-                val probe = viewModel.probeFingerprint(ref)?.let { probes[it] } ?: VoiceProbeUi.Idle
+                val fp = viewModel.probeFingerprint(ref)
+                val probe = fp?.let { probes[it] } ?: VoiceProbeUi.Idle
+                val transcript = fp?.let { transcripts[it] }.orEmpty()
                 val inUse = when (ref.capability) {
                     VoiceCapability.STT -> snapshot.selections.stt == SttSelection.Model(ref)
                     VoiceCapability.TTS -> snapshot.selections.tts == ref
                     VoiceCapability.REALTIME -> snapshot.selections.realtime == ref
                 }
                 ListRow(null, voiceModelDisplayName(model), capabilityLine(setOf(ref.capability)), first = index == 0) {
-                    MikaButton(
-                        stringResource(
-                            when (ref.capability) {
-                                VoiceCapability.STT -> R.string.voice_try_stt
-                                VoiceCapability.TTS -> R.string.voice_try_tts
-                                VoiceCapability.REALTIME -> R.string.voice_try_realtime
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (probe is VoiceProbeUi.Listening && probe.canFinish && !probe.converting) {
+                            MikaButton(
+                                stringResource(R.string.voice_result_done),
+                                onClick = { viewModel.finishStt(ref) },
+                                kind = ButtonKind.Primary,
+                                size = ButtonSize.Small,
+                            )
+                        }
+                        MikaButton(
+                            stringResource(
+                                if (probe.isActive) R.string.chat_audio_stop
+                                else when (ref.capability) {
+                                    VoiceCapability.STT -> R.string.voice_try_stt
+                                    VoiceCapability.TTS -> R.string.voice_try_tts
+                                    VoiceCapability.REALTIME -> R.string.voice_try_realtime
+                                },
+                            ),
+                            onClick = {
+                                if (probe.isActive) {
+                                    viewModel.stopProbe(ref)
+                                } else {
+                                    when (ref.capability) {
+                                        VoiceCapability.STT -> viewModel.verifyStt(ref)
+                                        VoiceCapability.TTS -> viewModel.verifyTts(ref, com.wangzan101.mika.core.model.TtsRequest(sample))
+                                        VoiceCapability.REALTIME -> viewModel.verifyRealtime(ref)
+                                    }
+                                }
                             },
-                        ),
-                        onClick = {
-                            when (ref.capability) {
-                                VoiceCapability.STT -> viewModel.verifyStt(ref)
-                                VoiceCapability.TTS -> viewModel.verifyTts(ref, com.wangzan101.mika.core.model.TtsRequest(sample))
-                                VoiceCapability.REALTIME -> viewModel.verifyRealtime(ref)
-                            }
-                        },
-                        kind = ButtonKind.Tonal, size = ButtonSize.Small,
-                        enabled = probe !is VoiceProbeUi.Running && probe !is VoiceProbeUi.Listening,
-                    )
+                            kind = if (probe.isActive) ButtonKind.Secondary else ButtonKind.Tonal,
+                            size = ButtonSize.Small,
+                        )
+                    }
+                }
+                if (probe is VoiceProbeUi.Listening && !probe.converting) {
+                    Box(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 6.dp)) {
+                        VoiceWave(probe.level, flat = false, reduceMotion = false, color = c.accent)
+                    }
                 }
                 Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     val line = when (probe) {
                         VoiceProbeUi.Idle -> null
                         VoiceProbeUi.Running -> stringResource(R.string.voice_catalog_testing)
-                        is VoiceProbeUi.Listening -> probe.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) }
+                        is VoiceProbeUi.Listening -> if (probe.converting) stringResource(R.string.voice_catalog_testing) else probe.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) }
+                        VoiceProbeUi.Playing -> stringResource(R.string.voice_playing)
                         is VoiceProbeUi.Failed -> probe.error.detail
-                        VoiceProbeUi.Verified -> stringResource(R.string.voice_catalog_verified)
+                        VoiceProbeUi.Verified -> if (transcript.isNotBlank()) "${stringResource(R.string.voice_catalog_verified)} · “$transcript”"
+                        else stringResource(R.string.voice_catalog_verified)
                     }
                     Text(
                         line.orEmpty(), Modifier.weight(1f).padding(top = 6.dp), style = MikaType.Hint,
