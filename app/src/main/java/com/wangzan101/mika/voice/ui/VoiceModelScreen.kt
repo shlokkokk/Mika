@@ -47,6 +47,28 @@ import com.wangzan101.mika.voice.model.settingsProtocol
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import com.wangzan101.mika.settings.ui.models.Page
+import java.util.Locale
+
+internal fun sampleVoicePhrase(voiceLocale: Locale? = null): String {
+    val lang = (voiceLocale ?: Locale.getDefault()).language.lowercase()
+    return when (lang) {
+        "zh" -> "你好，我是 Mika。这是一段声音测试。"
+        "es" -> "¡Hola! Soy Mika. Esta es una prueba de voz."
+        "fr" -> "Bonjour ! Je suis Mika. Ceci est un test vocal."
+        "de" -> "Hallo! Ich bin Mika. Dies ist ein Sprachtest."
+        "ja" -> "こんにちは、Mikaです。これは音声テストです。"
+        "ko" -> "안녕하세요, 미카입니다. 음성 테스트입니다。"
+        "ru" -> "Привет! Я Mika. Это проверка голоса."
+        "hi" -> "नमस्ते! मैं मीका हूँ। यह एक आवाज़ परीक्षण है।"
+        "pt" -> "Olá! Eu sou a Mika. Este é um teste de voz."
+        "it" -> "Ciao! Sono Mika. Questa è una prova vocale."
+        "ar" -> "مرحباً! أنا ميكا. هذا اختبار صوتي."
+        "sq" -> "Përshëndetje! Unë jam Mika. Ky është një test zëri."
+        "as" -> "নমস্কাৰ! মই মিকা। এইটো এটা শব্দ পৰীক্ষা।"
+        "bn" -> "হ্যালো! আমি মিকা। এটি একটি শব্দ পরীক্ষা।"
+        else -> "Hello! I am Mika. This is a voice test."
+    }
+}
 
 /**
  * 设置 › 模型 › 声音模型:选服务商、模型、接口、音色、语速;打开朗读/自动朗读/主动说话。
@@ -170,7 +192,7 @@ internal fun VoiceModelContent(store: ProviderStore, settings: VoiceSettings, on
                         player.play(
                             tts,
                             TtsRequest(
-                                "你好，我是 Mika。这是一段声音测试。",
+                                sampleVoicePhrase(null),
                                 choice.voice.ifBlank { null },
                                 choice.speed,
                                 "wav",
@@ -214,6 +236,7 @@ private fun MigratedVoiceModelContent(
     val voiceVm = rememberVoiceCatalogViewModel(voiceModels)
     val providers by store.providers.collectAsState()
     var voicesOpen by remember { mutableStateOf(false) }
+    var enginesOpen by remember { mutableStateOf(false) }
     val state by settings.state.collectAsState()
     val catalog by voiceModels.catalog.state.collectAsState()
     val tts = voiceModels.tts
@@ -255,12 +278,89 @@ private fun MigratedVoiceModelContent(
 
         selectedModel?.let { model ->
             GroupCard {
-                val pickable = if (model.tts?.protocol == com.wangzan101.mika.voice.model.TtsProtocol.AndroidSystem) {
-                    SystemTtsRows(voiceModels, settings, onChanged = { test = null })
-                    true
+                val isSystem = model.tts?.protocol == com.wangzan101.mika.voice.model.TtsProtocol.AndroidSystem
+                if (isSystem) {
+                    val installedEngines = remember { com.wangzan101.mika.voice.SystemTtsDiscovery.getInstalledEngines(context) }
+                    val currentEngine = installedEngines.firstOrNull { it.packageName == state.ttsEngine }
+                    val engineLabel = when {
+                        state.ttsEngine.isBlank() -> tr(R.string.voice_engine_default)
+                        currentEngine != null -> currentEngine.label
+                        else -> state.ttsEngine
+                    }
+                    ListRow(
+                        null, tr(R.string.voice_tts_engine), first = true, onClick = { enginesOpen = true },
+                        modifier = Modifier.testTag("tts-engine"),
+                    ) {
+                        RowValue(engineLabel)
+                        RowChevron()
+                    }
+                    if (enginesOpen) {
+                        val actions = listOf(
+                            com.wangzan101.mika.ui.components.SheetAction(tr(R.string.voice_engine_default)) {
+                                settings.setTtsEngine("")
+                                test = null
+                            }
+                        ) + installedEngines.map { eng ->
+                            com.wangzan101.mika.ui.components.SheetAction("${eng.label} (${eng.packageName})") {
+                                settings.setTtsEngine(eng.packageName)
+                                test = null
+                            }
+                        }
+                        com.wangzan101.mika.ui.components.ActionSheet(
+                            tr(R.string.voice_tts_engine), actions,
+                        ) { enginesOpen = false }
+                    }
+
+                    var systemVoices by remember(state.ttsEngine) { mutableStateOf<List<com.wangzan101.mika.voice.SystemTtsVoiceInfo>?>(null) }
+                    androidx.compose.runtime.LaunchedEffect(state.ttsEngine) {
+                        systemVoices = com.wangzan101.mika.voice.SystemTtsDiscovery.queryVoices(context, state.ttsEngine.ifBlank { null })
+                    }
+                    val currentVoice = systemVoices?.firstOrNull { it.name == state.voice }
+                    val voiceLabel = when {
+                        state.voice.isBlank() -> tr(R.string.voice_voice_default)
+                        currentVoice != null -> currentVoice.displayName
+                        else -> state.voice
+                    }
+                    ListRow(
+                        null, tr(R.string.voice_voice), onClick = { voicesOpen = true },
+                        modifier = Modifier.testTag("tts-voice"),
+                    ) {
+                        RowValue(voiceLabel)
+                        RowChevron()
+                    }
+                    if (voicesOpen) {
+                        val voiceNames = systemVoices.orEmpty().map { it.name }
+                        val nameLabels = systemVoices.orEmpty().associate { it.name to it.displayName }
+                        val voiceModelForLabels = model.copy(
+                            tts = model.tts?.copy(voiceNames = nameLabels),
+                        )
+                        VoicePickerSheet(
+                            VoiceVoices.withCurrent(voiceNames, state.voice),
+                            onPick = { settings.setVoice(it); test = null },
+                            onDismiss = { voicesOpen = false },
+                            model = voiceModelForLabels,
+                            onAudition = { voiceId ->
+                                val ref = selection ?: return@VoicePickerSheet
+                                val protocol = model.tts?.protocol ?: return@VoicePickerSheet
+                                val caps = settings.capabilities(protocol.settingsProtocol() ?: return@VoicePickerSheet)
+                                val ttsModel = runCatching { tts.createTts(context, ref, caps) }.getOrNull() ?: return@VoicePickerSheet
+                                val voiceLoc = systemVoices?.firstOrNull { it.name == voiceId }?.locale
+                                previewScope.launch {
+                                    runCatching {
+                                        player.stop()
+                                        player.play(
+                                            ttsModel,
+                                            TtsRequest(sampleVoicePhrase(voiceLoc), voiceId, state.speed, "wav"),
+                                            streaming = state.streaming,
+                                        ) {}
+                                    }
+                                }
+                            },
+                        )
+                    }
                 } else {
                     val voices = VoiceVoices.tts(model)
-                    val pickable = voices.isNotEmpty() || model.tts != null
+                    val pickable = voices.isNotEmpty() || model.tts?.protocol.let { it != null && it != com.wangzan101.mika.voice.model.TtsProtocol.AndroidSystem }
                     if (pickable) {
                         ListRow(null, tr(R.string.voice_voice), first = true, onClick = { voicesOpen = true },
                             modifier = Modifier.testTag("tts-voice")) {
@@ -274,12 +374,27 @@ private fun MigratedVoiceModelContent(
                             onPick = { settings.setVoice(it); test = null },
                             onDismiss = { voicesOpen = false },
                             model = model,
+                            onAudition = { voiceId ->
+                                val ref = selection ?: return@VoicePickerSheet
+                                val protocol = model.tts?.protocol ?: return@VoicePickerSheet
+                                val caps = settings.capabilities(protocol.settingsProtocol() ?: return@VoicePickerSheet)
+                                val ttsModel = runCatching { tts.createTts(context, ref, caps) }.getOrNull() ?: return@VoicePickerSheet
+                                previewScope.launch {
+                                    runCatching {
+                                        player.stop()
+                                        player.play(
+                                            ttsModel,
+                                            TtsRequest(sampleVoicePhrase(null), voiceId, state.speed, "wav"),
+                                            streaming = state.streaming,
+                                        ) {}
+                                    }
+                                }
+                            },
                         )
                     }
-                    pickable
                 }
                 InputRow(
-                    tr(R.string.voice_speed), speed, first = !pickable,
+                    tr(R.string.voice_speed), speed, first = false,
                     onChange = {
                         speed = it
                         it.toFloatOrNull()?.takeIf { v -> v.isFinite() }?.let { v -> settings.setSpeed(normalizeVoiceSpeed(v)) }
@@ -342,7 +457,7 @@ private fun MigratedVoiceModelContent(
                         player.play(
                             model,
                             TtsRequest(
-                                "你好，我是 Mika。这是一段声音测试。",
+                                sampleVoicePhrase(null),
                                 state.voice.ifBlank { null },
                                 state.speed,
                                 "wav",
