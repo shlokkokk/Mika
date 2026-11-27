@@ -36,7 +36,6 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -722,8 +721,9 @@ private fun MikaRoot(
     // 页面有自己的返回处理时(设置页里的子页、侧栏)由它们先接;这里只管退回上一页
     BackHandler(enabled = nav.canGoBack) { nav.back() }
     val back: () -> Unit = { nav.back() }
-    // 聊天页离开组合树时保留列表位置和输入内容，返回设置页等子页面后原样恢复。
-    val screenStates = rememberSaveableStateHolder()
+    // 各页离开组合树时保留列表位置和输入内容:还在返回栈里的页按返回原样恢复,出栈的页丢掉、下次进来从头开始;
+    // 对话页和个人助理是来回切的根页面,一直留着
+    val screenStates = rememberPageStates(keep = { it == Route.Chat.name || it == Route.Personal.name })
     val sidebarPage = nav.current in setOf(Route.Chat, Route.Personal, Route.Plans, Route.Memory, Route.Browser)
     // 通话页不在最上面时,顶上一条「通话中 · 回到通话」;下面的页面从它下面开始
     val liveCall = voiceCall.liveCall()
@@ -734,9 +734,8 @@ private fun MikaRoot(
     AdaptiveWindow(navigation = sidebarPage) {
         val page: @Composable (() -> Unit) -> Unit = { openDrawer ->
     // 全局换页套滑动推入过渡;页内一律用 route 不用 nav.current:过渡动画期间旧页还在渲染,读实时状态会瞬间变脸
-    NavSlide(nav.stack, depth = { it.size }) { stack ->
+    NavSlide(nav.stack, depth = { it.size }, states = screenStates, pageKey = { it.last().name }) { stack ->
     val route = stack.last()
-    screenStates.SaveableStateProvider(route.name) {
     when (route) {
         Route.PhoneSetup -> PhoneSetupScreen(status, setupRepair, onFix, onboarding = onboarding == OnboardingStep.Phone) {
             phoneSetup.markGuideSeen()
@@ -993,7 +992,6 @@ private fun MikaRoot(
         Route.Calls -> CallSettingsScreen(app.calls, onBack = back, initialHistoryCallId = focusedCallHistoryId,
             openStandbyChecklist = requestedCallStandby, onStandbyChecklistOpened = onCallStandbyOpened,
             onOpenVoiceCatalog = { nav.push(Route.VoiceServices) })
-    }
     }
     }
         }
