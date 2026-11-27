@@ -350,4 +350,6 @@
     <string name="tool_video_generate">Gerar vídeo</string>
     <string name="provider_nickname_label">Apelido da conta</string>
     <string name="provider_rename_title">Renomear conta</string> (feat(models): add optional custom provider nicknames, dynamic placeholders, and app-wide rename wiring)
+    <string name="provider_nickname_hint">Opcional, ex.: Trabalho ou Pessoal</string>
+    <string name="provider_name_with_note">%1$s (%2$s)</string>
 </resources>

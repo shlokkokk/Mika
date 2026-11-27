@@ -342,4 +342,6 @@
     <string name="tool_video_generate">動画を生成</string>
     <string name="provider_nickname_label">アカウントのニックネーム</string>
     <string name="provider_rename_title">アカウント名を変更</string> (feat(models): add optional custom provider nicknames, dynamic placeholders, and app-wide rename wiring)
+    <string name="provider_nickname_hint">任意（例：仕事、個人）</string>
+    <string name="provider_name_with_note">%1$s（%2$s）</string>
 </resources>

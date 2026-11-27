@@ -148,7 +148,7 @@ fun ProviderStore.geminiDeveloperApiKey(): String? {
 internal fun ProviderStore.resolveGrounding(): GroundingTarget? {
     val cfg = configFor(ModelRole.Main) ?: return null
     val p = provider(cfg.providerId)
-    val providerName = p?.displayName?.ifBlank { null } ?: ProviderConnection.displayName(cfg)
+    val providerName = p?.name?.ifBlank { null } ?: ProviderConnection.displayName(cfg)
     val endpoint = listedOf(cfg)?.endpoint
     val (kind, baseUrl) = adapterFor(cfg, endpoint)
     return when (kind) {

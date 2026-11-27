@@ -152,7 +152,7 @@ internal fun AddProviderForm(ui: ModelSetupUi, actions: ModelSetupActions, stand
                 stringResource(R.string.provider_nickname_label),
                 f.nickname,
                 actions.setNickname,
-                f.nicknamePlaceholder(),
+                stringResource(R.string.provider_nickname_hint),
                 first = !f.urlEditable && !f.isCloudflare,
                 modifier = Modifier.testTag("setup-nickname"),
             )

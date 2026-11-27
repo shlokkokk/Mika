@@ -340,4 +340,6 @@
     <string name="tool_video_generate">동영상 생성</string>
     <string name="provider_nickname_label">계정 별칭</string>
     <string name="provider_rename_title">계정 이름 변경</string> (feat(models): add optional custom provider nicknames, dynamic placeholders, and app-wide rename wiring)
+    <string name="provider_nickname_hint">선택 사항, 예: 업무, 개인</string>
+    <string name="provider_name_with_note">%1$s (%2$s)</string>
 </resources>

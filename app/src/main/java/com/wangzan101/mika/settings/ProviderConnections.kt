@@ -43,11 +43,10 @@ fun ProviderStore.connect(
     signIn: String? = null,
     typed: Set<String> = emptySet(),
     untested: Boolean = false,
-    customAlias: String? = null,
+    nickname: String? = null,
 ): Provider {
     return synchronized(this) {
-        val cleanAlias = customAlias?.trim()?.ifEmpty { null }
-        val found = findOrAddProvider(name, kind, baseUrl, signIn, cleanAlias)
+        val found = findOrAddProvider(name, kind, baseUrl, signIn)
         // 跳过测试时没有列表可存:这家之前列过的留着,不要用空表把已有的列表盖掉
         val listed = if (untested && models.isEmpty()) found.models ?: models else models
         val p = found.copy(
@@ -55,7 +54,8 @@ fun ProviderStore.connect(
             verifiedModels = found.verifiedModels + verified, typedModels = found.typedModels + typed,
             // 这次没测、这家也没有核实过的模型、也没列过列表,才是「没测过」;别的情况一律按测过
             savedUntested = untested && verified.isEmpty() && found.verifiedModels.isEmpty() && listed.isEmpty(),
-            customAlias = cleanAlias ?: found.customAlias,
+            // 这次没填备注就留着原来的;备注不参与找同一家(见 [Provider.nickname])
+            nickname = Provider.cleanNickname(nickname) ?: found.nickname,
         )
         _providers.value = _providers.value.map { if (it.id == p.id) p else it }
         repairUnavailableReasoningEfforts()
@@ -65,14 +65,14 @@ fun ProviderStore.connect(
     }
 }
 
-/** 修改或清除服务商的自定义别名 / 备注名称。 */
-fun ProviderStore.setProviderAlias(providerId: String, alias: String?) {
+/** 改这家的备注(见 [Provider.nickname]);空的就是去掉备注。和其它改动一样在锁里改、写同一个配置文件。 */
+fun ProviderStore.setProviderNickname(providerId: String, nickname: String?) {
     synchronized(this) {
         val p = provider(providerId) ?: return
-        val clean = alias?.trim()?.ifEmpty { null }
-        if (p.customAlias == clean) return
+        val clean = Provider.cleanNickname(nickname)
+        if (p.nickname == clean) return
         _providers.value = _providers.value.map {
-            if (it.id == providerId) it.copy(customAlias = clean) else it
+            if (it.id == providerId) it.copy(nickname = clean) else it
         }
         writeConfig()
     }
@@ -142,17 +142,10 @@ fun ProviderStore.removeProvider(providerId: String) {
     }
 }
 
-internal fun ProviderStore.findOrAddProvider(
-    name: String,
-    kind: ProviderConfig.Kind,
-    baseUrl: String,
-    signIn: String? = null,
-    customAlias: String? = null,
-): Provider {
+internal fun ProviderStore.findOrAddProvider(name: String, kind: ProviderConfig.Kind, baseUrl: String, signIn: String? = null): Provider {
     val key = ProviderConnection.keyOf(kind, baseUrl, name)
-    val cleanAlias = customAlias?.trim()?.ifEmpty { null }
-    _providers.value.firstOrNull { it.key == key && it.signIn == signIn && it.customAlias == cleanAlias }?.let { return it }
-    val p = Provider(newId(), name.trim(), kind, baseUrl.trim(), signIn = signIn, customAlias = cleanAlias)
+    _providers.value.firstOrNull { it.key == key && it.signIn == signIn }?.let { return it }
+    val p = Provider(newId(), name.trim(), kind, baseUrl.trim(), signIn = signIn)
     _providers.value = _providers.value + p
     return p
 }

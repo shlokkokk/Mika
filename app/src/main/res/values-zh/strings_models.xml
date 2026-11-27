@@ -343,4 +343,6 @@
     <string name="tool_video_generate">生成视频</string>
     <string name="provider_nickname_label">账号备注</string>
     <string name="provider_rename_title">重命名账号</string> (feat(models): add optional custom provider nicknames, dynamic placeholders, and app-wide rename wiring)
+    <string name="provider_nickname_hint">选填，比如：工作、个人</string>
+    <string name="provider_name_with_note">%1$s（%2$s）</string>
 </resources>

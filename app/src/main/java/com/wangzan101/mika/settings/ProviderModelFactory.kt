@@ -110,7 +110,7 @@ internal fun ProviderStore.groupModelFor(
             effortOverride = effort, useRoleEffort = false)
         PoolMember(
             key = MemberKey(p.id, cfg.model), model = model, priority = m.priority,
-            weight = m.weight.takeIf { it > 0 } ?: 1, costRank = m.costRank, providerName = p.displayName,
+            weight = m.weight.takeIf { it > 0 } ?: 1, costRank = m.costRank, providerName = p.name,
         )
     }
     if (members.isEmpty()) return null
@@ -226,7 +226,7 @@ internal fun ProviderStore.checkDailyBudget(source: UsageSource) {
     val p = provider(source.providerId) ?: return
     val limit = p.dailyTokenBudget ?: return
     val used = dailyUsage(source.providerId)
-    if (used >= limit) throw ModelError.DailyBudgetExceeded(p.displayName, limit, used, providerId = source.providerId)
+    if (used >= limit) throw ModelError.DailyBudgetExceeded(p.name, limit, used, providerId = source.providerId)
 }
 
 internal fun ProviderStore.headers(sessionHeader: String?, session: ModelSession) = ClientHeaders.of(userAgent, sessionHeader, session)

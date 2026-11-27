@@ -340,4 +340,6 @@
     <string name="tool_video_generate">Buat video</string>
     <string name="provider_nickname_label">Nama panggilan akun</string>
     <string name="provider_rename_title">Ubah nama akun</string> (feat(models): add optional custom provider nicknames, dynamic placeholders, and app-wide rename wiring)
+    <string name="provider_nickname_hint">Opsional, mis. Kerja atau Pribadi</string>
+    <string name="provider_name_with_note">%1$s (%2$s)</string>
 </resources>

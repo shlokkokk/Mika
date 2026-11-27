@@ -12,11 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,15 +21,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.core.model.ModelRole
 import com.wangzan101.mika.settings.ModelContextSettings
-import com.wangzan101.mika.settings.Provider
 import com.wangzan101.mika.settings.RoleChoice
 import com.wangzan101.mika.settings.VoiceChoice
 import com.wangzan101.mika.ui.components.FooterNote
 import com.wangzan101.mika.ui.components.GroupCard
 import com.wangzan101.mika.ui.components.Hairline
 import com.wangzan101.mika.ui.components.ListRow
-import com.wangzan101.mika.ui.components.MikaDialog
-import com.wangzan101.mika.ui.components.MikaTextField
 import com.wangzan101.mika.ui.components.RowChevron
 import com.wangzan101.mika.ui.components.RowValue
 import com.wangzan101.mika.ui.components.TileTone
@@ -44,7 +38,6 @@ import com.wangzan101.mika.ui.theme.MikaType
 @Composable
 internal fun ProvidersSection(ui: ModelSetupUi, actions: ModelSetupActions) {
     val c = MikaTheme.colors
-    var renaming by remember { mutableStateOf<Provider?>(null) }
     if (ui.providers.isNotEmpty()) {
         GroupCard {
             ui.providers.forEachIndexed { i, p ->
@@ -53,10 +46,7 @@ internal fun ProvidersSection(ui: ModelSetupUi, actions: ModelSetupActions) {
                 val warning = ModelsCopy.UNVERIFIED.takeIf {
                     ui.unverified(p).isNotEmpty() || (ui.untested(p) && ui.rolesOf(p).isNotEmpty())
                 }
-                ProviderRow(
-                    p, line, first = i == 0, warning = warning,
-                    onRename = { renaming = p },
-                ) { actions.openProvider(p.id) }
+                ProviderRow(p, line, first = i == 0, warning = warning) { actions.openProvider(p.id) }
             }
             if (!ui.showForm) {
                 ListRow(
@@ -66,53 +56,9 @@ internal fun ProvidersSection(ui: ModelSetupUi, actions: ModelSetupActions) {
             }
         }
     }
-    renaming?.let { target ->
-        ProviderRenameDialog(
-            provider = target,
-            onDismiss = { renaming = null },
-            onConfirm = { alias -> actions.renameProvider(target.id, alias); renaming = null },
-        )
-    }
     ProbeNote(ui, actions)
     if (ui.providers.isEmpty()) AddProviderForm(ui, actions)
     FooterNote(ModelsCopy.KEY_NOTE)
-}
-
-@Composable
-internal fun ProviderRenameDialog(
-    provider: Provider,
-    onDismiss: () -> Unit,
-    onConfirm: (String?) -> Unit,
-) {
-    var text by remember(provider.id) { mutableStateOf(provider.customAlias.orEmpty()) }
-    val placeholder = remember(provider.name) { AddForm.of(AddForm.presetFor(provider.name)).nicknamePlaceholder() }
-    MikaDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.provider_rename_title)) },
-        text = {
-            MikaTextField(
-                value = text,
-                onValueChange = { value ->
-                    val n = value.codePointCount(0, value.length)
-                    text = if (n <= ModelSetupViewModel.MAX_NAME) value else value.substring(0, value.offsetByCodePoints(0, ModelSetupViewModel.MAX_NAME))
-                },
-                modifier = Modifier.fillMaxWidth().testTag("provider-rename-input"),
-                singleLine = true,
-                label = { Text(stringResource(R.string.provider_nickname_label)) },
-                placeholder = { Text(placeholder) },
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(text.trim().ifEmpty { null }) }) {
-                Text(ModelsCopy.SAVE)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(ModelsCopy.CANCEL)
-            }
-        },
-    )
 }
 
 /** 存下服务商时的说明;推荐的模型没试通过、还没有主模型时,给「选主模型」(选的时候先试调用)。 */

@@ -151,7 +151,7 @@ fun ModelSetupScreen(
     val role = picking
     val actions = ModelSetupActions(
         selectPreset = vm::selectPreset, setKind = vm::setKind, setBaseUrl = vm::setBaseUrl, setAccountId = vm::setAccountId, setApiKey = vm::setApiKey,
-        setModel = vm::setModel, setManual = vm::setManual, setName = vm::setName, setNickname = vm::setNickname, renameProvider = vm::renameProvider,
+        setModel = vm::setModel, setManual = vm::setManual, setName = vm::setName, setNickname = vm::setNickname,
         testAndSave = vm::testAndSave,
         saveUntested = vm::saveWithoutTest,
         openForm = vm::openForm, closeForm = vm::closeForm,
@@ -382,8 +382,8 @@ class ModelSetupActions(
     /** 「手动填写模型名」的开和收。 */
     val setManual: (Boolean) -> Unit = {},
     val setName: (String) -> Unit = {},
+    /** 添加时填的账号备注(见 [com.wangzan101.mika.settings.Provider.nickname])。 */
     val setNickname: (String) -> Unit = {},
-    val renameProvider: (String, String?) -> Unit = { _, _ -> },
     val testAndSave: () -> Unit = {},
     /** 不测试,直接保存(见 [ModelSetupViewModel.saveWithoutTest])。 */
     val saveUntested: () -> Unit = {},

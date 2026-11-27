@@ -341,4 +341,6 @@
     <string name="tool_video_generate">Tạo video</string>
     <string name="provider_nickname_label">Biệt danh tài khoản</string>
     <string name="provider_rename_title">Đổi tên tài khoản</string> (feat(models): add optional custom provider nicknames, dynamic placeholders, and app-wide rename wiring)
+    <string name="provider_nickname_hint">Không bắt buộc, ví dụ: Công việc, Cá nhân</string>
+    <string name="provider_name_with_note">%1$s (%2$s)</string>
 </resources>

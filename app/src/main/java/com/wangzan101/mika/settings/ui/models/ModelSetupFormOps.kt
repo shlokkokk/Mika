@@ -84,9 +84,12 @@ fun ModelSetupViewModel.setName(name: String) = edit {
     it.copy(name = if (n <= MAX_NAME) name else name.substring(0, name.offsetByCodePoints(0, MAX_NAME)))
 }
 
-fun ModelSetupViewModel.setNickname(nickname: String) = edit {
-    val n = nickname.codePointCount(0, nickname.length)
-    it.copy(nickname = if (n <= MAX_NAME) nickname else nickname.substring(0, nickname.offsetByCodePoints(0, MAX_NAME)))
+fun ModelSetupViewModel.setNickname(nickname: String) = edit { it.copy(nickname = nicknameInput(nickname)) }
+
+/** 输入备注时按字符(码点)截到 [Provider.MAX_NICKNAME];首尾空白存的时候才去(见 [Provider.cleanNickname])。 */
+internal fun nicknameInput(text: String): String {
+    val n = text.codePointCount(0, text.length)
+    return if (n <= Provider.MAX_NICKNAME) text else text.substring(0, text.offsetByCodePoints(0, Provider.MAX_NICKNAME))
 }
 
 /** 连接信息变了:进行中的测试和上次的失败原因作废。 */
@@ -129,7 +132,7 @@ fun ModelSetupViewModel.testAndSave() {
                 store.connect(
                     f.providerName, f.kind, baseUrl, key, models, f.sessionHeader,
                     typed = setOfNotNull(typed.takeIf { it.isNotEmpty() && models.none { model -> model.id == it } }),
-                    customAlias = f.nickname.trim().ifEmpty { null },
+                    nickname = f.nickname,
                 )
             }
         } catch (e: CancellationException) {
@@ -184,7 +187,7 @@ fun ModelSetupViewModel.saveWithoutTest() {
             withContext(io) {
                 store.connect(
                     f.providerName, f.kind, baseUrl, key.ifEmpty { null }, emptyList(), f.sessionHeader, untested = true,
-                    customAlias = f.nickname.trim().ifEmpty { null },
+                    nickname = f.nickname,
                 ).also { p -> if (typed.isNotEmpty()) store.markTyped(p.id, typed) }
             }
         } catch (e: CancellationException) {
