@@ -64,6 +64,7 @@ import com.wangzan101.mika.settings.ui.UsageCopy
 import com.wangzan101.mika.setup.ui.Onboarding
 import com.wangzan101.mika.setup.ui.OnboardingStep
 import com.wangzan101.mika.ui.NavSlide
+import com.wangzan101.mika.ui.rememberPageStates
 import com.wangzan101.mika.ui.Route
 import com.wangzan101.mika.ui.openInBrowser
 import com.wangzan101.mika.voice.ui.VoiceHubSection
@@ -188,7 +189,9 @@ fun ModelSetupScreen(
     // 换页动画期间旧页还在渲染:服务商刚删掉时详情页也能从缓存里拿到数据画完退出
     var heldProviders by remember { mutableStateOf(ui.providers) }
     if (ui.providers.isNotEmpty()) heldProviders = ui.providers
-    NavSlide(subPage, depth = { it.depth }) { page ->
+    // 子页的滚动位置等:返回到上一层时原样恢复,退出的子页丢掉(规则见 PageStates)
+    val pageStates = rememberPageStates()
+    NavSlide(subPage, depth = { it.depth }, states = pageStates) { page ->
     when (page) {
         is ModelSubPage.AddProvider -> {
             BackHandler(onBack = vm::closeForm)
