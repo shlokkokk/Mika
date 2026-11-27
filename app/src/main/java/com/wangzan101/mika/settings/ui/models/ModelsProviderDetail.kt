@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicTextField
 import com.wangzan101.mika.ui.components.MikaDialog
+import com.wangzan101.mika.ui.components.MikaTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -88,6 +89,8 @@ class ProviderDetailActions(
     val setDailyBudget: (Long?) -> Boolean = { false },
     /** 把这家默认的模型设为主模型(账号登录的详情里那一行)。 */
     val useAsMain: () -> Unit = {},
+    /** 改这家的备注;null 是去掉备注。 */
+    val rename: (String?) -> Unit = {},
 )
 
 /**
@@ -168,6 +171,7 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
     var confirmDelete by remember { mutableStateOf(false) }
     var confirmRetest by remember(p.id) { mutableStateOf<String?>(null) }
     var editingBudget by remember { mutableStateOf(false) }
+    var renaming by remember { mutableStateOf(false) }
     var customBudget by remember { mutableStateOf("") }
     var budgetSaveFailed by remember { mutableStateOf(false) }
     var using by remember { mutableStateOf<String?>(null) }
@@ -193,6 +197,20 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
                     }
                 }
                 ListRow(null, ModelsCopy.BASE_URL) { RowValue(ModelsCopy.shortUrl(p.baseUrl)) }
+                ListRow(
+                    null, stringResource(R.string.provider_nickname_label), onClick = { renaming = true },
+                    modifier = Modifier.testTag("provider-nickname"),
+                ) {
+                    RowValue(p.nickname ?: ModelsCopy.UNSET)
+                    RowChevron()
+                }
+            }
+            if (renaming) {
+                ProviderRenameDialog(
+                    current = p.nickname,
+                    onDismiss = { renaming = false },
+                    onConfirm = { nickname -> actions.rename(nickname); renaming = false },
+                )
             }
             (state as? ListState.Failed)?.let { FooterNote(ModelSetupCopy.failed(it.message), color = c.bad) }
 
@@ -462,4 +480,30 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
             dismissButton = { TextButton({ confirmDelete = false }) { Text(ModelSetupCopy.CANCEL) } },
         )
     }
+}
+
+/** 改账号备注:空着保存就是去掉备注。字数在输入时按 [Provider.MAX_NICKNAME] 截。 */
+@Composable
+internal fun ProviderRenameDialog(current: String?, onDismiss: () -> Unit, onConfirm: (String?) -> Unit) {
+    var text by remember { mutableStateOf(current.orEmpty()) }
+    MikaDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.provider_rename_title)) },
+        text = {
+            MikaTextField(
+                value = text,
+                onValueChange = { text = nicknameInput(it) },
+                modifier = Modifier.fillMaxWidth().testTag("provider-rename-input"),
+                singleLine = true,
+                label = { Text(stringResource(R.string.provider_nickname_label)) },
+                placeholder = { Text(stringResource(R.string.provider_nickname_hint)) },
+            )
+        },
+        confirmButton = {
+            TextButton({ onConfirm(Provider.cleanNickname(text)) }, modifier = Modifier.testTag("provider-rename-save")) {
+                Text(ModelsCopy.SAVE)
+            }
+        },
+        dismissButton = { TextButton(onDismiss) { Text(ModelSetupCopy.CANCEL) } },
+    )
 }

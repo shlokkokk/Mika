@@ -1,5 +1,6 @@
 package com.wangzan101.mika.voice.ui
 
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -38,6 +39,7 @@ import com.wangzan101.mika.ui.components.RadioRow
 import com.wangzan101.mika.ui.components.RowChevron
 import com.wangzan101.mika.ui.components.RowValue
 import com.wangzan101.mika.ui.components.SheetAction
+import com.wangzan101.mika.ui.components.SheetTrailing
 import com.wangzan101.mika.ui.components.StatusPill
 import com.wangzan101.mika.ui.components.TagTone
 import com.wangzan101.mika.ui.components.ValueTone
@@ -215,10 +217,18 @@ internal fun VoiceOptionList(
 
 /**
  * A list of voices in a bottom sheet; the saved one is listed even when it is not a known voice. The last row takes
- * any voice id (a cloned voice, one newer than the list), so the list never limits what can be used.
+ * any voice id (a cloned voice, one newer than the list), so the list never limits what can be used. The first row goes
+ * back to the service's default voice. With [onAudition] each voice gets a listen button; the caller owns playback and
+ * stops it when the sheet goes away.
  */
 @Composable
-internal fun VoicePickerSheet(voices: List<String>, onPick: (String) -> Unit, onDismiss: () -> Unit, model: VoiceModel? = null) {
+internal fun VoicePickerSheet(
+    voices: List<String>,
+    onPick: (String) -> Unit,
+    onDismiss: () -> Unit,
+    model: VoiceModel? = null,
+    onAudition: ((String) -> Unit)? = null,
+) {
     var typing by remember { mutableStateOf(false) }
     if (typing) {
         TextEntryDialog(
@@ -227,10 +237,16 @@ internal fun VoicePickerSheet(voices: List<String>, onPick: (String) -> Unit, on
         )
         return
     }
-    val actions = voices.map { voice -> SheetAction(VoiceVoices.label(model, voice)) { onPick(voice) } } +
-        SheetAction(stringResource(R.string.voice_enter_voice_id), MikaIcons.Edit) { typing = true }
+    val actions = listOf(SheetAction(stringResource(R.string.voice_voice_default), searchable = false) { onPick("") }) +
+        voices.filter { it.isNotBlank() }.map { voice ->
+            val label = VoiceVoices.label(model, voice)
+            SheetAction(label, trailing = onAudition?.let { play -> SheetTrailing(MikaIcons.Sound, stringResource(R.string.voice_audition, label)) { play(voice) } }) {
+                onPick(voice)
+            }
+        } +
+        SheetAction(stringResource(R.string.voice_enter_voice_id), MikaIcons.Edit, searchable = false) { typing = true }
     // 选「手动输入」时面板会顺手关掉,这里拦下,让输入框接着出来
-    ActionSheet(stringResource(R.string.voice_voice), actions) { if (!typing) onDismiss() }
+    ActionSheet(stringResource(R.string.voice_voice), actions, searchHint = stringResource(R.string.search)) { if (!typing) onDismiss() }
 }
 
 /** Shown under each use page: where to connect more services. */
@@ -381,7 +397,7 @@ fun RealtimeVoiceScreen(store: ProviderStore, onBack: () -> Unit, onOpenCalls: (
 
 /** Status pill helper kept here so pages agree on wording. */
 @Composable
-internal fun VoiceUsablePill(usable: Boolean) {
+internal fun RowScope.VoiceUsablePill(usable: Boolean) {
     if (usable) RowValue(stringResource(R.string.voice_hub_ready), ValueTone.Ok)
     else StatusPill(stringResource(R.string.voice_hub_setup), PillTone.Warn)
 }

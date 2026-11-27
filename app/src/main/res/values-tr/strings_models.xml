@@ -341,7 +341,16 @@
     <string name="video_model_name">Model</string>
     <string name="video_no_providers">Önce bir model hizmeti ekleyin (video aynı hizmeti ve anahtarı kullanır).</string>
     <string name="video_provider">Hizmet</string>
-    <string name="video_resolution">Çözünürlük</string> (feat(voice): add key pool rotation, 5xx overload failover, backup chains, and Same-as-Main/Light STT)
+    <string name="video_resolution">Çözünürlük</string>
+    <string name="provider_nickname_label">Hesap takma adı</string>
+    <string name="provider_rename_title">Hesabı yeniden adlandır</string>
+    <string name="provider_nickname_hint">İsteğe bağlı, ör. İş veya Kişisel</string>
+    <string name="provider_name_with_note">%1$s (%2$s)</string>
+    <string name="model_fallback_move_up">Yukarı taşı</string>
+    <string name="model_fallback_move_down">Aşağı taşı</string>
+    <string name="model_fallback_move_up_desc">%1$d. yedeği yukarı taşı</string>
+    <string name="model_fallback_move_down_desc">%1$d. yedeği aşağı taşı</string>
+    <string name="video_resolution">Çözünürlük</string>
     <string name="voice_same_as_main">Ana model ile aynı</string>
     <string name="voice_same_as_light">Hafif model ile aynı</string>
     <string name="voice_backup_chain_title">Yedek modeller</string>

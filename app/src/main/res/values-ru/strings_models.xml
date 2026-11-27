@@ -354,7 +354,15 @@
     <string name="video_footer">Генерация идёт в фоне и может занять несколько минут. Готовое видео сохраняется в рабочей области в out/video.</string>
     <string name="video_no_compatible">Ни один из ваших сервисов моделей не умеет создавать видео. Сначала добавьте подходящий: %1$s.</string>
     <string name="video_choice_stale">Выбранный ранее сервис больше не может создавать видео (он удалён или его адрес изменился). Выберите другой ниже; до этого Mika не будет создавать видео.</string>
-    <string name="tool_video_generate">Создать видео</string> (feat(voice): add key pool rotation, 5xx overload failover, backup chains, and Same-as-Main/Light STT)
+    <string name="tool_video_generate">Создать видео</string>
+    <string name="provider_nickname_label">Псевдоним аккаунта</string>
+    <string name="provider_rename_title">Переименовать аккаунт</string>
+    <string name="provider_nickname_hint">Необязательно, например: Работа или Личный</string>
+    <string name="provider_name_with_note">%1$s (%2$s)</string>
+    <string name="model_fallback_move_up">Вверх</string>
+    <string name="model_fallback_move_down">Вниз</string>
+    <string name="model_fallback_move_up_desc">Переместить резерв №%1$d вверх</string>
+    <string name="model_fallback_move_down_desc">Переместить резерв №%1$d вниз</string>
     <string name="voice_same_as_main">Как основная модель</string>
     <string name="voice_same_as_light">Как лёгкая модель</string>
     <string name="voice_backup_chain_title">Резервные модели</string>

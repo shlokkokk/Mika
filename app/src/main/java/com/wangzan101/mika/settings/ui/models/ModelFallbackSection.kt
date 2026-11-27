@@ -25,7 +25,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,6 +52,7 @@ internal fun FallbackSection(
     role: ModelRole = ModelRole.Main,
     onPickFallback: (ModelRole, Int) -> Unit,
     onClearFallback: (ModelRole, Int) -> Unit,
+    onMoveFallback: (ModelRole, Int, Int) -> Unit = { _, _, _ -> },
 ) {
     val shouldShow = when (role) {
         ModelRole.Main -> ui.roles.main != null
@@ -206,12 +212,25 @@ internal fun FallbackSection(
                 fallbacks.forEachIndexed { slot, configId ->
                     Hairline(start = 14.dp)
                     val cfg = ui.configs.firstOrNull { it.id == configId }
+                    val canUp = slot > 0
+                    val canDown = slot < fallbacks.lastIndex
+                    val moveUp = stringResource(R.string.model_fallback_move_up)
+                    val moveDown = stringResource(R.string.model_fallback_move_down)
+                    val remove = stringResource(R.string.model_fallback_remove_desc)
                     Row(
                         Modifier
                             .fillMaxWidth()
                             .clickable { onPickFallback(role, slot) }
+                            // 读屏:在这一行上就能上移、下移、移除,不用逐个找右边的小按钮
+                            .semantics {
+                                customActions = listOfNotNull(
+                                    CustomAccessibilityAction(moveUp) { onMoveFallback(role, slot, slot - 1); true }.takeIf { canUp },
+                                    CustomAccessibilityAction(moveDown) { onMoveFallback(role, slot, slot + 1); true }.takeIf { canDown },
+                                    CustomAccessibilityAction(remove) { removingSlot = slot; true },
+                                )
+                            }
                             .testTag("role-fallback-${role.name.lowercase()}-$slot")
-                            .padding(horizontal = 14.dp, vertical = 11.dp),
+                            .padding(start = 14.dp, end = 2.dp, top = 4.dp, bottom = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
@@ -223,7 +242,7 @@ internal fun FallbackSection(
                         ) {
                             Text("${slot + 2}", style = MikaType.Caption.copy(fontWeight = FontWeight.Bold), color = c.ink2)
                         }
-                        Column(Modifier.weight(1f)) {
+                        Column(Modifier.weight(1f).padding(vertical = 7.dp)) {
                             Text(
                                 stringResource(R.string.model_fallback_backup_badge, slot + 1),
                                 style = MikaType.Hint,
@@ -251,19 +270,22 @@ internal fun FallbackSection(
                                 )
                             }
                         }
-                        Box(
-                            Modifier
-                                .size(32.dp)
-                                .clip(MikaShapes.Pill)
-                                .clickable { removingSlot = slot },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                MikaIcons.Close,
-                                contentDescription = stringResource(R.string.model_fallback_remove_desc),
-                                tint = c.ink3,
-                                modifier = Modifier.size(16.dp),
-                            )
+                        Row {
+                            // 只有一个备援时没有可挪的,不占地方
+                            if (fallbacks.size > 1) {
+                                FallbackIconButton(
+                                    MikaIcons.Up, stringResource(R.string.model_fallback_move_up_desc, slot + 1), canUp,
+                                    Modifier.testTag("role-fallback-${role.name.lowercase()}-$slot-up"),
+                                ) { onMoveFallback(role, slot, slot - 1) }
+                                FallbackIconButton(
+                                    MikaIcons.Down, stringResource(R.string.model_fallback_move_down_desc, slot + 1), canDown,
+                                    Modifier.testTag("role-fallback-${role.name.lowercase()}-$slot-down"),
+                                ) { onMoveFallback(role, slot, slot + 1) }
+                            }
+                            FallbackIconButton(
+                                MikaIcons.Close, remove, true,
+                                Modifier.testTag("role-fallback-${role.name.lowercase()}-$slot-remove"),
+                            ) { removingSlot = slot }
                         }
                     }
                 }
@@ -331,5 +353,32 @@ internal fun FallbackSection(
 
     if (hasAny && expanded) {
         FooterNote(stringResource(R.string.model_fallback_footer_note, roleLabel))
+    }
+}
+
+
+/** 备援一行右边的图标按钮:点按区域 48dp,图标 16dp;不能用时变淡、不可点。 */
+@Composable
+private fun FallbackIconButton(
+    icon: ImageVector,
+    description: String,
+    enabled: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    val c = MikaTheme.colors
+    Box(
+        modifier
+            .size(48.dp)
+            .clip(MikaShapes.Pill)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            icon,
+            contentDescription = description,
+            tint = if (enabled) c.ink3 else c.ink3.copy(alpha = 0.35f),
+            modifier = Modifier.size(16.dp),
+        )
     }
 }

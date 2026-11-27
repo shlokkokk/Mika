@@ -92,4 +92,5 @@
     <string name="calls_audio_checked">Проверено</string>
     <string name="calls_audio_unchecked">Не проверено</string>
     <string name="voice_stt_footer">Встроенное распознавание телефона бесплатно. Онлайн-варианты берутся из ваших голосовых сервисов; скажите фразу, чтобы проверить перед выбором.</string>
+    <string name="voice_audition">Прослушать %1$s</string>
 </resources>

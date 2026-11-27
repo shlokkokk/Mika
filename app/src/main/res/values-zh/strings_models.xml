@@ -340,7 +340,15 @@
     <string name="video_footer">生成在后台进行，可能要几分钟。做好的视频保存在工作区的 out/video 下。</string>
     <string name="video_no_compatible">你添加的模型服务商都不能生成视频。请先添加一个能生成视频的：%1$s。</string>
     <string name="video_choice_stale">之前选的服务商已不能生成视频（已删除或地址改了）。请在下面重新选择；在此之前 Mika 不会生成视频。</string>
-    <string name="tool_video_generate">生成视频</string> (feat(voice): add key pool rotation, 5xx overload failover, backup chains, and Same-as-Main/Light STT)
+    <string name="tool_video_generate">生成视频</string>
+    <string name="provider_nickname_label">账号备注</string>
+    <string name="provider_rename_title">重命名账号</string>
+    <string name="provider_nickname_hint">选填，比如：工作、个人</string>
+    <string name="provider_name_with_note">%1$s（%2$s）</string>
+    <string name="model_fallback_move_up">上移</string>
+    <string name="model_fallback_move_down">下移</string>
+    <string name="model_fallback_move_up_desc">上移备用 #%1$d</string>
+    <string name="model_fallback_move_down_desc">下移备用 #%1$d</string>
     <string name="voice_same_as_main">与主模型相同</string>
     <string name="voice_same_as_light">与轻量模型相同</string>
     <string name="voice_backup_chain_title">备援模型</string>
