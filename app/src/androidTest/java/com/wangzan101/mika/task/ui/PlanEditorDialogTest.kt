@@ -9,17 +9,18 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToKey
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
+import android.util.Log
 import android.view.KeyEvent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -28,6 +29,9 @@ import com.wangzan101.mika.core.trigger.TriggerDefinition
 import com.wangzan101.mika.core.trigger.DEEPSEEK_OFF_PEAK_WINDOWS
 import com.wangzan101.mika.core.trigger.ExecutionWindow
 import com.wangzan101.mika.core.trigger.toPlanDraft
+import com.wangzan101.mika.core.trigger.newPlanDraft
+import com.wangzan101.mika.i18n.uiLocale
+import kotlin.system.measureTimeMillis
 import com.wangzan101.mika.core.trigger.TriggerWindowState
 import com.wangzan101.mika.task.FileTriggerStore
 import com.wangzan101.mika.task.TriggerRuntime
@@ -175,12 +179,18 @@ class PlanEditorDialogTest {
         assertEquals(saved.single().executionWindowZone, saved.single().toPlanDraft().zone)
     }
 
-    /** 一次性计划的时间已过:不让保存,提示可改到明天同一时间,改完能保存。 */
+    /**
+     * 新建(或复制出来)的一次性计划时间已过:不让保存,提示可改到明天同一时间,改完能保存。
+     * 只对新时间把关:编辑已有计划而时间没动时,核心特意放行(见下一条),所以这里用新建的草稿。
+     */
     @Test fun pastOneShotTimeStaysInEditorUntilMovedToTomorrow() {
-        val past = System.currentTimeMillis() - 3_600_000
-        val original = TriggerDefinition("past-id", "past-thread", "测试", past)
+        val past = newPlanDraft(System.currentTimeMillis() - 3 * 3_600_000).copy(content = "测试")
         val saved = mutableListOf<TriggerDefinition>()
-        show(original, saved)
+        compose.setContent {
+            MikaTheme(dark = false, reduceMotion = true) {
+                PlanEditorDialog(null, "new-thread", onDismiss = {}, onSave = saved::add, initialDraft = past, use24Hour = true)
+            }
+        }
         compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
         compose.onNodeWithTag("plan-editor-error").performScrollTo().assertExists()
         assertTrue(saved.isEmpty())
@@ -189,6 +199,19 @@ class PlanEditorDialogTest {
         compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
         val plan = saved.single()
         assertTrue(plan.nextAtMs > System.currentTimeMillis())
+        assertEquals("new-thread", plan.threadId)
+    }
+
+    /** 编辑一条已过时的一次性计划、时间没改:照常能存(核心对「时间未改的编辑」不查是否在将来),线程不变。 */
+    @Test fun editingPastOneShotWithoutChangingTimeStillSaves() {
+        val past = System.currentTimeMillis() - 3_600_000
+        val original = TriggerDefinition("past-id", "past-thread", "测试", past)
+        val saved = mutableListOf<TriggerDefinition>()
+        show(original, saved)
+        compose.onNodeWithTag("plan-editor-use-tomorrow").performScrollTo().assertExists()
+        compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
+        val plan = saved.single()
+        assertEquals(past, plan.nextAtMs)
         assertEquals("past-thread", plan.threadId)
     }
 
@@ -248,13 +271,17 @@ class PlanEditorDialogTest {
         show(saved = saved)
         compose.onNodeWithTag("plan-editor-content").performTextInput("测试")
         compose.onNodeWithTag("plan-editor-daily").performSemanticsAction(SemanticsActions.OnClick)
+        // 先在测试线程上把这门语言的时区索引建好(编辑器打开时也会在后台预热同一份),
+        // 选择器打开时直接拿到现成索引,不再靠超时去等后台线程;顺便把真机上的建索引耗时记进日志。
+        val buildMs = measureTimeMillis { PlanZoneIndex.get(uiLocale()) }
+        Log.i("PlanEditorDialogTest", "zone index ready in $buildMs ms")
         compose.onNodeWithTag("plan-editor-zone").performScrollTo().performClick()
-        compose.waitUntil(5_000) {
-            compose.onAllNodesWithTag("plan-zone-list").fetchSemanticsNodes().isNotEmpty()
-        }
+        compose.onNodeWithTag("plan-zone-list").assertExists()
         compose.onNodeWithTag("plan-zone-search").performTextInput("+9")
         compose.onNodeWithTag("plan-zone-Europe/London").assertDoesNotExist()
-        compose.onNodeWithTag("plan-zone-Asia/Tokyo").performScrollTo().performClick()
+        // 列表是懒加载的,东京不一定在首屏:按 key 滚过去再点。
+        compose.onNodeWithTag("plan-zone-list").performScrollToKey("Asia/Tokyo")
+        compose.onNodeWithTag("plan-zone-Asia/Tokyo").performClick()
         compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
         assertEquals("Asia/Tokyo", saved.single().calendarZone)
     }
@@ -297,7 +324,7 @@ class PlanEditorDialogTest {
         compose.onNodeWithTag("plan-editor-clock-0").assertTextContains("09:00", substring = true)
         compose.onNodeWithTag("plan-editor-clock-1").assertDoesNotExist()
         compose.onNodeWithTag("plan-editor-save").performSemanticsAction(SemanticsActions.OnClick)
-        assertEquals(listOf("08:00"), saved.single().calendarClocks())
+        assertEquals(listOf("09:00"), saved.single().calendarClocks())
         assertEquals(1, saved.single().calendarDays.size)
     }
 

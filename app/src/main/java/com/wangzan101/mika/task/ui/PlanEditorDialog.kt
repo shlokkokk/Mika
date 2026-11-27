@@ -2,6 +2,9 @@ package com.wangzan101.mika.task.ui
 
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import android.text.format.DateFormat
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -104,6 +107,8 @@ fun PlanEditorDialog(
     use24Hour: Boolean = systemUses24Hour(),
 ) {
     val locale = uiLocale()
+    // 时区选择器要用的本地化索引建起来较慢,编辑器一打开就在后台预热,点开选择器时直接有列表。
+    LaunchedEffect(locale) { withContext(Dispatchers.Default) { PlanZoneIndex.get(locale) } }
 
     val newId = remember(original?.id) { original?.id ?: UUID.randomUUID().toString() }
     var draft by remember(original?.id) {

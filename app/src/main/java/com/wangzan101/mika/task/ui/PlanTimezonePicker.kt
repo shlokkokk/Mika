@@ -51,8 +51,9 @@ internal fun PlanTimezonePickerDialog(
 ) {
     val locale = uiLocale()
     var query by remember { mutableStateOf("") }
-    val index by produceState<List<ZoneEntry>?>(null, locale) {
-        value = withContext(Dispatchers.Default) { zoneIndexFor(locale) }
+    // 编辑器打开时已在后台预热,通常这里直接拿到现成索引;还没建好就后台建完再显示。
+    val index by produceState(PlanZoneIndex.cached(locale), locale) {
+        if (value == null) value = withContext(Dispatchers.Default) { PlanZoneIndex.get(locale) }
     }
     val zones = remember(index, query, currentZoneId) {
         index?.let { PlanTimeFormat.searchZones(it, query, currentZoneId) }
@@ -110,7 +111,31 @@ internal fun zoneSummary(zoneId: String, locale: Locale): String {
     return listOfNotNull(city?.takeIf { it.isNotBlank() } ?: zoneId, offset).joinToString(" · ")
 }
 
-private fun zoneIndexFor(locale: Locale): List<ZoneEntry> {
-    val names = TimeZoneNames.getInstance(locale)
-    return PlanTimeFormat.zoneIndex(locale, cityName = { id -> runCatching { names.getExemplarLocationName(id) }.getOrNull() })
+/**
+ * 按界面语言建好的时区索引,进程内复用。几百个时区逐个查本地化城市名和时区名,真机上第一次要几百毫秒到几秒,
+ * 不放在每次打开选择器时现查。偏移随夏令时会变,索引存一小时后重建。同一语言同时只建一份,别的调用方等它建完。
+ * [get] 会阻塞,只在后台线程(或测试线程)调用。
+ */
+internal object PlanZoneIndex {
+    private const val MAX_AGE_MS = 3_600_000L
+    private class Built(val atMs: Long, val zones: List<ZoneEntry>)
+    private val built = java.util.concurrent.ConcurrentHashMap<Locale, Built>()
+    private val building = Any()
+
+    /** 主线程可调:只读现成的,不等正在建的那份。 */
+    fun cached(locale: Locale, nowMs: Long = System.currentTimeMillis()): List<ZoneEntry>? =
+        built[locale]?.takeIf { nowMs - it.atMs < MAX_AGE_MS }?.zones
+
+    fun get(locale: Locale): List<ZoneEntry> = synchronized(building) {
+        val nowMs = System.currentTimeMillis()
+        cached(locale, nowMs)?.let { return it }
+        val names = TimeZoneNames.getInstance(locale)
+        val zones = PlanTimeFormat.zoneIndex(
+            locale,
+            now = java.time.Instant.ofEpochMilli(nowMs),
+            cityName = { id -> runCatching { names.getExemplarLocationName(id) }.getOrNull() },
+        )
+        built[locale] = Built(nowMs, zones)
+        return zones
+    }
 }
