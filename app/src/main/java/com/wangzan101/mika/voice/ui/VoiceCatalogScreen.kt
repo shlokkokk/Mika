@@ -1,5 +1,6 @@
 package com.wangzan101.mika.voice.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -73,6 +74,7 @@ import com.wangzan101.mika.ui.components.PillTone
 import com.wangzan101.mika.ui.components.SelectChip
 import com.wangzan101.mika.ui.components.StatusPill
 import com.wangzan101.mika.ui.components.SubPage
+import com.wangzan101.mika.ui.theme.MikaShapes
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import kotlinx.coroutines.launch
@@ -375,58 +377,48 @@ private fun CapabilityRow(
     onStop: () -> Unit,
 ) {
     val c = MikaTheme.colors
-    Row(
-        Modifier.fillMaxWidth().testTag(tag),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(label, style = MikaType.Caption.copy(fontWeight = FontWeight.Medium), color = c.ink2)
-                Text("·", style = MikaType.Hint, color = c.ink3)
-                Text(protocol, style = MikaType.Hint, color = c.ink3)
-            }
-            when (ui) {
-                VoiceProbeUi.Idle -> StatusPill(
-                    stringResource(if (verified) R.string.voice_catalog_verified else R.string.voice_catalog_unverified),
-                    if (verified) PillTone.Ok else PillTone.Warn,
-                )
-                VoiceProbeUi.Running -> StatusPill(stringResource(R.string.voice_catalog_testing), PillTone.Warn)
-                is VoiceProbeUi.Listening -> if (ui.converting) {
-                    StatusPill(stringResource(R.string.voice_catalog_testing), PillTone.Warn)
-                } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        VoiceWave(ui.level, flat = false, reduceMotion = false, color = c.accent)
-                        Text(
-                            ui.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) },
-                            style = MikaType.Hint, color = c.ink2,
-                        )
+    Column(Modifier.fillMaxWidth().testTag(tag), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(label, style = MikaType.Caption.copy(fontWeight = FontWeight.Medium), color = c.ink2)
+                    Text("·", style = MikaType.Hint, color = c.ink3)
+                    Text(
+                        protocol,
+                        style = MikaType.Hint,
+                        color = c.ink3,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    )
+                }
+                when (ui) {
+                    VoiceProbeUi.Idle -> StatusPill(
+                        stringResource(if (verified) R.string.voice_catalog_verified else R.string.voice_catalog_unverified),
+                        if (verified) PillTone.Ok else PillTone.Warn,
+                    )
+                    VoiceProbeUi.Running -> StatusPill(stringResource(R.string.voice_catalog_testing), PillTone.Warn)
+                    is VoiceProbeUi.Listening -> if (ui.converting) {
+                        StatusPill(stringResource(R.string.voice_catalog_testing), PillTone.Warn)
+                    }
+                    VoiceProbeUi.Playing -> StatusPill(stringResource(R.string.voice_playing), PillTone.Ok)
+                    is VoiceProbeUi.Failed -> Text(ui.error.detail, style = MikaType.Hint, color = c.bad)
+                    VoiceProbeUi.Verified -> Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        StatusPill(stringResource(R.string.voice_catalog_verified), PillTone.Ok)
+                        if (transcript.isNotBlank()) {
+                            Text(
+                                "“$transcript”",
+                                style = MikaType.Hint,
+                                color = c.ink2,
+                                maxLines = 2,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            )
+                        }
                     }
                 }
-                VoiceProbeUi.Playing -> StatusPill(stringResource(R.string.voice_playing), PillTone.Ok)
-                is VoiceProbeUi.Failed -> Text(ui.error.detail, style = MikaType.Hint, color = c.bad)
-                VoiceProbeUi.Verified -> Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    StatusPill(stringResource(R.string.voice_catalog_verified), PillTone.Ok)
-                    if (transcript.isNotBlank()) {
-                        Text(
-                            "“$transcript”",
-                            style = MikaType.Hint,
-                            color = c.ink2,
-                            maxLines = 2,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                        )
-                    }
-                }
-            }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            if (ui is VoiceProbeUi.Listening && ui.canFinish && !ui.converting) {
-                MikaButton(
-                    text = stringResource(R.string.voice_result_done),
-                    onClick = onFinish,
-                    kind = ButtonKind.Primary,
-                    size = ButtonSize.Small,
-                )
             }
             MikaButton(
                 text = if (ui.isActive) stringResource(R.string.chat_audio_stop) else testLabel,
@@ -434,6 +426,33 @@ private fun CapabilityRow(
                 kind = if (ui.isActive) ButtonKind.Secondary else ButtonKind.Tonal,
                 size = ButtonSize.Small,
             )
+        }
+        if (ui is VoiceProbeUi.Listening && !ui.converting) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .background(c.fill, MikaShapes.Button)
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    VoiceWave(ui.level, flat = false, reduceMotion = false, color = c.accent)
+                    Text(
+                        ui.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) },
+                        style = MikaType.Hint,
+                        color = c.ink2,
+                    )
+                }
+                if (ui.canFinish) {
+                    MikaButton(
+                        text = stringResource(R.string.voice_result_done),
+                        onClick = onFinish,
+                        kind = ButtonKind.Primary,
+                        size = ButtonSize.Small,
+                    )
+                }
+            }
         }
     }
 }

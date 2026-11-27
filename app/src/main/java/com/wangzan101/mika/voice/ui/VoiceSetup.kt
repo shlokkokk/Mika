@@ -1,5 +1,6 @@
 package com.wangzan101.mika.voice.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -45,6 +46,7 @@ import com.wangzan101.mika.ui.components.StatusPill
 import com.wangzan101.mika.ui.components.TagTone
 import com.wangzan101.mika.ui.components.ValueTone
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaShapes
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.voice.VoicePlayer
@@ -202,12 +204,29 @@ internal fun VoiceOptionList(
                         when (probe) {
                             VoiceProbeUi.Idle -> if (choice.verified) Text(stringResource(R.string.voice_catalog_verified), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ok)
                             VoiceProbeUi.Running -> Text(stringResource(R.string.voice_catalog_testing), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink3)
-                            is VoiceProbeUi.Listening -> Column(Modifier.padding(top = 6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                if (probe.converting) {
-                                    Text(stringResource(R.string.voice_catalog_testing), style = MikaType.Hint, color = c.ink3)
-                                } else {
-                                    VoiceWave(probe.level, flat = false, reduceMotion = false, color = c.accent)
-                                    Text(probe.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) }, style = MikaType.Hint, color = c.ink2)
+                            is VoiceProbeUi.Listening -> if (probe.converting) {
+                                Text(stringResource(R.string.voice_catalog_testing), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink3)
+                            } else {
+                                Row(
+                                    Modifier
+                                        .padding(top = 6.dp)
+                                        .background(c.fill, MikaShapes.Button)
+                                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                ) {
+                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        VoiceWave(probe.level, flat = false, reduceMotion = false, color = c.accent)
+                                        Text(probe.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) }, style = MikaType.Hint, color = c.ink2)
+                                    }
+                                    if (probe.canFinish) {
+                                        MikaButton(
+                                            stringResource(R.string.voice_result_done),
+                                            onClick = { viewModel.finishStt(choice.ref) },
+                                            kind = ButtonKind.Primary,
+                                            size = ButtonSize.Small,
+                                        )
+                                    }
                                 }
                             }
                             VoiceProbeUi.Playing -> Text(stringResource(R.string.voice_playing), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink2)
@@ -221,23 +240,13 @@ internal fun VoiceOptionList(
                     }
                 },
                 trailing = {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        if (probe is VoiceProbeUi.Listening && probe.canFinish && !probe.converting) {
-                            MikaButton(
-                                stringResource(R.string.voice_result_done),
-                                onClick = { viewModel.finishStt(choice.ref) },
-                                kind = ButtonKind.Primary,
-                                size = ButtonSize.Small,
-                            )
-                        }
-                        MikaButton(
-                            if (probe.isActive) stringResource(R.string.chat_audio_stop) else testLabel,
-                            onClick = { if (probe.isActive) viewModel.stopProbe(choice.ref) else onTest(choice) },
-                            kind = if (probe.isActive) ButtonKind.Secondary else ButtonKind.Tonal,
-                            size = ButtonSize.Small,
-                            modifier = Modifier.testTag("voice-try-${choice.ref.serviceId}-${choice.ref.modelId}"),
-                        )
-                    }
+                    MikaButton(
+                        if (probe.isActive) stringResource(R.string.chat_audio_stop) else testLabel,
+                        onClick = { if (probe.isActive) viewModel.stopProbe(choice.ref) else onTest(choice) },
+                        kind = if (probe.isActive) ButtonKind.Secondary else ButtonKind.Tonal,
+                        size = ButtonSize.Small,
+                        modifier = Modifier.testTag("voice-try-${choice.ref.serviceId}-${choice.ref.modelId}"),
+                    )
                 },
             )
         }
