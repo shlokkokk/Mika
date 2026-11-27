@@ -2,6 +2,8 @@ package com.wangzan101.mika.voice.ui
 
 import com.wangzan101.mika.core.model.TtsRequest
 import com.wangzan101.mika.core.model.TtsResponse
+import com.wangzan101.mika.voice.SpeechEvent
+import com.wangzan101.mika.voice.SpeechSession
 import com.wangzan101.mika.voice.model.MigrationResult
 import com.wangzan101.mika.voice.model.SttSelectionController
 import com.wangzan101.mika.voice.model.TtsSelectionController
@@ -15,14 +17,15 @@ import com.wangzan101.mika.voice.model.VoiceModelEnvironment
 import com.wangzan101.mika.voice.model.VoiceModelError
 import com.wangzan101.mika.voice.model.VoiceModelProbe
 import com.wangzan101.mika.voice.model.VoiceModelRef
-import com.wangzan101.mika.voice.model.VoiceProbeState
 import com.wangzan101.mika.voice.model.VoiceService
 import com.wangzan101.mika.voice.model.VoiceVerification
+import com.wangzan101.mika.voice.model.toError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,9 +44,18 @@ sealed interface ProbeResult {
 sealed interface VoiceProbeUi {
     data object Idle : VoiceProbeUi
     data object Running : VoiceProbeUi
-    data class Listening(val transcript: String) : VoiceProbeUi
+    data class Listening(
+        val transcript: String,
+        val level: Float = 0f,
+        val canFinish: Boolean = false,
+        val converting: Boolean = false,
+    ) : VoiceProbeUi
+    data object Playing : VoiceProbeUi
     data class Failed(val error: VoiceModelError) : VoiceProbeUi
     data object Verified : VoiceProbeUi
+
+    val isActive: Boolean
+        get() = this is Running || this is Listening || this is Playing
 }
 
 /**
@@ -58,6 +70,8 @@ class VoiceCatalogViewModel(
     private val scope: CoroutineScope,
     private val playAudio: suspend (ByteArray, String) -> Unit,
     private val io: CoroutineDispatcher = Dispatchers.IO,
+    private val playAudioWithStatus: (suspend (ByteArray, String, () -> Unit) -> Unit)? = null,
+    private val onStopAudio: () -> Unit = {},
 ) {
     val catalog: VoiceCatalogStore = environment.catalog
     val snapshot: StateFlow<VoiceCatalogSnapshot> = catalog.state
@@ -70,6 +84,10 @@ class VoiceCatalogViewModel(
 
     private val _probes = MutableStateFlow<Map<String, VoiceProbeUi>>(emptyMap())
     val probes: StateFlow<Map<String, VoiceProbeUi>> = _probes.asStateFlow()
+    private val _transcripts = MutableStateFlow<Map<String, String>>(emptyMap())
+    val transcripts: StateFlow<Map<String, String>> = _transcripts.asStateFlow()
+    private val activeJobs = mutableMapOf<String, Job>()
+    private val activeSttSessions = mutableMapOf<String, SpeechSession>()
 
     // ---------- accounts, models and services ----------
 
@@ -132,9 +150,11 @@ class VoiceCatalogViewModel(
 
     private fun startProbe(ref: VoiceModelRef): Pair<CompletableDeferred<ProbeResult>, String> {
         val fingerprint = probe.connection(ref)
+        stopOtherProbes(except = fingerprint)
         setProbe(fingerprint, VoiceProbeUi.Running)
         val pending = CompletableDeferred<ProbeResult>()
         pending.invokeOnCompletion {
+            activeJobs.remove(fingerprint)
             if (pending.isCancelled) return@invokeOnCompletion
             when (val result = pending.getCompleted()) {
                 is ProbeResult.Success -> {
@@ -148,36 +168,179 @@ class VoiceCatalogViewModel(
         return pending to fingerprint
     }
 
+    private fun stopOtherProbes(except: String? = null) {
+        val toStop = activeJobs.keys.filter { it != except }
+        toStop.forEach { fp ->
+            activeSttSessions.remove(fp)?.cancel()
+            activeJobs.remove(fp)?.cancel()
+            if (_probes.value[fp]?.isActive == true) setProbe(fp, VoiceProbeUi.Idle)
+        }
+        onStopAudio()
+    }
+
+    /** Stops all active probes (e.g. when leaving the screen so mic and audio always release). */
+    fun stopAllProbes() {
+        stopOtherProbes(except = null)
+    }
+
+    /** Stops an in-progress STT capture, TTS synthesis/playback, or Realtime connection probe for [ref]. */
+    fun stopProbe(ref: VoiceModelRef) {
+        val fingerprint = probeFingerprint(ref)
+        if (fingerprint != null) {
+            activeSttSessions.remove(fingerprint)?.cancel()
+            activeJobs.remove(fingerprint)?.cancel()
+            _transcripts.update { it - fingerprint }
+            if (_probes.value[fingerprint]?.isActive == true) setProbe(fingerprint, VoiceProbeUi.Idle)
+        }
+        onStopAudio()
+    }
+
+    /** Ends an active non-live STT recording early so it transcribes immediately. */
+    fun finishStt(ref: VoiceModelRef) {
+        val fingerprint = probeFingerprint(ref) ?: return
+        val session = activeSttSessions[fingerprint] ?: return
+        val current = _probes.value[fingerprint] as? VoiceProbeUi.Listening
+        if (current != null) setProbe(fingerprint, current.copy(level = 0f, canFinish = false, converting = true))
+        session.release()
+    }
+
     private fun setProbe(fingerprint: String, state: VoiceProbeUi) {
         _probes.update { it + (fingerprint to state) }
     }
 
-    /** Holds a real microphone capture through [VoiceModelProbe.verifyStt] and records a passing probe. */
+    /** Holds a real microphone capture, drives live waveform levels, and finishes automatically on pause or Done. */
     fun verifyStt(ref: VoiceModelRef) {
         val (pending, fingerprint) = startProbe(ref)
-        scope.launch {
-            try {
-                probe.verifyStt(ref).collect { state ->
-                    when (state) {
-                        VoiceProbeState.Capturing -> setProbe(fingerprint, VoiceProbeUi.Listening(""))
-                        is VoiceProbeState.Transcribing -> setProbe(fingerprint, VoiceProbeUi.Listening(state.text))
-                        is VoiceProbeState.Verified -> pending.complete(ProbeResult.Success)
-                        is VoiceProbeState.Failed -> pending.complete(ProbeResult.Failed(state.error))
-                    }
-                }
+        val job = scope.launch {
+            val session = try {
+                probe.openSttSession(ref)
             } catch (e: CancellationException) {
                 pending.cancel()
                 throw e
             } catch (e: Exception) {
                 pending.complete(ProbeResult.Failed(VoiceModelError.from(e)))
+                return@launch
+            }
+            activeSttSessions[fingerprint] = session
+            var currentTranscript = ""
+            var currentLevel = 0f
+            var heardSpeech = false
+            val startedMs = System.currentTimeMillis()
+            var lastLoudMs = startedMs
+            var released = false
+            try {
+                session.events.collect { event ->
+                    when (event) {
+                        is SpeechEvent.Level -> {
+                            currentLevel = event.value
+                            val now = System.currentTimeMillis()
+                            if (event.value >= 0.08f) {
+                                heardSpeech = true
+                                lastLoudMs = now
+                            }
+                            setProbe(
+                                fingerprint,
+                                VoiceProbeUi.Listening(
+                                    transcript = currentTranscript,
+                                    level = currentLevel,
+                                    canFinish = !session.live && !released,
+                                    converting = released,
+                                ),
+                            )
+                            if (!session.live && !released) {
+                                val silenceElapsed = now - lastLoudMs
+                                val totalElapsed = now - startedMs
+                                if (!heardSpeech && totalElapsed >= 6_000L) {
+                                    released = true
+                                    runCatching { session.cancel() }
+                                    _transcripts.update { it - fingerprint }
+                                    pending.complete(
+                                        ProbeResult.Failed(
+                                            VoiceModelError.Protocol(
+                                                com.wangzan101.mika.voice.model.VoiceErrorCategory.SYSTEM_UNAVAILABLE,
+                                                "No speech detected",
+                                            ),
+                                        ),
+                                    )
+                                } else if ((heardSpeech && silenceElapsed >= 1_600L && totalElapsed >= 900L) || totalElapsed >= 15_000L) {
+                                    released = true
+                                    setProbe(
+                                        fingerprint,
+                                        VoiceProbeUi.Listening(
+                                            transcript = currentTranscript,
+                                            level = 0f,
+                                            canFinish = false,
+                                            converting = true,
+                                        ),
+                                    )
+                                    session.release()
+                                }
+                            }
+                        }
+                        is SpeechEvent.Partial -> {
+                            currentTranscript = event.stable + event.tail
+                            setProbe(
+                                fingerprint,
+                                VoiceProbeUi.Listening(
+                                    transcript = currentTranscript,
+                                    level = currentLevel,
+                                    canFinish = !session.live && !released,
+                                    converting = released,
+                                ),
+                            )
+                        }
+                        SpeechEvent.Converting -> {
+                            released = true
+                            setProbe(
+                                fingerprint,
+                                VoiceProbeUi.Listening(
+                                    transcript = currentTranscript,
+                                    level = 0f,
+                                    canFinish = false,
+                                    converting = true,
+                                ),
+                            )
+                        }
+                        is SpeechEvent.Final -> {
+                            if (event.text.isBlank()) {
+                                _transcripts.update { it - fingerprint }
+                                pending.complete(
+                                    ProbeResult.Failed(
+                                        VoiceModelError.Protocol(
+                                            com.wangzan101.mika.voice.model.VoiceErrorCategory.SYSTEM_UNAVAILABLE,
+                                            "No speech detected",
+                                        ),
+                                    ),
+                                )
+                            } else {
+                                _transcripts.update { it + (fingerprint to event.text) }
+                                pending.complete(ProbeResult.Success)
+                            }
+                        }
+                        is SpeechEvent.Failed -> {
+                            _transcripts.update { it - fingerprint }
+                            pending.complete(ProbeResult.Failed(event.why.toError()))
+                        }
+                    }
+                }
+            } catch (e: CancellationException) {
+                runCatching { session.cancel() }
+                pending.cancel()
+                throw e
+            } catch (e: Exception) {
+                pending.complete(ProbeResult.Failed(VoiceModelError.from(e)))
+            } finally {
+                activeSttSessions.remove(fingerprint)
+                runCatching { session.release() }
             }
         }
+        activeJobs[fingerprint] = job
     }
 
-    /** Synthesizes once, then starts the returned audio through the injected player before reporting success. */
+    /** Synthesizes once, then plays through the injected player before reporting success. */
     fun verifyTts(ref: VoiceModelRef, request: TtsRequest) {
-        val (pending, _) = startProbe(ref)
-        scope.launch {
+        val (pending, fingerprint) = startProbe(ref)
+        val job = scope.launch {
             val response = try {
                 withContext(io) { probe.verifyTts(ref, request) }
             } catch (e: CancellationException) {
@@ -188,7 +351,16 @@ class VoiceCatalogViewModel(
                 return@launch
             }
             try {
-                withContext(io) { playAudio(response.bytes, response.mime) }
+                if (playAudioWithStatus != null) {
+                    withContext(io) {
+                        playAudioWithStatus(response.bytes, response.mime) {
+                            setProbe(fingerprint, VoiceProbeUi.Playing)
+                        }
+                    }
+                } else {
+                    setProbe(fingerprint, VoiceProbeUi.Playing)
+                    withContext(io) { playAudio(response.bytes, response.mime) }
+                }
             } catch (e: CancellationException) {
                 pending.cancel()
                 throw e
@@ -205,12 +377,13 @@ class VoiceCatalogViewModel(
             }
             pending.complete(ProbeResult.Success)
         }
+        activeJobs[fingerprint] = job
     }
 
     /** Records a Realtime handshake outcome; success is gated on an unchanged fingerprint like every probe. */
     fun verifyRealtime(ref: VoiceModelRef) {
-        val (pending, _) = startProbe(ref)
-        scope.launch {
+        val (pending, fingerprint) = startProbe(ref)
+        val job = scope.launch {
             try {
                 withContext(io) { probe.verifyRealtimeConnection(ref) }
             } catch (e: CancellationException) {
@@ -222,5 +395,6 @@ class VoiceCatalogViewModel(
             }
             pending.complete(ProbeResult.Success)
         }
+        activeJobs[fingerprint] = job
     }
 }

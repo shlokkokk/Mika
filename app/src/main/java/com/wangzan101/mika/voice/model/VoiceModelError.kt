@@ -1,8 +1,10 @@
 package com.wangzan101.mika.voice.model
 
+import com.wangzan101.mika.R
 import com.wangzan101.mika.calls.VolcRealtimeException
 import com.wangzan101.mika.core.model.ModelError
 import com.wangzan101.mika.core.model.TtsError
+import com.wangzan101.mika.i18n.tr
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import java.io.IOException
@@ -96,7 +98,22 @@ sealed class VoiceModelError(
             return Protocol(VoiceErrorCategory.NETWORK, detailOf(error), error)
         }
 
-        private fun detailOf(error: Throwable): String =
-            error.message?.takeIf { it.isNotBlank() } ?: error.javaClass.simpleName
+        private fun detailOf(error: Throwable): String {
+            val localized = runCatching {
+                when (error) {
+                    is ModelError.ModelNotAvailable -> tr(
+                        R.string.model_probe_not_available,
+                        error.model,
+                        error.detail.ifEmpty { error.javaClass.simpleName },
+                    )
+                    is ModelError.Auth, is ModelError.SignInExpired, is ModelError.AccountPlanNotAllowed ->
+                        tr(R.string.voicecall_error_auth)
+                    is ModelError.RateLimited -> tr(R.string.voicecall_error_rate_limited)
+                    is ModelError.IllegalHeader -> tr(R.string.model_key_illegal_chars)
+                    else -> null
+                }
+            }.getOrNull()
+            return localized ?: error.message?.takeIf { it.isNotBlank() } ?: error.javaClass.simpleName
+        }
     }
 }

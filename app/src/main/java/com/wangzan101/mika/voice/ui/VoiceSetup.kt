@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -95,10 +96,12 @@ internal fun rememberVoiceCatalogViewModel(voiceModels: VoiceModelEnvironment): 
             manager = manager,
             probe = probe,
             scope = scope,
-            playAudio = { bytes, mime -> player.play(bytes, mime) },
+            playAudio = { bytes, mime -> player.playAndAwait(bytes, mime) },
+            playAudioWithStatus = { bytes, mime, onStarted -> player.playAndAwait(bytes, mime, onStarted) },
+            onStopAudio = { player.stop() },
         )
     }
-    DisposableEffect(viewModel) { onDispose { player.stop() } }
+    DisposableEffect(viewModel) { onDispose { viewModel.stopAllProbes(); player.stop() } }
     return viewModel
 }
 
@@ -170,12 +173,14 @@ internal fun VoiceOptionList(
     extraTop: (@Composable () -> Unit)? = null,
 ) {
     val probes by viewModel.probes.collectAsState()
+    val transcripts by viewModel.transcripts.collectAsState()
     val c = MikaTheme.colors
     GroupCard {
         extraTop?.invoke()
         choices.forEachIndexed { index, choice ->
-            val probe = if (choice.offer == null) viewModel.probeFingerprint(choice.ref)?.let { probes[it] } ?: VoiceProbeUi.Idle
-            else VoiceProbeUi.Idle
+            val fp = if (choice.offer == null) viewModel.probeFingerprint(choice.ref) else null
+            val probe = fp?.let { probes[it] } ?: VoiceProbeUi.Idle
+            val transcript = fp?.let { transcripts[it] }.orEmpty()
             RadioRow(
                 voiceModelDisplayName(choice.model),
                 selected = choice.ref == selected,
@@ -197,18 +202,42 @@ internal fun VoiceOptionList(
                         when (probe) {
                             VoiceProbeUi.Idle -> if (choice.verified) Text(stringResource(R.string.voice_catalog_verified), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ok)
                             VoiceProbeUi.Running -> Text(stringResource(R.string.voice_catalog_testing), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink3)
-                            is VoiceProbeUi.Listening -> Text(probe.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) }, Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink2)
+                            is VoiceProbeUi.Listening -> Column(Modifier.padding(top = 6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                if (probe.converting) {
+                                    Text(stringResource(R.string.voice_catalog_testing), style = MikaType.Hint, color = c.ink3)
+                                } else {
+                                    VoiceWave(probe.level, flat = false, reduceMotion = false, color = c.accent)
+                                    Text(probe.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) }, style = MikaType.Hint, color = c.ink2)
+                                }
+                            }
+                            VoiceProbeUi.Playing -> Text(stringResource(R.string.voice_playing), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink2)
                             is VoiceProbeUi.Failed -> Text(probe.error.detail, Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.bad)
-                            VoiceProbeUi.Verified -> Text(stringResource(R.string.voice_catalog_verified), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ok)
+                            VoiceProbeUi.Verified -> {
+                                val label = if (transcript.isNotBlank()) "${stringResource(R.string.voice_catalog_verified)} · “$transcript”"
+                                else stringResource(R.string.voice_catalog_verified)
+                                Text(label, Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ok)
+                            }
                         }
                     }
                 },
                 trailing = {
-                    MikaButton(
-                        testLabel, onClick = { onTest(choice) }, kind = ButtonKind.Tonal, size = ButtonSize.Small,
-                        enabled = probe !is VoiceProbeUi.Running && probe !is VoiceProbeUi.Listening,
-                        modifier = Modifier.testTag("voice-try-${choice.ref.serviceId}-${choice.ref.modelId}"),
-                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (probe is VoiceProbeUi.Listening && probe.canFinish && !probe.converting) {
+                            MikaButton(
+                                stringResource(R.string.voice_result_done),
+                                onClick = { viewModel.finishStt(choice.ref) },
+                                kind = ButtonKind.Primary,
+                                size = ButtonSize.Small,
+                            )
+                        }
+                        MikaButton(
+                            if (probe.isActive) stringResource(R.string.chat_audio_stop) else testLabel,
+                            onClick = { if (probe.isActive) viewModel.stopProbe(choice.ref) else onTest(choice) },
+                            kind = if (probe.isActive) ButtonKind.Secondary else ButtonKind.Tonal,
+                            size = ButtonSize.Small,
+                            modifier = Modifier.testTag("voice-try-${choice.ref.serviceId}-${choice.ref.modelId}"),
+                        )
+                    }
                 },
             )
         }

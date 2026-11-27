@@ -159,9 +159,15 @@ internal fun VoiceModelContent(store: ProviderStore, settings: VoiceSettings, on
             )
         }
 
+        val isPlaying = playback is VoicePlayback.Loading || playback is VoicePlayback.Playing
         MikaButton(
-            tr(R.string.voice_test),
+            if (isPlaying) tr(R.string.chat_audio_stop) else tr(R.string.voice_test),
             onClick = {
+                if (isPlaying) {
+                    player.stop()
+                    test = null
+                    return@MikaButton
+                }
                 val choice = choice ?: return@MikaButton
                 val caps = settings.capabilities() ?: return@MikaButton
                 val tts = store.ttsModel(choice, caps) ?: return@MikaButton
@@ -185,7 +191,8 @@ internal fun VoiceModelContent(store: ProviderStore, settings: VoiceSettings, on
                     }
                 }
             },
-            enabled = choice != null,
+            kind = if (isPlaying) com.wangzan101.mika.ui.components.ButtonKind.Secondary else com.wangzan101.mika.ui.components.ButtonKind.Primary,
+            enabled = choice != null || isPlaying,
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
         )
         playback.let { p ->
@@ -355,15 +362,22 @@ private fun MigratedVoiceModelContent(
             )
         }
 
+        val isPlaying = playback is VoicePlayback.Loading || playback is VoicePlayback.Playing
         MikaButton(
-            tr(R.string.voice_test),
+            if (isPlaying) tr(R.string.chat_audio_stop) else tr(R.string.voice_test),
             onClick = {
+                if (isPlaying) {
+                    player.stop()
+                    test = null
+                    return@MikaButton
+                }
                 val ref = selection ?: return@MikaButton
                 val protocol = selectedModel?.tts?.protocol ?: return@MikaButton
                 val caps = settings.capabilities(protocol.settingsProtocol() ?: return@MikaButton)
                 val model = try {
                     tts.createTts(context, ref, caps)
-                } catch (_: VoiceModelError) {
+                } catch (e: VoiceModelError) {
+                    test = tr(R.string.voice_test_failed, e.detail)
                     return@MikaButton
                 }
                 previewScope.launch {
@@ -386,7 +400,8 @@ private fun MigratedVoiceModelContent(
                     }
                 }
             },
-            enabled = selectedModel != null,
+            kind = if (isPlaying) com.wangzan101.mika.ui.components.ButtonKind.Secondary else com.wangzan101.mika.ui.components.ButtonKind.Primary,
+            enabled = selectedModel != null || isPlaying,
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
         )
         playback.let { p ->

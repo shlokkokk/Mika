@@ -193,4 +193,105 @@ class VoiceCatalogViewModelTest {
         viewModel.deleteService(SttSelectionController.SYSTEM_STT_SERVICE.id)
         assertTrue(env.catalog.state.value.services.any { it.id == "android-system" })
     }
+
+    @Test fun `stopProbe cancels active listening and resets probe to idle`() = runTest {
+        val env = environment()
+        val session = FakeSession(kotlinx.coroutines.flow.flow {
+            emit(SpeechEvent.Level(0.2f))
+            kotlinx.coroutines.awaitCancellation()
+        })
+        val probe = VoiceModelProbe(
+            env,
+            startStt = { session },
+            synthesize = { _, _ -> TtsResponse(byteArrayOf(), "audio/wav") },
+            connectRealtime = {},
+        )
+        var stoppedAudio = false
+        val viewModel = VoiceCatalogViewModel(
+            env,
+            VoiceAccountManager(env.catalog, testStore()),
+            probe,
+            backgroundScope,
+            playAudio = { _, _ -> },
+            io = StandardTestDispatcher(testScheduler),
+            onStopAudio = { stoppedAudio = true },
+        )
+        viewModel.verifyStt(ref)
+        runCurrent()
+        assertEquals(VoiceProbeUi.Listening("", level = 0.2f), viewModel.probeState(ref))
+
+        viewModel.stopProbe(ref)
+        runCurrent()
+        assertEquals(VoiceProbeUi.Idle, viewModel.probeState(ref))
+        assertTrue(stoppedAudio)
+        assertEquals(VoiceVerification.Unverified, env.catalog.verification(ref))
+    }
+
+    @Test fun `verifyTts reports playback error instead of falsely marking verified`() = runTest {
+        val env = environment()
+        val ttsRef = VoiceModelRef("provider:p1", "tts-m1", VoiceCapability.TTS)
+        env.catalog.upsertModel(
+            VoiceModel(
+                "provider:p1",
+                "tts-m1",
+                "TTS M1",
+                tts = com.wangzan101.mika.voice.model.TtsBinding(com.wangzan101.mika.voice.model.TtsProtocol.OpenAiSpeech),
+            ),
+        )
+        val probe = VoiceModelProbe(
+            env,
+            startStt = { FakeSession(flowOf()) },
+            synthesize = { _, _ -> TtsResponse(byteArrayOf(1, 2, 3), "audio/wav") },
+            connectRealtime = {},
+        )
+        val viewModel = VoiceCatalogViewModel(
+            env,
+            VoiceAccountManager(env.catalog, testStore()),
+            probe,
+            backgroundScope,
+            playAudio = { _, _ -> },
+            io = StandardTestDispatcher(testScheduler),
+            playAudioWithStatus = { _, _, onStarted ->
+                onStarted()
+                error("audio focus is not available")
+            },
+        )
+        viewModel.verifyTts(ttsRef, TtsRequest("hi"))
+        runCurrent()
+        assertTrue(viewModel.probeState(ttsRef) is VoiceProbeUi.Failed)
+        assertEquals(VoiceVerification.Unverified, env.catalog.verification(ttsRef))
+    }
+
+    @Test fun `finishStt releases non-live session and completes verification`() = runTest {
+        val env = environment()
+        val events = kotlinx.coroutines.flow.MutableSharedFlow<SpeechEvent>()
+        var released = false
+        val nonLiveSession = object : SpeechSession {
+            override val events: Flow<SpeechEvent> = events
+            override val live = false
+            override fun release() { released = true }
+            override fun cancel() {}
+        }
+        val probe = VoiceModelProbe(
+            env,
+            startStt = { nonLiveSession },
+            synthesize = { _, _ -> TtsResponse(byteArrayOf(), "audio/wav") },
+            connectRealtime = {},
+        )
+        val viewModel = viewModel(env, backgroundScope, StandardTestDispatcher(testScheduler), probe)
+        viewModel.verifyStt(ref)
+        runCurrent()
+        events.emit(SpeechEvent.Level(0.6f))
+        runCurrent()
+        val listening = viewModel.probeState(ref) as VoiceProbeUi.Listening
+        assertEquals(0.6f, listening.level, 0.001f)
+        assertTrue(listening.canFinish)
+
+        viewModel.finishStt(ref)
+        assertTrue(released)
+        events.emit(SpeechEvent.Final("hello mika"))
+        runCurrent()
+        assertEquals(VoiceProbeUi.Verified, viewModel.probeState(ref))
+        assertEquals(VoiceVerification.Verified, env.catalog.verification(ref))
+    }
 }

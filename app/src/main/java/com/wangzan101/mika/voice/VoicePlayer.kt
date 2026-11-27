@@ -60,6 +60,15 @@ class VoicePlayer(private val context: Context) {
         prepareFile(ticket, bytes, mime)
     }
 
+    /** 播一段合成好的音频并等到播完或出错;适合试听测试需要知道是否真出声、并支持随时停止的场景。 */
+    suspend fun playAndAwait(bytes: ByteArray, mime: String, onStarted: () -> Unit = {}) = loadAndPlay { ticket ->
+        val completion = CompletableDeferred<VoicePlayback>()
+        prepareFile(ticket, bytes, mime, onStarted, completion)
+        val result = completion.await()
+        if (result is VoicePlayback.Error) error(result.message)
+        if (tickets.owns(ticket)) _state.value = VoicePlayback.Idle
+    }
+
     /** 在服务支持时边合成边播，其他服务或语速继续使用完整音频响应。 */
     suspend fun play(
         model: TtsModel,
