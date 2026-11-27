@@ -125,11 +125,11 @@ internal fun VoiceCatalogViewModel.ensureInCatalog(choice: VoiceOption): VoiceMo
 }
 
 /** Runs the capability's own test: a real sentence for speech input, a played sample for reading, a connection for calls. */
-internal fun VoiceCatalogViewModel.tryChoice(choice: VoiceOption, sample: String) {
+internal fun VoiceCatalogViewModel.tryChoice(choice: VoiceOption, sample: String, ttsRequest: TtsRequest = TtsRequest(sample)) {
     val ref = ensureInCatalog(choice)
     when (ref.capability) {
         VoiceCapability.STT -> verifyStt(ref)
-        VoiceCapability.TTS -> verifyTts(ref, TtsRequest(sample))
+        VoiceCapability.TTS -> verifyTts(ref, ttsRequest)
         VoiceCapability.REALTIME -> verifyRealtime(ref)
     }
 }
@@ -234,6 +234,7 @@ internal fun VoicePickerSheet(
     onDismiss: () -> Unit,
     model: VoiceModel? = null,
     onAudition: ((String) -> Unit)? = null,
+    auditioningVoice: String? = null,
 ) {
     var typing by remember { mutableStateOf(false) }
     if (typing) {
@@ -246,7 +247,16 @@ internal fun VoicePickerSheet(
     val actions = listOf(SheetAction(stringResource(R.string.voice_voice_default), searchable = false) { onPick("") }) +
         voices.filter { it.isNotBlank() }.map { voice ->
             val label = VoiceVoices.label(model, voice)
-            SheetAction(label, trailing = onAudition?.let { play -> SheetTrailing(MikaIcons.Sound, stringResource(R.string.voice_audition, label)) { play(voice) } }) {
+            val playing = auditioningVoice == voice
+            SheetAction(
+                label,
+                trailing = onAudition?.let { play ->
+                    SheetTrailing(
+                        if (playing) MikaIcons.Stop else MikaIcons.Sound,
+                        if (playing) stringResource(R.string.chat_audio_stop) else stringResource(R.string.voice_audition, label),
+                    ) { play(voice) }
+                },
+            ) {
                 onPick(voice)
             }
         } +
