@@ -2,6 +2,8 @@ package com.wangzan101.mika.voice.ui
 
 import com.wangzan101.mika.core.model.TtsRequest
 import com.wangzan101.mika.core.model.TtsResponse
+import com.wangzan101.mika.voice.SpeechEvent
+import com.wangzan101.mika.voice.SpeechSession
 import com.wangzan101.mika.voice.model.MigrationResult
 import com.wangzan101.mika.voice.model.SttSelectionController
 import com.wangzan101.mika.voice.model.TtsSelectionController
@@ -18,6 +20,7 @@ import com.wangzan101.mika.voice.model.VoiceModelRef
 import com.wangzan101.mika.voice.model.VoiceProbeState
 import com.wangzan101.mika.voice.model.VoiceService
 import com.wangzan101.mika.voice.model.VoiceVerification
+import com.wangzan101.mika.voice.model.toError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
@@ -32,6 +35,31 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.wangzan101.mika.settings.ui.models.providerVoiceUsage
 
+internal enum class SttSilenceDecision {
+    Continue,
+    NoSpeechTimeout,
+    FinishSpeech,
+}
+
+internal object SttSilencePolicy {
+    const val SPEECH_LEVEL_THRESHOLD = 0.08f
+    const val NO_SPEECH_TIMEOUT_MS = 6_000L
+    const val SILENCE_AFTER_SPEECH_MS = 1_600L
+    const val MIN_RECORDING_MS = 900L
+    const val HARD_TIMEOUT_MS = 15_000L
+
+    fun evaluate(
+        heardSpeech: Boolean,
+        silenceElapsedMs: Long,
+        totalElapsedMs: Long,
+    ): SttSilenceDecision = when {
+        !heardSpeech && totalElapsedMs >= NO_SPEECH_TIMEOUT_MS -> SttSilenceDecision.NoSpeechTimeout
+        (heardSpeech && silenceElapsedMs >= SILENCE_AFTER_SPEECH_MS && totalElapsedMs >= MIN_RECORDING_MS) ||
+            totalElapsedMs >= HARD_TIMEOUT_MS -> SttSilenceDecision.FinishSpeech
+        else -> SttSilenceDecision.Continue
+    }
+}
+
 /** A voice probe's outcome; only [Success] is gated on an unchanged configuration fingerprint. */
 sealed interface ProbeResult {
     data object Success : ProbeResult
@@ -42,7 +70,12 @@ sealed interface ProbeResult {
 sealed interface VoiceProbeUi {
     data object Idle : VoiceProbeUi
     data object Running : VoiceProbeUi
-    data class Listening(val transcript: String) : VoiceProbeUi
+    data class Listening(
+        val transcript: String,
+        val level: Float = 0f,
+        val canFinish: Boolean = false,
+        val converting: Boolean = false,
+    ) : VoiceProbeUi
     data object Playing : VoiceProbeUi
     data class Failed(val error: VoiceModelError) : VoiceProbeUi
     data object Verified : VoiceProbeUi
@@ -77,7 +110,10 @@ class VoiceCatalogViewModel(
 
     private val _probes = MutableStateFlow<Map<String, VoiceProbeUi>>(emptyMap())
     val probes: StateFlow<Map<String, VoiceProbeUi>> = _probes.asStateFlow()
+    private val _transcripts = MutableStateFlow<Map<String, String>>(emptyMap())
+    val transcripts: StateFlow<Map<String, String>> = _transcripts.asStateFlow()
     private val activeJobs = mutableMapOf<String, Job>()
+    private val activeSttSessions = mutableMapOf<String, SpeechSession>()
 
     // ---------- accounts, models and services ----------
 
@@ -162,6 +198,7 @@ class VoiceCatalogViewModel(
     private fun stopOtherProbes(except: String?) {
         val toStop = activeJobs.keys.filter { it != except }
         toStop.forEach { fp ->
+            activeSttSessions.remove(fp)?.cancel()
             activeJobs.remove(fp)?.cancel()
             if (_probes.value[fp]?.isActive == true) setProbe(fp, VoiceProbeUi.Idle)
         }
@@ -177,34 +214,139 @@ class VoiceCatalogViewModel(
     fun stopProbe(ref: VoiceModelRef) {
         val fingerprint = probeFingerprint(ref)
         if (fingerprint != null) {
+            activeSttSessions.remove(fingerprint)?.cancel()
             activeJobs.remove(fingerprint)?.cancel()
+            _transcripts.update { it - fingerprint }
             if (_probes.value[fingerprint]?.isActive == true) setProbe(fingerprint, VoiceProbeUi.Idle)
         }
         onStopAudio()
+    }
+
+    /** Ends an active non-live STT recording early so it transcribes immediately. */
+    fun finishStt(ref: VoiceModelRef) {
+        val fingerprint = probeFingerprint(ref) ?: return
+        val session = activeSttSessions[fingerprint] ?: return
+        val current = _probes.value[fingerprint] as? VoiceProbeUi.Listening
+        if (current != null) setProbe(fingerprint, current.copy(level = 0f, canFinish = false, converting = true))
+        session.release()
     }
 
     private fun setProbe(fingerprint: String, state: VoiceProbeUi) {
         _probes.update { it + (fingerprint to state) }
     }
 
-    /** Holds a real microphone capture through [VoiceModelProbe.verifyStt] and records a passing probe. */
+    /** Holds a real microphone capture, drives live waveform levels, and finishes automatically on pause or Done. */
     fun verifyStt(ref: VoiceModelRef) {
         val (pending, fingerprint) = startProbe(ref)
         val job = scope.launch {
-            try {
-                probe.verifyStt(ref).collect { state ->
-                    when (state) {
-                        VoiceProbeState.Capturing -> setProbe(fingerprint, VoiceProbeUi.Listening(""))
-                        is VoiceProbeState.Transcribing -> setProbe(fingerprint, VoiceProbeUi.Listening(state.text))
-                        is VoiceProbeState.Verified -> pending.complete(ProbeResult.Success)
-                        is VoiceProbeState.Failed -> pending.complete(ProbeResult.Failed(state.error))
-                    }
-                }
+            val session = try {
+                probe.openSttSession(ref)
             } catch (e: CancellationException) {
                 pending.cancel()
                 throw e
             } catch (e: Exception) {
                 pending.complete(ProbeResult.Failed(VoiceModelError.from(e)))
+                return@launch
+            }
+            activeSttSessions[fingerprint] = session
+            var currentTranscript = ""
+            var currentLevel = 0f
+            var heardSpeech = false
+            val startedMs = System.currentTimeMillis()
+            var lastLoudMs = startedMs
+            var released = false
+            try {
+                session.events.collect { event ->
+                    when (event) {
+                        is SpeechEvent.Level -> {
+                            currentLevel = event.value
+                            val now = System.currentTimeMillis()
+                            if (event.value >= SttSilencePolicy.SPEECH_LEVEL_THRESHOLD) {
+                                heardSpeech = true
+                                lastLoudMs = now
+                            }
+                            setProbe(
+                                fingerprint,
+                                VoiceProbeUi.Listening(
+                                    transcript = currentTranscript,
+                                    level = currentLevel,
+                                    canFinish = !session.live && !released,
+                                    converting = released,
+                                ),
+                            )
+                            if (!session.live && !released) {
+                                when (SttSilencePolicy.evaluate(heardSpeech, now - lastLoudMs, now - startedMs)) {
+                                    SttSilenceDecision.NoSpeechTimeout -> {
+                                        released = true
+                                        runCatching { session.cancel() }
+                                        _transcripts.update { it - fingerprint }
+                                        pending.complete(ProbeResult.Failed(VoiceModelError.NoSpeechDetected()))
+                                    }
+                                    SttSilenceDecision.FinishSpeech -> {
+                                        released = true
+                                        setProbe(
+                                            fingerprint,
+                                            VoiceProbeUi.Listening(
+                                                transcript = currentTranscript,
+                                                level = 0f,
+                                                canFinish = false,
+                                                converting = true,
+                                            ),
+                                        )
+                                        session.release()
+                                    }
+                                    SttSilenceDecision.Continue -> Unit
+                                }
+                            }
+                        }
+                        is SpeechEvent.Partial -> {
+                            currentTranscript = event.stable + event.tail
+                            setProbe(
+                                fingerprint,
+                                VoiceProbeUi.Listening(
+                                    transcript = currentTranscript,
+                                    level = currentLevel,
+                                    canFinish = !session.live && !released,
+                                    converting = released,
+                                ),
+                            )
+                        }
+                        SpeechEvent.Converting -> {
+                            released = true
+                            setProbe(
+                                fingerprint,
+                                VoiceProbeUi.Listening(
+                                    transcript = currentTranscript,
+                                    level = 0f,
+                                    canFinish = false,
+                                    converting = true,
+                                ),
+                            )
+                        }
+                        is SpeechEvent.Final -> {
+                            if (event.text.isBlank()) {
+                                _transcripts.update { it - fingerprint }
+                                pending.complete(ProbeResult.Failed(VoiceModelError.NoSpeechDetected()))
+                            } else {
+                                _transcripts.update { it + (fingerprint to event.text) }
+                                pending.complete(ProbeResult.Success)
+                            }
+                        }
+                        is SpeechEvent.Failed -> {
+                            _transcripts.update { it - fingerprint }
+                            pending.complete(ProbeResult.Failed(event.why.toError()))
+                        }
+                    }
+                }
+            } catch (e: CancellationException) {
+                runCatching { session.cancel() }
+                pending.cancel()
+                throw e
+            } catch (e: Exception) {
+                pending.complete(ProbeResult.Failed(VoiceModelError.from(e)))
+            } finally {
+                activeSttSessions.remove(fingerprint)
+                runCatching { session.release() }
             }
         }
         activeJobs[fingerprint] = job

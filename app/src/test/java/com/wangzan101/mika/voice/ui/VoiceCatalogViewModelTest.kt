@@ -281,4 +281,60 @@ class VoiceCatalogViewModelTest {
         runCurrent()
         assertEquals(VoiceProbeUi.Verified, vm.probeState(ttsRef))
     }
+
+    @Test fun `SttSilencePolicy evaluates timeouts and minimum recording window`() {
+        assertEquals(
+            SttSilenceDecision.Continue,
+            SttSilencePolicy.evaluate(heardSpeech = false, silenceElapsedMs = 5_999L, totalElapsedMs = 5_999L),
+        )
+        assertEquals(
+            SttSilenceDecision.NoSpeechTimeout,
+            SttSilencePolicy.evaluate(heardSpeech = false, silenceElapsedMs = 6_000L, totalElapsedMs = 6_000L),
+        )
+        assertEquals(
+            SttSilenceDecision.Continue,
+            SttSilencePolicy.evaluate(heardSpeech = true, silenceElapsedMs = 1_600L, totalElapsedMs = 899L),
+        )
+        assertEquals(
+            SttSilenceDecision.FinishSpeech,
+            SttSilencePolicy.evaluate(heardSpeech = true, silenceElapsedMs = 1_600L, totalElapsedMs = 900L),
+        )
+        assertEquals(
+            SttSilenceDecision.FinishSpeech,
+            SttSilencePolicy.evaluate(heardSpeech = true, silenceElapsedMs = 100L, totalElapsedMs = 15_000L),
+        )
+    }
+
+    @Test fun `finishStt releases non-live session and completes verification with transcript`() = runTest {
+        val env = environment()
+        val events = kotlinx.coroutines.flow.MutableSharedFlow<SpeechEvent>()
+        var released = false
+        val session = object : SpeechSession {
+            override val events: Flow<SpeechEvent> = events
+            override val live = false
+            override fun release() { released = true }
+            override fun cancel() {}
+        }
+        val probe = VoiceModelProbe(
+            env,
+            startStt = { session },
+            synthesize = { _, _ -> TtsResponse(byteArrayOf(), "audio/wav") },
+            connectRealtime = {},
+        )
+        val vm = viewModel(env, backgroundScope, StandardTestDispatcher(testScheduler), probe)
+        vm.verifyStt(ref)
+        runCurrent()
+        events.emit(SpeechEvent.Level(0.2f))
+        runCurrent()
+        val listening = vm.probeState(ref) as VoiceProbeUi.Listening
+        assertTrue(listening.canFinish)
+
+        vm.finishStt(ref)
+        assertTrue(released)
+        events.emit(SpeechEvent.Final("hello mika"))
+        runCurrent()
+        assertEquals(VoiceProbeUi.Verified, vm.probeState(ref))
+        val fp = vm.probeFingerprint(ref)!!
+        assertEquals("hello mika", vm.transcripts.value[fp])
+    }
 }

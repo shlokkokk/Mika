@@ -1,5 +1,6 @@
 package com.wangzan101.mika.voice.ui
 
+import androidx.compose.foundation.background
 import com.wangzan101.mika.voice.ondevice.OnDeviceCatalog
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -72,6 +73,7 @@ import com.wangzan101.mika.ui.components.PillTone
 import com.wangzan101.mika.ui.components.SelectChip
 import com.wangzan101.mika.ui.components.StatusPill
 import com.wangzan101.mika.ui.components.SubPage
+import com.wangzan101.mika.ui.theme.MikaShapes
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import kotlinx.coroutines.launch
@@ -107,6 +109,7 @@ fun VoiceCatalogScreen(voiceModels: VoiceModelEnvironment, onBack: () -> Unit) {
 internal fun VoiceCatalogContent(viewModel: VoiceCatalogViewModel, onBack: () -> Unit) {
     val snapshot by viewModel.snapshot.collectAsState()
     val probes by viewModel.probes.collectAsState()
+    val transcripts by viewModel.transcripts.collectAsState()
     val scope = rememberCoroutineScope()
     var sheetOpen by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<VoiceModel?>(null) }
@@ -164,8 +167,10 @@ internal fun VoiceCatalogContent(viewModel: VoiceCatalogViewModel, onBack: () ->
                 },
                 onDelete = { model -> deleting = model },
                 onTest = { ref, request -> viewModel.test(ref, request) },
+                onFinish = { ref -> viewModel.finishStt(ref) },
                 onStop = { ref -> viewModel.stopProbe(ref) },
                 probeState = { ref -> viewModel.probeFingerprint(ref)?.let { probes[it] } ?: VoiceProbeUi.Idle },
+                probeTranscript = { ref -> viewModel.probeFingerprint(ref)?.let { transcripts[it] }.orEmpty() },
             )
         }
     }
@@ -231,8 +236,10 @@ private fun ServiceGroup(
     onEdit: (VoiceModel) -> Unit,
     onDelete: (VoiceModel) -> Unit,
     onTest: (VoiceModelRef, TtsRequest?) -> Unit,
+    onFinish: (VoiceModelRef) -> Unit,
     onStop: (VoiceModelRef) -> Unit,
     probeState: (VoiceModelRef) -> VoiceProbeUi,
+    probeTranscript: (VoiceModelRef) -> String,
 ) {
     val system = service.id == SttSelectionController.SYSTEM_STT_SERVICE.id
     GroupCard(Modifier.padding(top = 12.dp)) {
@@ -258,8 +265,10 @@ private fun ServiceGroup(
                 onEdit = { onEdit(model) },
                 onDelete = { onDelete(model) },
                 onTest = onTest,
+                onFinish = onFinish,
                 onStop = onStop,
                 probeState = probeState,
+                probeTranscript = probeTranscript,
             )
         }
     }
@@ -275,8 +284,10 @@ private fun ModelRow(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onTest: (VoiceModelRef, TtsRequest?) -> Unit,
+    onFinish: (VoiceModelRef) -> Unit,
     onStop: (VoiceModelRef) -> Unit,
     probeState: (VoiceModelRef) -> VoiceProbeUi,
+    probeTranscript: (VoiceModelRef) -> String,
 ) {
     val c = MikaTheme.colors
     val ttsSampleText = stringResource(R.string.voice_catalog_tts_sample)
@@ -305,10 +316,12 @@ private fun ModelRow(
                     label = stringResource(R.string.voice_catalog_cap_stt),
                     protocol = sttProtocolLabel(binding.protocol),
                     ui = probeState(VoiceModelRef(model.serviceId, model.id, VoiceCapability.STT)),
+                    transcript = probeTranscript(VoiceModelRef(model.serviceId, model.id, VoiceCapability.STT)),
                     verified = snapshot.verified(VoiceModelRef(model.serviceId, model.id, VoiceCapability.STT)),
                     testLabel = stringResource(R.string.voice_catalog_test),
                     tag = "voice-cap-stt-${model.id}",
                     onTest = { onTest(VoiceModelRef(model.serviceId, model.id, VoiceCapability.STT), null) },
+                    onFinish = { onFinish(VoiceModelRef(model.serviceId, model.id, VoiceCapability.STT)) },
                     onStop = { onStop(VoiceModelRef(model.serviceId, model.id, VoiceCapability.STT)) },
                 )
             }
@@ -318,10 +331,12 @@ private fun ModelRow(
                     label = stringResource(R.string.voice_catalog_cap_tts),
                     protocol = ttsProtocolLabel(binding.protocol),
                     ui = probeState(VoiceModelRef(model.serviceId, model.id, VoiceCapability.TTS)),
+                    transcript = "",
                     verified = snapshot.verified(VoiceModelRef(model.serviceId, model.id, VoiceCapability.TTS)),
                     testLabel = stringResource(R.string.voice_catalog_try_tts),
                     tag = "voice-cap-tts-${model.id}",
                     onTest = { onTest(VoiceModelRef(model.serviceId, model.id, VoiceCapability.TTS), TtsRequest(ttsSampleText)) },
+                    onFinish = {},
                     onStop = { onStop(VoiceModelRef(model.serviceId, model.id, VoiceCapability.TTS)) },
                 )
             }
@@ -331,10 +346,12 @@ private fun ModelRow(
                     label = stringResource(R.string.voice_catalog_cap_realtime),
                     protocol = realtimeProtocolLabel(binding.protocol),
                     ui = probeState(VoiceModelRef(model.serviceId, model.id, VoiceCapability.REALTIME)),
+                    transcript = "",
                     verified = snapshot.verified(VoiceModelRef(model.serviceId, model.id, VoiceCapability.REALTIME)),
                     testLabel = stringResource(R.string.voice_catalog_test_realtime),
                     tag = "voice-cap-rt-${model.id}",
                     onTest = { onTest(VoiceModelRef(model.serviceId, model.id, VoiceCapability.REALTIME), null) },
+                    onFinish = {},
                     onStop = { onStop(VoiceModelRef(model.serviceId, model.id, VoiceCapability.REALTIME)) },
                 )
             }
@@ -358,10 +375,12 @@ private fun CapabilityBadge(
     label: String,
     protocol: String,
     ui: VoiceProbeUi,
+    transcript: String,
     verified: Boolean,
     testLabel: String,
     tag: String,
     onTest: () -> Unit,
+    onFinish: () -> Unit,
     onStop: () -> Unit,
 ) {
     val c = MikaTheme.colors
@@ -370,6 +389,9 @@ private fun CapabilityBadge(
             Text(label, style = MikaType.Hint.copy(fontWeight = FontWeight.SemiBold), color = c.ink2)
             Text(protocol, style = MikaType.Hint, color = c.ink3)
             if (ui.isActive) {
+                if (ui is VoiceProbeUi.Listening && ui.canFinish && !ui.converting) {
+                    TextButton(onClick = onFinish) { Text(stringResource(R.string.voice_result_done), style = MikaType.Hint) }
+                }
                 TextButton(onClick = onStop) { Text(stringResource(R.string.chat_audio_stop), style = MikaType.Hint) }
             } else {
                 TextButton(onClick = onTest) { Text(testLabel, style = MikaType.Hint) }
@@ -378,13 +400,30 @@ private fun CapabilityBadge(
         when (ui) {
             VoiceProbeUi.Idle -> Unit
             VoiceProbeUi.Running -> StatusPill(stringResource(R.string.voice_catalog_testing), PillTone.Warn)
-            is VoiceProbeUi.Listening -> Text(
-                ui.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) },
-                style = MikaType.Hint, color = c.ink2,
-            )
+            is VoiceProbeUi.Listening -> if (ui.converting) {
+                StatusPill(stringResource(R.string.voice_catalog_testing), PillTone.Warn)
+            } else {
+                Column(
+                    Modifier
+                        .padding(top = 4.dp)
+                        .background(c.fill, MikaShapes.Button)
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    VoiceWave(ui.level, flat = false, reduceMotion = false, color = c.accent)
+                    Text(
+                        ui.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) },
+                        style = MikaType.Hint, color = c.ink2,
+                    )
+                }
+            }
             VoiceProbeUi.Playing -> StatusPill(stringResource(R.string.voice_playing), PillTone.Ok)
             is VoiceProbeUi.Failed -> Text(voiceErrorText(ui.error), style = MikaType.Hint, color = c.bad)
-            VoiceProbeUi.Verified -> StatusPill(stringResource(R.string.voice_catalog_verified), PillTone.Ok)
+            VoiceProbeUi.Verified -> {
+                val labelText = if (transcript.isNotBlank()) "${stringResource(R.string.voice_catalog_verified)} · “$transcript”"
+                else stringResource(R.string.voice_catalog_verified)
+                StatusPill(labelText, PillTone.Ok)
+            }
         }
         if (ui == VoiceProbeUi.Idle && verified) {
             StatusPill(stringResource(R.string.voice_catalog_verified), PillTone.Ok)

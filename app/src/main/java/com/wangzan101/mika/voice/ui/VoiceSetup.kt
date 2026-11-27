@@ -1,5 +1,7 @@
 package com.wangzan101.mika.voice.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,6 +46,7 @@ import com.wangzan101.mika.ui.components.StatusPill
 import com.wangzan101.mika.ui.components.TagTone
 import com.wangzan101.mika.ui.components.ValueTone
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaShapes
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.voice.VoicePlayer
@@ -176,12 +179,14 @@ internal fun VoiceOptionList(
     badge: (VoiceOption) -> String? = { null },
 ) {
     val probes by viewModel.probes.collectAsState()
+    val transcripts by viewModel.transcripts.collectAsState()
     val c = MikaTheme.colors
     GroupCard {
         extraTop?.invoke()
         choices.forEachIndexed { index, choice ->
-            val probe = if (choice.offer == null) viewModel.probeFingerprint(choice.ref)?.let { probes[it] } ?: VoiceProbeUi.Idle
-            else VoiceProbeUi.Idle
+            val fp = if (choice.offer == null) viewModel.probeFingerprint(choice.ref) else null
+            val probe = fp?.let { probes[it] } ?: VoiceProbeUi.Idle
+            val transcript = fp?.let { transcripts[it] }.orEmpty()
             RadioRow(
                 voiceModelDisplayName(choice.model),
                 selected = choice.ref == selected,
@@ -205,10 +210,38 @@ internal fun VoiceOptionList(
                         when (probe) {
                             VoiceProbeUi.Idle -> if (choice.verified) Text(stringResource(R.string.voice_catalog_verified), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ok)
                             VoiceProbeUi.Running -> Text(stringResource(R.string.voice_catalog_testing), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink3)
-                            is VoiceProbeUi.Listening -> Text(probe.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) }, Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink2)
+                            is VoiceProbeUi.Listening -> if (probe.converting) {
+                                Text(stringResource(R.string.voice_catalog_testing), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink3)
+                            } else {
+                                Row(
+                                    Modifier
+                                        .padding(top = 6.dp)
+                                        .background(c.fill, MikaShapes.Button)
+                                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                ) {
+                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        VoiceWave(probe.level, flat = false, reduceMotion = false, color = c.accent)
+                                        Text(probe.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) }, style = MikaType.Hint, color = c.ink2)
+                                    }
+                                    if (probe.canFinish) {
+                                        MikaButton(
+                                            stringResource(R.string.voice_result_done),
+                                            onClick = { viewModel.finishStt(choice.ref) },
+                                            kind = ButtonKind.Primary,
+                                            size = ButtonSize.Small,
+                                        )
+                                    }
+                                }
+                            }
                             VoiceProbeUi.Playing -> Text(stringResource(R.string.voice_playing), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink2)
                             is VoiceProbeUi.Failed -> Text(voiceErrorText(probe.error), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.bad)
-                            VoiceProbeUi.Verified -> Text(stringResource(R.string.voice_catalog_verified), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ok)
+                            VoiceProbeUi.Verified -> {
+                                val label = if (transcript.isNotBlank()) "${stringResource(R.string.voice_catalog_verified)} · “$transcript”"
+                                else stringResource(R.string.voice_catalog_verified)
+                                Text(label, Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ok)
+                            }
                         }
                     }
                 },
