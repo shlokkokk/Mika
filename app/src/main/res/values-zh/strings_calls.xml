@@ -162,4 +162,8 @@
     <string name="calls_delete_digit">退格</string>
     <string name="calls_clear_draft">清空草稿</string>
     <string name="calls_reset_history_filters">重置筛选</string>
+    <string name="calls_audio_probe_ready">音频路径具备运行条件，仍需双向实机验证</string>
+    <string name="calls_audio_probe_unavailable">内置助手无法检测电话音频</string>
+    <string name="calls_history_summary_updated">摘要已更新</string>
+    <string name="calls_voice_briefing_left_foreground">已离开前台，未拨号</string>
 </resources>

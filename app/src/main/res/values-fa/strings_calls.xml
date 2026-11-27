@@ -162,4 +162,8 @@
     <string name="calls_delete_digit">حذف</string>
     <string name="calls_clear_draft">پاک کردن پیش‌نویس</string>
     <string name="calls_reset_history_filters">بازنشانی فیلترها</string>
+    <string name="calls_audio_probe_ready">مسیر صدا آماده است، اما صدای دوطرفه همچنان نیاز به یک تماس آزمایشی واقعی دارد</string>
+    <string name="calls_audio_probe_unavailable">دستیار داخلی نتوانست صدای تماس را تشخیص دهد</string>
+    <string name="calls_history_summary_updated">خلاصه به‌روزرسانی شد</string>
+    <string name="calls_voice_briefing_left_foreground">برنامه از پیش‌زمینه خارج شد، تماس برقرار نشد</string>
 </resources>

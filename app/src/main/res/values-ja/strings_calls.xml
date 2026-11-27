@@ -162,4 +162,8 @@
     <string name="calls_delete_digit">削除</string>
     <string name="calls_clear_draft">下書きを消去</string>
     <string name="calls_reset_history_filters">絞り込みをリセット</string>
+    <string name="calls_audio_probe_ready">音声経路の準備は整っていますが、双方向通話の実機テストが必要です</string>
+    <string name="calls_audio_probe_unavailable">内蔵ヘルパーが通話音声を検出できませんでした</string>
+    <string name="calls_history_summary_updated">要約を更新しました</string>
+    <string name="calls_voice_briefing_left_foreground">フォアグラウンドを離れたため発信しませんでした</string>
 </resources>

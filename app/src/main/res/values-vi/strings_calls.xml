@@ -162,4 +162,8 @@
     <string name="calls_delete_digit">Xóa</string>
     <string name="calls_clear_draft">Xóa bản nháp</string>
     <string name="calls_reset_history_filters">Đặt lại bộ lọc</string>
+    <string name="calls_audio_probe_ready">Đường dẫn âm thanh đã sẵn sàng, nhưng vẫn cần gọi thử để kiểm tra âm thanh hai chiều</string>
+    <string name="calls_audio_probe_unavailable">Trình hỗ trợ tích hợp không phát hiện được âm thanh cuộc gọi</string>
+    <string name="calls_history_summary_updated">Đã cập nhật tóm tắt</string>
+    <string name="calls_voice_briefing_left_foreground">Đã rời khỏi nền trước, chưa thực hiện cuộc gọi</string>
 </resources>

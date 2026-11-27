@@ -162,4 +162,8 @@
     <string name="calls_delete_digit">Sil</string>
     <string name="calls_clear_draft">Taslağı temizle</string>
     <string name="calls_reset_history_filters">Filtreleri sıfırla</string>
+    <string name="calls_audio_probe_ready">Ses yolu hazır ancak çift yönlü ses için yine de canlı bir test araması gerekiyor</string>
+    <string name="calls_audio_probe_unavailable">Yerleşik yardımcı arama sesini algılayamadı</string>
+    <string name="calls_history_summary_updated">Özet güncellendi</string>
+    <string name="calls_voice_briefing_left_foreground">Ön plandan ayrılındı, arama yapılmadı</string>
 </resources>

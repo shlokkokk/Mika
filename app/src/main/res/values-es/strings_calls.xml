@@ -162,4 +162,8 @@
     <string name="calls_delete_digit">Borrar</string>
     <string name="calls_clear_draft">Borrar borrador</string>
     <string name="calls_reset_history_filters">Restablecer filtros</string>
+    <string name="calls_audio_probe_ready">La ruta de audio está lista, pero el audio bidireccional aún requiere una llamada de prueba</string>
+    <string name="calls_audio_probe_unavailable">El asistente integrado no pudo detectar el audio de la llamada</string>
+    <string name="calls_history_summary_updated">Resumen actualizado</string>
+    <string name="calls_voice_briefing_left_foreground">Saliste de la pantalla, llamada no realizada</string>
 </resources>

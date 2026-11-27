@@ -162,4 +162,8 @@
     <string name="calls_delete_digit">Delete</string>
     <string name="calls_clear_draft">Clear draft</string>
     <string name="calls_reset_history_filters">Reset filters</string>
+    <string name="calls_audio_probe_ready">Audio path is ready, but two-way audio still needs a live test call</string>
+    <string name="calls_audio_probe_unavailable">Built-in helper could not detect phone audio</string>
+    <string name="calls_history_summary_updated">Summary updated</string>
+    <string name="calls_voice_briefing_left_foreground">Left foreground, call not placed</string>
 </resources>

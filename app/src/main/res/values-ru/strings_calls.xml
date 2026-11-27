@@ -162,4 +162,8 @@
     <string name="calls_delete_digit">Удалить</string>
     <string name="calls_clear_draft">Очистить черновик</string>
     <string name="calls_reset_history_filters">Сбросить фильтры</string>
+    <string name="calls_audio_probe_ready">Аудиоканал готов, но двустороннюю связь всё ещё нужно проверить тестовым звонком</string>
+    <string name="calls_audio_probe_unavailable">Встроенный помощник не смог определить аудио звонка</string>
+    <string name="calls_history_summary_updated">Сводка обновлена</string>
+    <string name="calls_voice_briefing_left_foreground">Приложение свернуто, звонок не выполнен</string>
 </resources>

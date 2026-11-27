@@ -162,4 +162,8 @@
     <string name="calls_delete_digit">삭제</string>
     <string name="calls_clear_draft">초안 지우기</string>
     <string name="calls_reset_history_filters">필터 초기화</string>
+    <string name="calls_audio_probe_ready">오디오 경로는 준비되었지만 양방향 통화 테스트가 필요합니다</string>
+    <string name="calls_audio_probe_unavailable">내장 도우미가 통화 오디오를 감지하지 못했습니다</string>
+    <string name="calls_history_summary_updated">요약이 업데이트되었습니다</string>
+    <string name="calls_voice_briefing_left_foreground">포그라운드를 벗어나 전화를 걸지 않았습니다</string>
 </resources>

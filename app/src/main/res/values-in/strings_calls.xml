@@ -162,4 +162,8 @@
     <string name="calls_delete_digit">Hapus</string>
     <string name="calls_clear_draft">Kosongkan draf</string>
     <string name="calls_reset_history_filters">Setel ulang filter</string>
+    <string name="calls_audio_probe_ready">Jalur audio siap, tetapi audio dua arah tetap perlu diuji dengan panggilan langsung</string>
+    <string name="calls_audio_probe_unavailable">Asisten bawaan tidak dapat mendeteksi audio panggilan</string>
+    <string name="calls_history_summary_updated">Ringkasan diperbarui</string>
+    <string name="calls_voice_briefing_left_foreground">Meninggalkan layar depan, panggilan tidak dilakukan</string>
 </resources>
