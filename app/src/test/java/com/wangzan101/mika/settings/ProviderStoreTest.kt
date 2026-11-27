@@ -69,6 +69,63 @@ class ProviderStoreTest {
 
     private val none = Capabilities(toolCalls = false, vision = false, contextTokens = 64_000, reasoning = false)
 
+    @Test fun nicknameSurvivesReloadAndIsNotPartOfProviderIdentity() {
+        val s = store()
+        val base = "https://api.deepseek.com"
+        val p = s.connect("DeepSeek", ProviderConfig.Kind.OpenAiCompat, base, "k1", emptyList(), nickname = "  Work  ")
+        assertEquals("Work", p.nickname)
+        // 再连同一家(换 Key、不填备注):还是这一家,备注留着,不新建
+        val again = s.connect("DeepSeek", ProviderConfig.Kind.OpenAiCompat, base, "k2", emptyList())
+        assertEquals(p.id, again.id)
+        assertEquals("Work", again.nickname)
+        assertEquals(1, s.providers.value.size)
+        // 填了别的备注也还是这一家,只是改了备注
+        val renamed = s.connect("DeepSeek", ProviderConfig.Kind.OpenAiCompat, base, null, emptyList(), nickname = "Home")
+        assertEquals(p.id, renamed.id)
+        assertEquals(1, s.providers.value.size)
+        assertEquals("k2", s.providerKey(p.id))
+
+        assertEquals("Home", store().provider(p.id)!!.nickname)
+        val raw = File(tmp.root, "providers.json").readText()
+        assertTrue(raw.contains("\"nickname\":\"Home\""))
+        assertFalse(raw.contains("k2"))
+    }
+
+    @Test fun setProviderNicknameCleansPersistsAndClears() {
+        val s = store()
+        val p = s.connect("DeepSeek", ProviderConfig.Kind.OpenAiCompat, "https://api.deepseek.com", "k", emptyList())
+        assertNull(p.nickname)
+        s.setProviderNickname(p.id, "  Personal\n ")
+        assertEquals("Personal", store().provider(p.id)!!.nickname)
+        s.setProviderNickname(p.id, "x".repeat(Provider.MAX_NICKNAME + 10))
+        assertEquals(Provider.MAX_NICKNAME, store().provider(p.id)!!.nickname!!.length)
+        s.setProviderNickname(p.id, "   ")
+        assertNull(store().provider(p.id)!!.nickname)
+        assertFalse(File(tmp.root, "providers.json").readText().contains("\"nickname\""))
+        assertEquals(p.id, store().provider(p.id)!!.id)
+        assertEquals("k", store().providerKey(p.id))
+    }
+
+    @Test fun providersFileWithoutNicknameStillLoadsAndBlankNicknameIsNull() {
+        val s = store()
+        val p = s.connect("DeepSeek", ProviderConfig.Kind.OpenAiCompat, "https://api.deepseek.com", "k", emptyList())
+        val file = File(tmp.root, "providers.json")
+        assertFalse(file.readText().contains("nickname"))
+        assertNull(store().provider(p.id)!!.nickname)
+        file.writeText(file.readText().replace("\"id\":\"${p.id}\"", "\"id\":\"${p.id}\",\"nickname\":\"  \""))
+        assertNull(store().provider(p.id)!!.nickname)
+        file.writeText(file.readText().replace("\"nickname\":\"  \"", "\"nickname\":7"))
+        assertNull(store().provider(p.id)!!.nickname)
+    }
+
+    @Test fun cleanNicknameCountsCodePoints() {
+        assertNull(Provider.cleanNickname(null))
+        assertNull(Provider.cleanNickname(" \t "))
+        val emoji = "😀".repeat(Provider.MAX_NICKNAME + 1)
+        val cut = Provider.cleanNickname(emoji)!!
+        assertEquals(Provider.MAX_NICKNAME, cut.codePointCount(0, cut.length))
+    }
+
     @Test fun openAiServiceTiersSurviveReloadAndApplyPerProviderAndModel() {
         val s = store()
         val base = "https://api.openai.com/v1"

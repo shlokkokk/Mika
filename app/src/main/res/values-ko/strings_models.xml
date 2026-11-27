@@ -338,6 +338,10 @@
     <string name="video_no_compatible">추가한 모델 서비스 중 동영상을 생성할 수 있는 곳이 없습니다. 먼저 동영상을 생성할 수 있는 서비스를 추가하세요: %1$s.</string>
     <string name="video_choice_stale">이전에 선택한 서비스는 더 이상 동영상을 생성할 수 없습니다(삭제되었거나 주소가 변경됨). 아래에서 다시 선택하세요. 그 전까지 Mika는 동영상을 생성하지 않습니다.</string>
     <string name="tool_video_generate">동영상 생성</string>
+    <string name="provider_nickname_label">계정 별칭</string>
+    <string name="provider_rename_title">계정 이름 변경</string>
+    <string name="provider_nickname_hint">선택 사항, 예: 업무, 개인</string>
+    <string name="provider_name_with_note">%1$s (%2$s)</string>
     <string name="model_fallback_move_up">위로 이동</string>
     <string name="model_fallback_move_down">아래로 이동</string>
     <string name="model_fallback_move_up_desc">백업 #%1$d 위로 이동</string>

@@ -64,6 +64,7 @@ import com.wangzan101.mika.settings.ui.UsageCopy
 import com.wangzan101.mika.setup.ui.Onboarding
 import com.wangzan101.mika.setup.ui.OnboardingStep
 import com.wangzan101.mika.ui.NavSlide
+import com.wangzan101.mika.ui.rememberPageStates
 import com.wangzan101.mika.ui.Route
 import com.wangzan101.mika.ui.openInBrowser
 import com.wangzan101.mika.voice.ui.VoiceHubSection
@@ -151,7 +152,7 @@ fun ModelSetupScreen(
     val role = picking
     val actions = ModelSetupActions(
         selectPreset = vm::selectPreset, setKind = vm::setKind, setBaseUrl = vm::setBaseUrl, setAccountId = vm::setAccountId, setApiKey = vm::setApiKey,
-        setModel = vm::setModel, setManual = vm::setManual, setName = vm::setName,
+        setModel = vm::setModel, setManual = vm::setManual, setName = vm::setName, setNickname = vm::setNickname,
         testAndSave = vm::testAndSave,
         saveUntested = vm::saveWithoutTest,
         openForm = vm::openForm, closeForm = vm::closeForm,
@@ -189,7 +190,9 @@ fun ModelSetupScreen(
     // 换页动画期间旧页还在渲染:服务商刚删掉时详情页也能从缓存里拿到数据画完退出
     var heldProviders by remember { mutableStateOf(ui.providers) }
     if (ui.providers.isNotEmpty()) heldProviders = ui.providers
-    NavSlide(subPage, depth = { it.depth }) { page ->
+    // 子页的滚动位置等:返回到上一层时原样恢复,退出的子页丢掉(规则见 PageStates)
+    val pageStates = rememberPageStates()
+    NavSlide(subPage, depth = { it.depth }, states = pageStates) { page ->
     when (page) {
         is ModelSubPage.AddProvider -> {
             BackHandler(onBack = vm::closeForm)
@@ -232,6 +235,7 @@ fun ModelSetupScreen(
                     },
                     useAsMain = { vm.useAsMain(p.id) },
                     setDailyBudget = { vm.setDailyTokenBudget(p.id, it) },
+                    rename = { vm.renameProvider(p.id, it) },
                 )
                 if (page is ModelSubPage.AllModels) {
                     BackHandler { allModels = false }
@@ -382,6 +386,8 @@ class ModelSetupActions(
     /** 「手动填写模型名」的开和收。 */
     val setManual: (Boolean) -> Unit = {},
     val setName: (String) -> Unit = {},
+    /** 添加时填的账号备注(见 [com.wangzan101.mika.settings.Provider.nickname])。 */
+    val setNickname: (String) -> Unit = {},
     val testAndSave: () -> Unit = {},
     /** 不测试,直接保存(见 [ModelSetupViewModel.saveWithoutTest])。 */
     val saveUntested: () -> Unit = {},

@@ -338,6 +338,10 @@
     <string name="video_no_compatible">Tidak ada layanan model Anda yang bisa membuat video. Tambahkan dulu layanan yang bisa: %1$s.</string>
     <string name="video_choice_stale">Layanan yang Anda pilih sebelumnya tidak bisa lagi membuat video (dihapus atau alamatnya berubah). Pilih ulang di bawah; sampai saat itu Mika tidak akan membuat video.</string>
     <string name="tool_video_generate">Buat video</string>
+    <string name="provider_nickname_label">Nama panggilan akun</string>
+    <string name="provider_rename_title">Ubah nama akun</string>
+    <string name="provider_nickname_hint">Opsional, mis. Kerja atau Pribadi</string>
+    <string name="provider_name_with_note">%1$s (%2$s)</string>
     <string name="model_fallback_move_up">Naikkan</string>
     <string name="model_fallback_move_down">Turunkan</string>
     <string name="model_fallback_move_up_desc">Naikkan cadangan #%1$d</string>
