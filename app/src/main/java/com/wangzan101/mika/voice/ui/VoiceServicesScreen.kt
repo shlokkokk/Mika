@@ -61,7 +61,6 @@ import com.wangzan101.mika.voice.model.VoiceAccount
 import com.wangzan101.mika.voice.model.VoiceAccountManager
 import com.wangzan101.mika.voice.model.VoiceCapability
 import com.wangzan101.mika.voice.model.VoiceCatalogSnapshot
-import com.wangzan101.mika.voice.model.VoiceCredentials
 import com.wangzan101.mika.voice.model.VoiceModelEnvironment
 import com.wangzan101.mika.voice.model.VoiceModelError
 import com.wangzan101.mika.voice.model.VoiceModelRef
@@ -254,10 +253,7 @@ private fun VendorDetail(
     val scope = rememberCoroutineScope()
     var list by remember(service.id) { mutableStateOf<ListUi>(ListUi.Idle) }
     var adding by remember(service.id) { mutableStateOf<VoiceCapability?>(null) }
-    var addingKeyToPool by remember(service.id) { mutableStateOf(false) }
     val open = remember(service.id) { mutableStateMapOf<VoiceCapability, Boolean>() }
-    val ownedAccount = service.account as? VoiceAccount.VoiceOwned
-    var poolCount by remember(service.id) { mutableStateOf(voiceModels.accountResolver.poolCount(service)) }
     fun refresh() {
         if (list == ListUi.Running) return
         list = ListUi.Running
@@ -268,19 +264,9 @@ private fun VendorDetail(
     }
     Page(service.name, onBack) {
         GroupCard(Modifier.padding(top = 8.dp)) {
-            val keyStatus = if (poolCount > 1) stringResource(R.string.voice_pool_count, poolCount) else stringResource(R.string.voice_vendor_key_saved)
-            ListRow(MikaIcons.Key, service.name, keyStatus, first = true) {
+            ListRow(MikaIcons.Key, service.name, stringResource(R.string.voice_vendor_key_saved), first = true) {
                 MikaButton(stringResource(R.string.voice_vendor_change_key), onClick = onChangeKey,
                     kind = ButtonKind.Secondary, size = ButtonSize.Small, modifier = Modifier.testTag("vendor-change-key"))
-            }
-            if (ownedAccount != null && voiceModels.credentialStore != null) {
-                ListRow(
-                    MikaIcons.Plus,
-                    stringResource(R.string.voice_pool_add_key),
-                    titleColor = c.accent,
-                    onClick = { addingKeyToPool = true },
-                    modifier = Modifier.testTag("vendor-add-pool-key"),
-                )
             }
             val status = if (vendor?.lister == null) stringResource(R.string.voice_list_none) else when (val state = list) {
                 ListUi.Idle -> stringResource(R.string.voice_list_idle)
@@ -346,29 +332,6 @@ private fun VendorDetail(
                 refresher.addManual(service.id, id, cap)?.let(onTest)
             },
             tag = "vendor-add-input",
-        )
-    }
-    if (addingKeyToPool && ownedAccount != null && voiceModels.credentialStore != null) {
-        TextEntryDialog(
-            title = stringResource(R.string.voice_pool_add_key),
-            label = stringResource(R.string.voice_field_api_key),
-            onDismiss = { addingKeyToPool = false },
-            onConfirm = { newKeyRaw ->
-                addingKeyToPool = false
-                val existing = voiceModels.credentials.read(ownedAccount.secretId)
-                val merged = (com.wangzan101.mika.core.model.KeyPoolManager.shared.parseKeys(existing?.apiKey.orEmpty()) +
-                    com.wangzan101.mika.core.model.KeyPoolManager.shared.parseKeys(newKeyRaw)).distinct()
-                if (merged.isNotEmpty()) {
-                    val joined = merged.joinToString(",")
-                    voiceModels.credentialStore.save(
-                        ownedAccount.secretId,
-                        VoiceCredentials(apiKey = joined, appId = existing?.appId.orEmpty(), accessKey = existing?.accessKey.orEmpty()),
-                    )
-                    com.wangzan101.mika.core.model.KeyPoolManager.shared.register("voice:${ownedAccount.secretId}", joined)
-                    poolCount = merged.size
-                }
-            },
-            tag = "vendor-add-pool-key-input",
         )
     }
 }

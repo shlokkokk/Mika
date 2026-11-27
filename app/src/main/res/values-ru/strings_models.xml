@@ -363,10 +363,4 @@
     <string name="model_fallback_move_down">Вниз</string>
     <string name="model_fallback_move_up_desc">Переместить резерв №%1$d вверх</string>
     <string name="model_fallback_move_down_desc">Переместить резерв №%1$d вниз</string>
-    <string name="voice_same_as_main">Как основная модель</string>
-    <string name="voice_same_as_light">Как лёгкая модель</string>
-    <string name="voice_backup_chain_title">Резервные модели</string>
-    <string name="voice_pool_count">Пул ключей · %1$d ключ(а) · авторотация</string>
-    <string name="voice_pool_add_key">Добавить ключ в пул</string>
-    <string name="voice_with_backups_count">%1$s · %2$d резервов</string>
 </resources>

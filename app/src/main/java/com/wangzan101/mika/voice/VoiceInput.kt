@@ -10,7 +10,6 @@ import com.wangzan101.mika.i18n.tr
 import com.wangzan101.mika.settings.Provider
 import com.wangzan101.mika.settings.ProviderStore
 import com.wangzan101.mika.settings.clientHeaders
-import com.wangzan101.mika.settings.configFor
 import com.wangzan101.mika.settings.providerKey
 import com.wangzan101.mika.voice.model.SttSelection
 import com.wangzan101.mika.voice.model.SttSelectionController
@@ -62,13 +61,6 @@ class VoiceInput(
         return when (val selection = voiceModels.stt.current()) {
             SttSelection.Auto -> SpeechResolver.resolve(SpeechChoice.Auto, systemCapability(), emptyList())
             SttSelection.Off -> SpeechEngineSpec.Unavailable(SpeechEngineSpec.Why.Off)
-            SttSelection.SameAsMain, SttSelection.SameAsLight -> {
-                val role = if (selection == SttSelection.SameAsMain) com.wangzan101.mika.core.model.ModelRole.Main else com.wangzan101.mika.core.model.ModelRole.Light
-                val cfg = providers.configFor(role) ?: return SpeechEngineSpec.Unavailable(SpeechEngineSpec.Why.ProviderGone)
-                val p = providers.provider(cfg.providerId) ?: return SpeechEngineSpec.Unavailable(SpeechEngineSpec.Why.ProviderGone)
-                val method = if (p.kind == com.wangzan101.mika.settings.ProviderConfig.Kind.Gemini) TranscribeMethod.GeminiInline else TranscribeMethod.ChatInputAudio
-                SpeechEngineSpec.Provider(p, cfg.model, method)
-            }
             is SttSelection.Model -> if (selection.ref == SttSelectionController.SYSTEM_STT_REF) {
                 SpeechResolver.resolve(SpeechChoice.System, systemCapability(), emptyList())
             } else {
@@ -98,34 +90,10 @@ class VoiceInput(
         }
         val tag = language ?: SystemSpeech.speechTag(AppLanguage.current(context))
         val selection = voiceModels.stt.current()
-        if (selection == SttSelection.SameAsMain || selection == SttSelection.SameAsLight) {
-            val role = if (selection == SttSelection.SameAsMain) com.wangzan101.mika.core.model.ModelRole.Main
-                else com.wangzan101.mika.core.model.ModelRole.Light
-            val langIso = SystemSpeech.isoCode(tag)
-            return ProviderSpeech(
-                recorder = PcmRecorder(),
-                transcribe = { wav -> com.wangzan101.mika.voice.model.VoiceFailover.transcribeRole(providers, role, wav, langIso) },
-            )
-        }
         val ref = when (selection) {
             SttSelection.Auto -> SttSelectionController.SYSTEM_STT_REF
             SttSelection.Off -> return FailedSession(SpeechFailure.Unavailable(SpeechEngineSpec.Why.Off))
             is SttSelection.Model -> selection.ref
-            SttSelection.SameAsMain, SttSelection.SameAsLight -> error("Handled above")
-        }
-        if (ref != SttSelectionController.SYSTEM_STT_REF && voiceModels.stt.batchModel() != null) {
-            val fallbacks = voiceModels.catalog.state.value.selections.sttFallbacks.filter { it != ref }
-            if (fallbacks.isNotEmpty()) {
-                val langIso = SystemSpeech.isoCode(tag)
-                return ProviderSpeech(
-                    recorder = PcmRecorder(),
-                    transcribe = { wav ->
-                        com.wangzan101.mika.voice.model.VoiceFailover.transcribeRefs(
-                            voiceModels, providers, listOf(ref) + fallbacks, wav, langIso,
-                        )
-                    },
-                )
-            }
         }
         val hooks = if (ref == SttSelectionController.SYSTEM_STT_REF) {
             SttHooks(

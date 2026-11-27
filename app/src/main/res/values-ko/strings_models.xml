@@ -346,10 +346,4 @@
     <string name="model_fallback_move_down">아래로 이동</string>
     <string name="model_fallback_move_up_desc">백업 #%1$d 위로 이동</string>
     <string name="model_fallback_move_down_desc">백업 #%1$d 아래로 이동</string>
-    <string name="voice_same_as_main">주 모델과 동일</string>
-    <string name="voice_same_as_light">경량 모델과 동일</string>
-    <string name="voice_backup_chain_title">백업 모델</string>
-    <string name="voice_pool_count">키 풀 · %1$d개 키 · 자동 순환</string>
-    <string name="voice_pool_add_key">풀에 키 추가</string>
-    <string name="voice_with_backups_count">%1$s · 백업 %2$d개</string>
 </resources>

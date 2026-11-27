@@ -348,10 +348,4 @@
     <string name="model_fallback_move_down">下へ移動</string>
     <string name="model_fallback_move_up_desc">予備 #%1$d を上へ移動</string>
     <string name="model_fallback_move_down_desc">予備 #%1$d を下へ移動</string>
-    <string name="voice_same_as_main">メインモデルと同じ</string>
-    <string name="voice_same_as_light">軽量モデルと同じ</string>
-    <string name="voice_backup_chain_title">バックアップモデル</string>
-    <string name="voice_pool_count">キーブル · %1$d 個 · 自動ローテーション</string>
-    <string name="voice_pool_add_key">プールにキーを追加</string>
-    <string name="voice_with_backups_count">%1$s · 予備 %2$d 件</string>
 </resources>

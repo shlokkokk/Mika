@@ -350,11 +350,4 @@
     <string name="model_fallback_move_down">Aşağı taşı</string>
     <string name="model_fallback_move_up_desc">%1$d. yedeği yukarı taşı</string>
     <string name="model_fallback_move_down_desc">%1$d. yedeği aşağı taşı</string>
-    <string name="video_resolution">Çözünürlük</string>
-    <string name="voice_same_as_main">Ana model ile aynı</string>
-    <string name="voice_same_as_light">Hafif model ile aynı</string>
-    <string name="voice_backup_chain_title">Yedek modeller</string>
-    <string name="voice_pool_count">Anahtar Havuzu · %1$d anahtar · otomatik döndürme</string>
-    <string name="voice_pool_add_key">Havuza anahtar ekle</string>
-    <string name="voice_with_backups_count">%1$s · %2$d yedek</string>
 </resources>

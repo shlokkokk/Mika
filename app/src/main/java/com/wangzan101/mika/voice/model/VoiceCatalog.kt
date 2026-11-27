@@ -179,14 +179,6 @@ sealed interface SttSelection {
     @Serializable
     @SerialName("Model")
     data class Model(val ref: VoiceModelRef) : SttSelection
-
-    @Serializable
-    @SerialName("SameAsMain")
-    data object SameAsMain : SttSelection
-
-    @Serializable
-    @SerialName("SameAsLight")
-    data object SameAsLight : SttSelection
 }
 
 @Serializable
@@ -194,10 +186,6 @@ data class VoiceSelections(
     val stt: SttSelection = SttSelection.Auto,
     val tts: VoiceModelRef? = null,
     val realtime: VoiceModelRef? = null,
-    /** Backup STT models tried in order on 429 / 5xx overload / network failure. */
-    val sttFallbacks: List<VoiceModelRef> = emptyList(),
-    /** Backup TTS models tried in order on 429 / 5xx overload / network failure. */
-    val ttsFallbacks: List<VoiceModelRef> = emptyList(),
     /** AI phone calls' own Realtime model; null follows [realtime]. */
     val callRealtime: VoiceModelRef? = null,
     /** Voice for [callRealtime]; blank uses that model's own voice. Ignored while calls follow [realtime]. */
@@ -215,12 +203,8 @@ data class VoiceSelections(
     val callEngine: CallEngine? = null,
     /** AI phone calls' own listen model; null follows [stt] (device recognition excluded). */
     val callStt: VoiceModelRef? = null,
-    /** AI phone calls' own listen backup chain; empty follows [sttFallbacks] when [callStt] is null. */
-    val callSttFallbacks: List<VoiceModelRef> = emptyList(),
     /** AI phone calls' own speak model; null follows [tts]. */
     val callTts: VoiceModelRef? = null,
-    /** AI phone calls' own speak backup chain; empty follows [ttsFallbacks] when [callTts] is null. */
-    val callTtsFallbacks: List<VoiceModelRef> = emptyList(),
     /** Voice for [callTts]; blank uses the model's default. */
     val callTtsVoice: String = "",
 ) {

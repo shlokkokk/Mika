@@ -349,10 +349,4 @@
     <string name="model_fallback_move_down">下移</string>
     <string name="model_fallback_move_up_desc">上移备用 #%1$d</string>
     <string name="model_fallback_move_down_desc">下移备用 #%1$d</string>
-    <string name="voice_same_as_main">与主模型相同</string>
-    <string name="voice_same_as_light">与轻量模型相同</string>
-    <string name="voice_backup_chain_title">备援模型</string>
-    <string name="voice_pool_count">密钥池 · %1$d 把密钥 · 自动轮换</string>
-    <string name="voice_pool_add_key">添加密钥到密钥池</string>
-    <string name="voice_with_backups_count">%1$s · %2$d 个备用</string>
 </resources>

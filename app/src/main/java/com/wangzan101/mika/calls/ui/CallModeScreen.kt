@@ -55,7 +55,6 @@ import com.wangzan101.mika.voice.ui.nameOf
 /** True when a call could not hear with this listen choice: device recognition only hears the microphone. */
 internal fun VoiceSelections.listenUnusableForCalls(): Boolean = when (val s = stt) {
     is SttSelection.Model -> s.ref == SttSelectionController.SYSTEM_STT_REF
-    SttSelection.SameAsMain, SttSelection.SameAsLight -> false
     else -> true
 }
 
@@ -111,15 +110,9 @@ fun CallModeScreen(onBack: () -> Unit, onOpenStt: () -> Unit, onOpenTts: () -> U
             val listenBad = s.listenUnusableForCalls()
             GroupLabel(stringResource(R.string.call_mode_steps))
             GroupCard {
-                val listenLabel = when (val sttSel = s.stt) {
-                    SttSelection.SameAsMain -> stringResource(R.string.voice_same_as_main)
-                    SttSelection.SameAsLight -> stringResource(R.string.voice_same_as_light)
-                    is SttSelection.Model -> snapshot.nameOf(sttSel.ref) ?: stringResource(R.string.voice_source_device)
-                    else -> stringResource(R.string.voice_source_device)
-                }
                 ListRow(
                     MikaIcons.Mic, stringResource(R.string.call_mode_listen),
-                    if (s.sttFallbacks.isNotEmpty() && s.stt is SttSelection.Model) "$listenLabel · ${s.sttFallbacks.size} backup(s)" else listenLabel,
+                    (s.stt as? SttSelection.Model)?.let { snapshot.nameOf(it.ref) } ?: stringResource(R.string.voice_source_device),
                     first = true, onClick = onOpenStt,
                     detail = if (listenBad) stringResource(R.string.call_mode_listen_device) else null, detailColor = c.warn,
                     modifier = Modifier.testTag("call-mode-listen"),

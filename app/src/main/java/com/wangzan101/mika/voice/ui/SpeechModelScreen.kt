@@ -260,28 +260,6 @@ private fun MigratedSpeechModelContent(
                 tr(R.string.models_off), selected = selection == SttSelection.Off,
                 onClick = { actions.pick(SpeechChoice.Off) }, note = tr(R.string.speech_off_note),
             )
-            val mainCfg = ui.configFor(com.wangzan101.mika.core.model.ModelRole.Main)
-            val lightCfg = ui.configFor(com.wangzan101.mika.core.model.ModelRole.Light)
-            if (mainCfg != null) {
-                val mainFb = ui.roles.fallbacks(com.wangzan101.mika.core.model.ModelRole.Main).size
-                val sub = if (mainFb > 0) "${mainCfg.model} · $mainFb backup(s)" else mainCfg.model
-                RadioRow(
-                    tr(R.string.voice_same_as_main),
-                    selected = selection == SttSelection.SameAsMain,
-                    onClick = { voiceVm.catalog.setSttSelection(SttSelection.SameAsMain) },
-                    subtitle = sub,
-                )
-            }
-            if (lightCfg != null) {
-                val lightFb = ui.roles.fallbacks(com.wangzan101.mika.core.model.ModelRole.Light).size
-                val sub = if (lightFb > 0) "${lightCfg.model} · $lightFb backup(s)" else lightCfg.model
-                RadioRow(
-                    tr(R.string.voice_same_as_light),
-                    selected = selection == SttSelection.SameAsLight,
-                    onClick = { voiceVm.catalog.setSttSelection(SttSelection.SameAsLight) },
-                    subtitle = sub,
-                )
-            }
         }
         val choices = voiceOptions(VoiceCapability.STT, catalog, ui.providers).filter { it.source != VoiceSource.Device }
         if (choices.isNotEmpty()) {
@@ -290,18 +268,6 @@ private fun MigratedSpeechModelContent(
                 choices, (selection as? SttSelection.Model)?.ref, tr(R.string.voice_try_stt), voiceVm,
                 onPick = { choice -> actions.pickRef(voiceVm.ensureInCatalog(choice)) },
                 onTest = { choice -> voiceVm.tryChoice(choice, "") },
-            )
-        }
-        val selectedCloudRef = (selection as? SttSelection.Model)?.ref?.takeIf { it != SttSelectionController.SYSTEM_STT_REF }
-        if (selectedCloudRef != null && choices.size > 1) {
-            VoiceBackupChainCard(
-                title = tr(R.string.voice_backup_chain_title),
-                primaryRef = selectedCloudRef,
-                fallbacks = catalog.selections.sttFallbacks,
-                options = choices,
-                snapshot = catalog,
-                onEnsureInCatalog = { voiceVm.ensureInCatalog(it) },
-                onUpdateFallbacks = { voiceVm.catalog.setSttFallbacks(it) },
             )
         }
         onOpenServices?.let { VoiceMoreServices(it) }

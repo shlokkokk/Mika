@@ -137,28 +137,8 @@ class VoiceCatalogStore(
     }
 
     @Synchronized
-    fun setSttFallbacks(fallbacks: List<VoiceModelRef>) {
-        commit { it.copy(selections = it.selections.copy(sttFallbacks = fallbacks.distinct().take(MAX_VOICE_FALLBACKS))) }
-    }
-
-    @Synchronized
-    fun setCallSttFallbacks(fallbacks: List<VoiceModelRef>) {
-        commit { it.copy(selections = it.selections.copy(callSttFallbacks = fallbacks.distinct().take(MAX_VOICE_FALLBACKS))) }
-    }
-
-    @Synchronized
     fun setTtsSelection(ref: VoiceModelRef?) {
         commit { it.copy(selections = it.selections.copy(tts = ref)) }
-    }
-
-    @Synchronized
-    fun setTtsFallbacks(fallbacks: List<VoiceModelRef>) {
-        commit { it.copy(selections = it.selections.copy(ttsFallbacks = fallbacks.distinct().take(MAX_VOICE_FALLBACKS))) }
-    }
-
-    @Synchronized
-    fun setCallTtsFallbacks(fallbacks: List<VoiceModelRef>) {
-        commit { it.copy(selections = it.selections.copy(callTtsFallbacks = fallbacks.distinct().take(MAX_VOICE_FALLBACKS))) }
     }
 
     @Synchronized
@@ -402,9 +382,8 @@ class VoiceCatalogStore(
         return protocol !in protocols
     }
 
-    companion object {
-        const val MAX_VOICE_FALLBACKS = 3
-        private val SYSTEM_STT_REF = VoiceModelRef("android-system", "system-stt", VoiceCapability.STT)
-        private val SYSTEM_TTS_REF = VoiceModelRef("android-system", "system-tts", VoiceCapability.TTS)
+    private companion object {
+        val SYSTEM_STT_REF = VoiceModelRef("android-system", "system-stt", VoiceCapability.STT)
+        val SYSTEM_TTS_REF = VoiceModelRef("android-system", "system-tts", VoiceCapability.TTS)
     }
 }

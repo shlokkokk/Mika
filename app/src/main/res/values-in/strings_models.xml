@@ -346,10 +346,4 @@
     <string name="model_fallback_move_down">Turunkan</string>
     <string name="model_fallback_move_up_desc">Naikkan cadangan #%1$d</string>
     <string name="model_fallback_move_down_desc">Turunkan cadangan #%1$d</string>
-    <string name="voice_same_as_main">Sama seperti model utama</string>
-    <string name="voice_same_as_light">Sama seperti model ringan</string>
-    <string name="voice_backup_chain_title">Model cadangan</string>
-    <string name="voice_pool_count">Kumpulan kunci · %1$d kunci · rotasi otomatis</string>
-    <string name="voice_pool_add_key">Tambah kunci ke kumpulan</string>
-    <string name="voice_with_backups_count">%1$s · %2$d cadangan</string>
 </resources>

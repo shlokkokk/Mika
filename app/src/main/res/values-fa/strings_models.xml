@@ -350,10 +350,4 @@
     <string name="model_fallback_move_down">انتقال به پایین</string>
     <string name="model_fallback_move_up_desc">انتقال پشتیبان شمارهٔ %1$d به بالا</string>
     <string name="model_fallback_move_down_desc">انتقال پشتیبان شمارهٔ %1$d به پایین</string>
-    <string name="voice_same_as_main">مشابه مدل اصلی</string>
-    <string name="voice_same_as_light">مشابه مدل سبک</string>
-    <string name="voice_backup_chain_title">مدل‌های پشتیبان</string>
-    <string name="voice_pool_count">مخزن کلید · %1$d کلید · چرخش خودکار</string>
-    <string name="voice_pool_add_key">افزودن کلید به مخزن</string>
-    <string name="voice_with_backups_count">%1$s · %2$d پشتیبان</string>
 </resources>

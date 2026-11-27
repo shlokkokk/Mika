@@ -70,23 +70,6 @@ class TtsSelectionController(private val environment: VoiceModelEnvironment) {
     }
 
     fun createTts(context: Context, ref: VoiceModelRef, capabilities: TtsCapabilities): TtsModel {
-        val snapshot = environment.catalog.state.value
-        val selections = snapshot.selections
-        val fallbacks = if (ref == selections.callTts && selections.callTtsFallbacks.isNotEmpty()) {
-            selections.callTtsFallbacks
-        } else {
-            selections.ttsFallbacks
-        }.filter { it != ref }
-        val poolCount = snapshot.services.firstOrNull { it.id == ref.serviceId }
-            ?.let { environment.accountResolver.poolCount(it) } ?: 0
-        return if (fallbacks.isEmpty() && poolCount <= 1) {
-            createTtsSingle(context, ref, capabilities)
-        } else {
-            VoiceFailover.createFailoverTts(context, environment, listOf(ref) + fallbacks, capabilities)
-        }
-    }
-
-    internal fun createTtsSingle(context: Context, ref: VoiceModelRef, capabilities: TtsCapabilities): TtsModel {
         val model = requireModel(ref)
         return environment.registry.tts(model).create(context, model, capabilities)
     }
