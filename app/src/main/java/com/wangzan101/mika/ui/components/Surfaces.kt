@@ -132,11 +132,16 @@ fun GroupCard(modifier: Modifier = Modifier, note: String? = null, content: @Com
         }
         return
     }
-    // 简约列表:行的说明([ListRow] / [RadioRow] 的 note)不进行里,收到卡片下面当脚注
+    // 简约列表:行的说明([ListRow] / [RadioRow] 的 note)不进行里,收到卡片下面当脚注;GroupCard 自己的 note 仍贴在卡片底部
     val notes = remember { CardNotes() }
     Column(modifier.padding(bottom = 12.dp)) {
-        CompositionLocalProvider(LocalCardNotes provides notes) { MikaCard(content = content) }
-        val text = listOfNotNull(notes.footnote(), note?.takeIf { it.isNotBlank() }).joinToString("\n").ifEmpty { null }
+        CompositionLocalProvider(LocalCardNotes provides notes) {
+            MikaCard {
+                content()
+                if (!note.isNullOrBlank()) AttachedCardNote(note)
+            }
+        }
+        val text = notes.footnote()
         if (text != null) {
             Text(text, Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
                 style = MikaType.Hint, color = MikaTheme.colors.ink3)
