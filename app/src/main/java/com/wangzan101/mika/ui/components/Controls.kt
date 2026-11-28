@@ -1,9 +1,16 @@
 package com.wangzan101.mika.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,12 +35,14 @@ import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -56,6 +65,27 @@ import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.ui.theme.MikaRadius
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+
+/** Subtle tactile press scale for interactive controls, automatically disabled when reduceMotion is active. */
+fun Modifier.pressScale(
+    enabled: Boolean = true,
+    interactionSource: MutableInteractionSource? = null,
+    targetScale: Float = 0.97f,
+): Modifier = composed {
+    val source = interactionSource ?: remember { MutableInteractionSource() }
+    val pressed by source.collectIsPressedAsState()
+    val reduce = MikaTheme.reduceMotion
+    val scale by animateFloatAsState(
+        targetValue = if (pressed && enabled && !reduce) targetScale else 1f,
+        animationSpec = if (reduce) snap() else spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 650f),
+        label = "press-scale",
+    )
+    graphicsLayer {
+        scaleX = scale
+        scaleY = scale
+    }
+}
 
 // ---------- 开关 ----------
 
@@ -72,7 +102,18 @@ fun MikaSwitch(
 ) {
     val c = MikaTheme.colors
     val reduce = MikaTheme.reduceMotion
-    val position by animateFloatAsState(if (checked) 1f else 0f, MikaMotion.switch(reduce), label = "switch")
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val position by animateFloatAsState(
+        targetValue = if (checked) 1f else 0f,
+        animationSpec = if (reduce) snap() else spring(dampingRatio = 0.86f, stiffness = 500f),
+        label = "switch",
+    )
+    val thumbStretch by animateFloatAsState(
+        targetValue = if (pressed && enabled && !reduce) 1.22f else 1f,
+        animationSpec = if (reduce) snap() else spring(dampingRatio = 0.8f, stiffness = 600f),
+        label = "switch-stretch",
+    )
     // 简约列表里打开是黑色(深色下反过来:浅色底、深色圆钮),不用强调色
     val plain = LocalPlainList.current
     val on = if (plain) c.ink else c.accent
@@ -83,7 +124,7 @@ fun MikaSwitch(
         modifier
             .then(
                 if (onCheckedChange != null) Modifier.minimumInteractiveComponentSize()
-                    .toggleable(checked, enabled = enabled, role = Role.Switch, interactionSource = null, indication = null, onValueChange = onCheckedChange)
+                    .toggleable(checked, enabled = enabled, role = Role.Switch, interactionSource = interactionSource, indication = null, onValueChange = onCheckedChange)
                 else Modifier,
             )
             .size(44.dp, 26.dp)
@@ -92,10 +133,13 @@ fun MikaSwitch(
                 drawRoundRect(track, cornerRadius = CornerRadius(size.height / 2))
                 val r = 11.dp.toPx()
                 val inset = 2.dp.toPx()
-                val cx = inset + r + (size.width - 2 * (inset + r)) * position
-                val center = Offset(cx, size.height / 2)
-                drawCircle(ring, r + 0.6.dp.toPx(), center.copy(y = center.y + 0.5.dp.toPx()))
-                drawCircle(thumb, r, center)
+                val thumbW = (r * 2f) * thumbStretch
+                val thumbH = r * 2f
+                val travel = size.width - 2 * inset - thumbW
+                val left = inset + travel * position
+                val top = (size.height - thumbH) / 2f
+                drawRoundRect(ring, Offset(left, top + 0.5.dp.toPx()), Size(thumbW, thumbH), CornerRadius(r))
+                drawRoundRect(thumb, Offset(left, top), Size(thumbW, thumbH), CornerRadius(r))
             },
     )
 }
@@ -151,18 +195,23 @@ fun MikaButton(
     maxLines: Int = 1,
 ) {
     val c = MikaTheme.colors
+    val reduce = MikaTheme.reduceMotion
     val shape = size.shape
-    val (bg, fg) = when (kind) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val (targetBg, targetFg) = when (kind) {
         ButtonKind.Primary -> c.accent to c.onAccent
         ButtonKind.Secondary -> c.surface to c.accent
         ButtonKind.Tonal -> c.fill to c.ink
         ButtonKind.Text -> Color.Transparent to c.accent
     }
+    val bg by animateColorAsState(targetBg, MikaMotion.switch(reduce), label = "btn-bg")
+    val fg by animateColorAsState(targetFg, MikaMotion.switch(reduce), label = "btn-fg")
     Box(
         modifier
+            .pressScale(enabled = enabled, interactionSource = interactionSource)
             .then(if (kind == ButtonKind.Secondary) Modifier.cardSurface(c, shape) else Modifier.background(bg, shape))
             .clip(shape)
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .clickable(interactionSource = interactionSource, indication = LocalIndication.current, enabled = enabled, role = Role.Button, onClick = onClick)
             .alpha(if (enabled) 1f else 0.45f)
             .then(
                 if (maxLines == 1) Modifier.height(size.height).padding(horizontal = size.padding)
@@ -186,23 +235,28 @@ fun SegmentedControl(
     tags: List<String>? = null,
 ) {
     val c = MikaTheme.colors
+    val reduce = MikaTheme.reduceMotion
     Row(modifier.fillMaxWidth().background(c.fill, SegmentOuter).padding(2.dp)) {
         options.forEachIndexed { i, label ->
             val on = i == selected
+            val interactionSource = remember { MutableInteractionSource() }
+            val pillBg by animateColorAsState(if (on) c.surface else Color.Transparent, MikaMotion.switch(reduce), label = "seg-bg")
+            val labelColor by animateColorAsState(if (on) c.ink else c.ink2, MikaMotion.switch(reduce), label = "seg-fg")
             Box(
                 Modifier.weight(1f).height(32.dp)
+                    .pressScale(interactionSource = interactionSource, targetScale = 0.98f)
                     .then(
                         if (on) Modifier.shadow(1.dp, SegmentInner, clip = false, ambientColor = c.cardShadow, spotColor = c.cardShadow)
-                            .background(c.surface, SegmentInner)
                         else Modifier,
                     )
+                    .background(pillBg, SegmentInner)
                     .clip(SegmentInner)
-                    .selectable(on, role = Role.Tab) { onSelect(i) }
+                    .selectable(on, interactionSource = interactionSource, indication = LocalIndication.current, role = Role.Tab) { onSelect(i) }
                     .padding(horizontal = 4.dp)
                     .then(if (tags != null) Modifier.testTag(tags[i]) else Modifier),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(label, style = SegmentText, color = if (on) c.ink else c.ink2, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(label, style = SegmentText, color = labelColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }
@@ -308,31 +362,36 @@ fun SelectChip(
     enabled: Boolean = true,
 ) {
     val c = MikaTheme.colors
+    val reduce = MikaTheme.reduceMotion
     val shape = if (small) SmallChipShape else MikaShapes.Pill
+    val interactionSource = remember { MutableInteractionSource() }
+    val targetBg = when {
+        selected && !enabled -> c.ink.copy(alpha = 0.38f)
+        selected -> c.ink
+        small -> c.fill
+        else -> c.surface
+    }
+    val targetFg = when {
+        selected -> c.bg
+        !enabled -> c.ink.copy(alpha = 0.38f)
+        else -> c.ink
+    }
+    val bg by animateColorAsState(targetBg, MikaMotion.switch(reduce), label = "chip-bg")
+    val fg by animateColorAsState(targetFg, MikaMotion.switch(reduce), label = "chip-fg")
     Box(
         modifier
+            .pressScale(enabled = enabled, interactionSource = interactionSource)
             .then(
-                when {
-                    selected && !enabled -> Modifier.background(c.ink.copy(alpha = 0.38f), shape)
-                    selected -> Modifier.background(c.ink, shape)
-                    small -> Modifier.background(c.fill, shape)
-                    else -> Modifier.cardSurface(c, shape)
-                },
+                if (!selected && !small) Modifier.border(0.5.dp, c.edge, shape) else Modifier,
             )
+            .background(bg, shape)
             .clip(shape)
-            .selectable(selected, enabled = enabled, role = Role.RadioButton, onClick = onClick)
+            .selectable(selected, interactionSource = interactionSource, indication = LocalIndication.current, enabled = enabled, role = Role.RadioButton, onClick = onClick)
             .height(if (small) 28.dp else 34.dp)
             .padding(horizontal = if (small) 10.dp else 14.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text, style = if (small) SmallChipText else ChipText, maxLines = 1, softWrap = false,
-            color = when {
-                selected -> c.bg
-                !enabled -> c.ink.copy(alpha = 0.38f)
-                else -> c.ink
-            },
-        )
+        Text(text, style = if (small) SmallChipText else ChipText, maxLines = 1, softWrap = false, color = fg)
     }
 }
 

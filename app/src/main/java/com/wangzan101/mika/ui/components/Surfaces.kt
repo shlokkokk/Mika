@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -120,22 +121,39 @@ fun MikaCard(modifier: Modifier = Modifier, shape: Shape = if (LocalPlainList.cu
 /**
  * 分组卡片:一组 [ListRow]。下面自带 12dp 间距,和下一组的 [GroupLabel](上 8)合起来是分组之间的 20。
  * 行与行的分隔线由行自己画,从文字处开始。
+ * [note] 非空时在卡片底部内嵌一条说明带,和卡片圆角、描边融为一体。
  */
 @Composable
-fun GroupCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+fun GroupCard(modifier: Modifier = Modifier, note: String? = null, content: @Composable ColumnScope.() -> Unit) {
     if (!LocalPlainList.current) {
-        MikaCard(modifier.padding(bottom = 12.dp), content = content)
+        MikaCard(modifier.padding(bottom = 12.dp)) {
+            content()
+            if (!note.isNullOrBlank()) AttachedCardNote(note)
+        }
         return
     }
     // 简约列表:行的说明([ListRow] / [RadioRow] 的 note)不进行里,收到卡片下面当脚注
     val notes = remember { CardNotes() }
     Column(modifier.padding(bottom = 12.dp)) {
         CompositionLocalProvider(LocalCardNotes provides notes) { MikaCard(content = content) }
-        val text = notes.footnote()
+        val text = listOfNotNull(notes.footnote(), note?.takeIf { it.isNotBlank() }).joinToString("\n").ifEmpty { null }
         if (text != null) {
             Text(text, Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
                 style = MikaType.Hint, color = MikaTheme.colors.ink3)
         }
+    }
+}
+
+@Composable
+private fun AttachedCardNote(note: String) {
+    val c = MikaTheme.colors
+    Box(Modifier.fillMaxWidth().height(0.5.dp).background(c.hair))
+    Box(
+        Modifier.fillMaxWidth()
+            .background(c.fill.copy(alpha = 0.55f))
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+    ) {
+        Text(note, style = MikaType.Hint, color = c.ink3)
     }
 }
 

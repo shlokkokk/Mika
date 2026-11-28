@@ -95,7 +95,7 @@ private fun DialogAction(
     val scheme = androidx.compose.material3.MaterialTheme.colorScheme
     // 整块都是按钮:把块的大小当最小尺寸交给里面的按钮,让它撑满,点块上任何地方都算
     Box(
-        modifier.heightIn(min = 44.dp).background(background, shape).clip(shape),
+        modifier.pressScale().heightIn(min = 44.dp).background(background, shape).clip(shape),
         contentAlignment = Alignment.Center,
         propagateMinConstraints = true,
     ) {

@@ -2,7 +2,7 @@ package com.wangzan101.mika.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentScope
-import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -125,9 +125,9 @@ fun rememberNavStack(first: Route = Route.Chat): NavStack =
 
 /** 页面切换的动效参数:时长、视差比例(旧页挪四分之一)、曲线。 */
 private object NavAnim {
-    const val MS = 280
+    const val MS = 320
     const val PARALLAX = 4
-    val EASE = FastOutSlowInEasing
+    val EASE = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
 }
 
 /**
@@ -202,11 +202,15 @@ fun <T> NavSlide(
                 fadeIn(snap()) togetherWith fadeOut(snap())
             } else {
                 val slide = tween<IntOffset>(NavAnim.MS, easing = NavAnim.EASE)
-                if (depth(targetState) >= depth(initialState)) {
-                    slideInHorizontally(slide) { it } togetherWith slideOutHorizontally(slide) { -it / NavAnim.PARALLAX }
+                val forward = depth(targetState) >= depth(initialState)
+                val spec = if (forward) {
+                    (slideInHorizontally(slide) { it } + fadeIn(tween(140, easing = NavAnim.EASE))) togetherWith
+                        (slideOutHorizontally(slide) { -it / NavAnim.PARALLAX } + fadeOut(tween(200, easing = NavAnim.EASE)))
                 } else {
-                    slideInHorizontally(slide) { -it / NavAnim.PARALLAX } togetherWith slideOutHorizontally(slide) { it }
+                    (slideInHorizontally(slide) { -it / NavAnim.PARALLAX } + fadeIn(tween(180, easing = NavAnim.EASE))) togetherWith
+                        (slideOutHorizontally(slide) { it } + fadeOut(tween(220, easing = NavAnim.EASE)))
                 }
+                spec.apply { targetContentZIndex = if (forward) 1f else -1f }
             }
         },
         label = "nav-slide",

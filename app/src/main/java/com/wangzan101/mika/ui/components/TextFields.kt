@@ -1,5 +1,14 @@
 package com.wangzan101.mika.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,6 +35,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
+import com.wangzan101.mika.ui.theme.MikaMotion
 import com.wangzan101.mika.ui.theme.MikaShapes
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
@@ -89,10 +99,14 @@ fun MikaTextField(
     minLines: Int = 1,
 ) {
     val c = MikaTheme.colors
+    val reduce = MikaTheme.reduceMotion
+    val fieldBg by animateColorAsState(if (isError) c.badSoft else c.fill, MikaMotion.switch(reduce), label = "tf-bg")
+    val labelColor by animateColorAsState(if (isError) c.bad else c.ink2, MikaMotion.switch(reduce), label = "tf-label")
+    val supportColor by animateColorAsState(if (isError) c.bad else c.ink3, MikaMotion.switch(reduce), label = "tf-support")
     val base = MikaType.Body.merge(textStyle).let { it.copy(color = it.color.takeOrElse { c.ink }) }
     Column(Modifier.alpha(if (enabled) 1f else 0.5f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (label != null) {
-            CompositionLocalProvider(LocalContentColor provides if (isError) c.bad else c.ink2, LocalTextStyle provides MikaType.Label) {
+            CompositionLocalProvider(LocalContentColor provides labelColor, LocalTextStyle provides MikaType.Label) {
                 Box(Modifier.padding(start = 4.dp)) { label() }
             }
         }
@@ -105,7 +119,7 @@ fun MikaTextField(
             decorationBox = { inner ->
                 Row(
                     Modifier.fillMaxWidth().heightIn(min = 48.dp)
-                        .background(if (isError) c.badSoft else c.fill, MikaShapes.Button)
+                        .background(fieldBg, MikaShapes.Button)
                         .padding(horizontal = 14.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -124,9 +138,15 @@ fun MikaTextField(
                 }
             },
         )
-        if (supportingText != null) {
-            CompositionLocalProvider(LocalContentColor provides if (isError) c.bad else c.ink3, LocalTextStyle provides MikaType.Hint) {
-                Box(Modifier.padding(start = 4.dp)) { supportingText() }
+        AnimatedVisibility(
+            visible = supportingText != null,
+            enter = if (reduce) EnterTransition.None else expandVertically(tween(MikaMotion.SWITCH_MS, easing = MikaMotion.Decelerate)) + fadeIn(tween(MikaMotion.SWITCH_MS, easing = MikaMotion.Decelerate)),
+            exit = if (reduce) ExitTransition.None else shrinkVertically(tween(MikaMotion.SWITCH_MS, easing = MikaMotion.Decelerate)) + fadeOut(tween(MikaMotion.SWITCH_MS, easing = MikaMotion.Decelerate)),
+        ) {
+            if (supportingText != null) {
+                CompositionLocalProvider(LocalContentColor provides supportColor, LocalTextStyle provides MikaType.Hint) {
+                    Box(Modifier.padding(start = 4.dp)) { supportingText() }
+                }
             }
         }
     }

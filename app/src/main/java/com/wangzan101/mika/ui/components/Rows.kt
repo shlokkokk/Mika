@@ -1,11 +1,25 @@
 package com.wangzan101.mika.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +29,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.graphics.SolidColor
@@ -27,32 +44,45 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.i18n.tr
 import com.wangzan101.mika.ui.theme.MikaColors
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaMotion
 import com.wangzan101.mika.ui.theme.MikaShapes
 import com.wangzan101.mika.ui.theme.MikaSize
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
+import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 /** 分组小标题:13 / 500,辅助文字色。 */
@@ -74,6 +104,8 @@ fun FooterNote(text: String, modifier: Modifier = Modifier, color: Color = Color
 @Composable
 fun DetailNote(summary: String, detail: String, modifier: Modifier = Modifier) {
     var open by rememberSaveable { mutableStateOf(false) }
+    val reduce = MikaTheme.reduceMotion
+    val chevronAngle by animateFloatAsState(if (open) 90f else 0f, MikaMotion.switch(reduce), label = "detail-chevron")
     Column(modifier) {
         Text(summary, style = MikaType.Hint, color = MikaTheme.colors.ink3)
         if (detail.isNotBlank()) {
@@ -83,7 +115,7 @@ fun DetailNote(summary: String, detail: String, modifier: Modifier = Modifier) {
             ) {
                 DirectionalIcon(
                     MikaIcons.Chevron, null,
-                    Modifier.size(MikaSize.SmallIcon).rotate(if (open) 90f else 0f),
+                    Modifier.size(MikaSize.SmallIcon).rotate(chevronAngle),
                     tint = MikaTheme.colors.accent,
                 )
                 Text(
@@ -91,10 +123,137 @@ fun DetailNote(summary: String, detail: String, modifier: Modifier = Modifier) {
                     style = MikaType.Hint.copy(fontWeight = FontWeight.SemiBold), color = MikaTheme.colors.accent,
                 )
             }
-            if (open) {
+            AnimatedVisibility(
+                visible = open,
+                enter = if (reduce) EnterTransition.None else expandVertically(tween(MikaMotion.PAGE_MS, easing = MikaMotion.Decelerate)) + fadeIn(tween(MikaMotion.SWITCH_MS, easing = MikaMotion.Decelerate)),
+                exit = if (reduce) ExitTransition.None else shrinkVertically(tween(MikaMotion.PAGE_MS, easing = MikaMotion.Decelerate)) + fadeOut(tween(MikaMotion.SWITCH_MS, easing = MikaMotion.Decelerate)),
+            ) {
                 Text(detail, Modifier.padding(top = 6.dp), style = MikaType.Hint, color = MikaTheme.colors.ink2)
             }
         }
+    }
+}
+
+/**
+ * Shared expandable row with smooth expand/collapse, rotating chevron pill, right-aligned trailing text
+ * (never fighting the title for weight), and automatic bring-into-view with bottom breathing space.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun FoldRow(
+    title: String,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    tone: TileTone = TileTone.Neutral,
+    subtitle: String? = null,
+    trailingText: String? = null,
+    trailingTone: ValueTone = ValueTone.Plain,
+    first: Boolean = false,
+    enabled: Boolean = true,
+    bottomBreathingSpace: Dp = 28.dp,
+    headerModifier: Modifier = Modifier,
+    stateLabel: String? = null,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val c = MikaTheme.colors
+    val reduce = MikaTheme.reduceMotion
+    val requester = remember { BringIntoViewRequester() }
+    var boxSize by remember { mutableStateOf(IntSize.Zero) }
+    val density = LocalDensity.current
+    LaunchedEffect(expanded) {
+        if (!expanded) return@LaunchedEffect
+        withFrameNanos { }
+        withFrameNanos { }
+        suspend fun bringWithMargin() {
+            val extraBottomPx = with(density) { bottomBreathingSpace.toPx() }
+            val rect = if (boxSize.width > 0 && boxSize.height > 0) {
+                Rect(0f, 0f, boxSize.width.toFloat(), boxSize.height.toFloat() + extraBottomPx)
+            } else null
+            requester.bringIntoView(rect)
+        }
+        bringWithMargin()
+        if (!reduce) {
+            delay(MikaMotion.PAGE_MS.toLong())
+            bringWithMargin()
+        }
+    }
+    Column(
+        modifier
+            .fillMaxWidth()
+            .onSizeChanged { boxSize = it }
+            .bringIntoViewRequester(requester),
+    ) {
+        Row(
+            headerModifier
+                .fillMaxWidth()
+                .topHairline(first, if (icon != null) TextStartWithIcon else TextStartPlain, c.hair)
+                .clickable(enabled = enabled, role = Role.Button, onClick = onToggle)
+                .then(if (stateLabel != null) Modifier.semantics { stateDescription = stateLabel } else Modifier)
+                .heightIn(min = MikaSize.RowMin)
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (icon != null) {
+                IconTile(icon, tone)
+                Spacer(Modifier.width(RowGap))
+            }
+            Column(Modifier.weight(1f).padding(vertical = 11.dp)) {
+                Text(title, style = MikaType.Body, color = if (enabled) c.ink else c.ink3)
+                if (!subtitle.isNullOrEmpty()) {
+                    Text(subtitle, Modifier.padding(top = 2.dp), style = MikaType.Caption, color = c.ink3)
+                }
+            }
+            Row(
+                Modifier.padding(start = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                if (!trailingText.isNullOrEmpty()) {
+                    val valColor = when (trailingTone) {
+                        ValueTone.Plain -> c.ink3
+                        ValueTone.Ok -> if (LocalPlainList.current) c.ink3 else c.ok
+                        ValueTone.Warn -> c.warn
+                        ValueTone.Bad -> c.bad
+                        ValueTone.Link -> c.accent
+                    }
+                    Text(
+                        trailingText,
+                        Modifier.widthIn(max = 160.dp),
+                        style = MikaType.Value,
+                        fontWeight = if (trailingTone == ValueTone.Link) FontWeight.Medium else FontWeight.Normal,
+                        color = valColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                FoldExpandPill(expanded, reduce)
+            }
+        }
+        AnimatedVisibility(
+            visible = expanded,
+            enter = if (reduce) EnterTransition.None else expandVertically(tween(MikaMotion.PAGE_MS, easing = MikaMotion.Decelerate)) + fadeIn(tween(MikaMotion.SWITCH_MS, easing = MikaMotion.Decelerate)),
+            exit = if (reduce) ExitTransition.None else shrinkVertically(tween(MikaMotion.PAGE_MS, easing = MikaMotion.Decelerate)) + fadeOut(tween(MikaMotion.SWITCH_MS, easing = MikaMotion.Decelerate)),
+        ) {
+            Column(Modifier.fillMaxWidth(), content = content)
+        }
+    }
+}
+
+@Composable
+private fun FoldExpandPill(expanded: Boolean, reduceMotion: Boolean) {
+    val c = MikaTheme.colors
+    val angle by animateFloatAsState(if (expanded) -90f else 90f, MikaMotion.switch(reduceMotion), label = "fold-chevron")
+    val bg by animateColorAsState(if (expanded) c.accentSoft else c.fill.copy(alpha = 0.6f), MikaMotion.switch(reduceMotion), label = "fold-pill-bg")
+    val tint by animateColorAsState(if (expanded) c.accent else c.ink3, MikaMotion.switch(reduceMotion), label = "fold-pill-fg")
+    Box(
+        Modifier.size(26.dp)
+            .background(bg, CircleShape)
+            .border(0.5.dp, c.edge, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(MikaIcons.Chevron, null, Modifier.size(13.dp).rotate(angle), tint = tint)
     }
 }
 
@@ -289,14 +448,30 @@ fun RadioRow(
 @Composable
 private fun RadioMark(selected: Boolean, enabled: Boolean = true) {
     val c = MikaTheme.colors
-    if (selected && enabled) {
-        // 简约列表里选中用正文色(和黑色开关一致),别处用强调色
-        val fill = if (LocalPlainList.current) c.ink else c.accent
-        Box(Modifier.size(22.dp).background(fill, CircleShape), contentAlignment = Alignment.Center) {
-            Box(Modifier.size(10.dp).background(if (LocalPlainList.current) c.surface else c.onAccent, CircleShape))
+    val reduce = MikaTheme.reduceMotion
+    val active = selected && enabled
+    val fillTarget = if (active) (if (LocalPlainList.current) c.ink else c.accent) else Color.Transparent
+    val borderTarget = if (active) fillTarget else c.hair
+    val fill by animateColorAsState(fillTarget, MikaMotion.switch(reduce), label = "radio-fill")
+    val borderColor by animateColorAsState(borderTarget, MikaMotion.switch(reduce), label = "radio-border")
+    val dotScale by animateFloatAsState(
+        targetValue = if (active) 1f else 0f,
+        animationSpec = if (reduce) snap() else spring(dampingRatio = 0.72f, stiffness = 580f),
+        label = "radio-dot",
+    )
+    Box(
+        Modifier.size(22.dp)
+            .background(fill, CircleShape)
+            .border(1.6.dp, borderColor, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (dotScale > 0.01f) {
+            Box(
+                Modifier.size(10.dp)
+                    .graphicsLayer { scaleX = dotScale; scaleY = dotScale }
+                    .background(if (LocalPlainList.current) c.surface else c.onAccent, CircleShape),
+            )
         }
-    } else {
-        Box(Modifier.size(22.dp).border(1.6.dp, c.hair, CircleShape))
     }
 }
 

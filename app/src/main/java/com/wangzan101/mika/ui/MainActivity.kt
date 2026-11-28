@@ -30,6 +30,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -734,7 +735,10 @@ private fun MikaRoot(
     if (callBar && liveCall != null) VoiceCallBar(liveCall) { nav.bringToTop(Route.VoiceCall) }
     Box(Modifier.weight(1f).fillMaxWidth().then(if (callBar) Modifier.consumeWindowInsets(WindowInsets.statusBars) else Modifier)) {
     AdaptiveWindow(navigation = sidebarPage) {
-        val page: @Composable (() -> Unit) -> Unit = { openDrawer ->
+        var openDrawerAction by remember { mutableStateOf({}) }
+        val movablePage = remember { movableContentOf<@Composable () -> Unit> { body -> body() } }
+        val page: @Composable () -> Unit = {
+            val openDrawer: () -> Unit = { openDrawerAction() }
     // 全局换页套滑动推入过渡;页内一律用 route 不用 nav.current:过渡动画期间旧页还在渲染,读实时状态会瞬间变脸
     NavSlide(nav.stack, depth = { it.size }, states = screenStates, pageKey = { it.last().name }) { stack ->
     val route = stack.last()
@@ -1042,9 +1046,15 @@ private fun MikaRoot(
                 frames = if (nav.current == Route.Chat) app.taskState.frames else null,
                 operationRun = app.taskState::run,
                 chatActive = nav.current == Route.Chat || nav.current == Route.Personal,
-                content = page,
+                content = { openDrawer ->
+                    openDrawerAction = openDrawer
+                    movablePage(page)
+                },
             )
-        } else page({})
+        } else {
+            openDrawerAction = {}
+            movablePage(page)
+        }
     }
     }
     }
