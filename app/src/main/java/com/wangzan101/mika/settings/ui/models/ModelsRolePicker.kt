@@ -115,9 +115,10 @@ fun RolePickerContent(ui: ModelSetupUi, role: ModelRole, actions: RolePickerActi
             listing = ui.listing,
         )
         if (providers.isEmpty()) FooterNote(ModelsCopy.ROLE_EMPTY)
-        GroupCard(Modifier.padding(top = 8.dp), note = ModelsCopy.PICKER_NOTE) {
+        GroupCard(Modifier.padding(top = 8.dp)) {
             ListRow(MikaIcons.Plus, ModelsCopy.ADD_PROVIDER, first = true, titleColor = c.accent, tone = TileTone.Accent, onClick = actions.addProvider)
         }
+        FooterNote(ModelsCopy.PICKER_NOTE)
     }
 }
 

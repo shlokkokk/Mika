@@ -241,7 +241,7 @@ private fun ServiceList(
             }
         }
         GroupLabel(stringResource(R.string.voice_add_advanced))
-        GroupCard(note = stringResource(R.string.voice_services_footer)) {
+        GroupCard {
             ListRow(MikaIcons.Key, stringResource(R.string.voice_preset_compat), subtitle = stringResource(R.string.voice_preset_compat_sub), first = true,
                 onClick = { onPreset(PresetKind.Compatible) }, modifier = Modifier.testTag("preset-compat")) { RowChevron() }
             ListRow(MikaIcons.Key, stringResource(R.string.voice_preset_selfhosted), subtitle = stringResource(R.string.voice_preset_selfhosted_sub),
@@ -249,6 +249,7 @@ private fun ServiceList(
             ListRow(null, stringResource(R.string.voice_add_custom),
                 onClick = onOpenCustom, modifier = Modifier.testTag("voice-service-add")) { RowChevron() }
         }
+        FooterNote(stringResource(R.string.voice_services_footer))
     }
 }
 

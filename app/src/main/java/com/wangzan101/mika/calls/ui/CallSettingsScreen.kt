@@ -673,7 +673,7 @@ internal fun CallReceivePage(
     }
 
     GroupLabel(stringResource(R.string.calls_how_to_talk))
-    GroupCard(note = stringResource(R.string.calls_privacy_note)) {
+    GroupCard {
         ListRow(MikaIcons.Message, stringResource(R.string.calls_greeting), first = true,
             onClick = onProfile, modifier = Modifier.testTag("call-settings-profile")) {
             RowValue(stringResource(if (config.greeting.isBlank()) R.string.calls_not_set else R.string.calls_is_set)); RowChevron()
@@ -681,6 +681,7 @@ internal fun CallReceivePage(
         ListRow(MikaIcons.Doc, stringResource(R.string.calls_instructions_entry), onClick = onInstructions,
             modifier = Modifier.testTag("call-instructions")) { RowChevron() }
     }
+    FooterNote(stringResource(R.string.calls_privacy_note))
 }
 
 /** ⑭: the settings that rarely change — voice, this phone's setup, records, and turning AI calls off. */

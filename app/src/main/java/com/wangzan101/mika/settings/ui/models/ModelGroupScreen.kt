@@ -109,9 +109,10 @@ fun ModelGroupsScreen(
                 }
             }
         }
-        GroupCard(Modifier.padding(top = 8.dp), note = ModelsCopy.groupFooter) {
+        GroupCard(Modifier.padding(top = 8.dp)) {
             ListRow(MikaIcons.Plus, ModelsCopy.NEW_GROUP, first = true, titleColor = c.accent, tone = TileTone.Accent, onClick = onNew)
         }
+        FooterNote(ModelsCopy.groupFooter)
     }
 }
 

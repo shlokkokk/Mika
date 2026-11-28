@@ -138,7 +138,7 @@ fun CapsuleScreen(
                 )
             }
         }
-        GroupCard(note = "${CapsuleSettingsCopy.FOOTNOTE}\n${CapsuleSettingsCopy.BACKGROUND}") {
+        GroupCard {
             ListRow(MikaIcons.EyeOff, stringResource(R.string.capsule_hide_at_edge), first = true,
                 onClick = { flags.setCapsuleHideAtEdge(!hideAtEdge) },
                 modifier = Modifier.focusHighlightTarget(SettingsFocusKey.CAPSULE_HIDE_AT_EDGE)) {
@@ -155,5 +155,7 @@ fun CapsuleScreen(
                 MikaSwitch(quickSettings, ::setQuickSettings, Modifier.testTag("capsule-quick-settings"))
             }
         }
+        FooterNote(CapsuleSettingsCopy.FOOTNOTE)
+        FooterNote(CapsuleSettingsCopy.BACKGROUND)
     }
 }
