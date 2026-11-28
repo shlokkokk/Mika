@@ -79,9 +79,9 @@ fun DuringWorkScreen(
     var customTokenBudget by remember { mutableStateOf("") }
     PageScaffold(stringResource(R.string.settings_during_work), onBack, scrollState = scrollState) {
         GroupLabel(AutonomyCopy.GROUP)
-        GroupCard {
+        GroupCard(note = AutonomyCopy.SUBTITLE) {
             ListRow(
-                null, AutonomyCopy.TITLE, note = AutonomyCopy.SUBTITLE, first = true,
+                null, AutonomyCopy.TITLE, first = true,
                 onClick = { onAutonomous(!autonomous) },
                 modifier = Modifier.focusHighlightTarget(SettingsFocusKey.AUTONOMOUS),
             ) {
@@ -189,10 +189,9 @@ fun DuringWorkScreen(
             onDismiss = { editingTokenBudget = false },
         )
         // 允许 Mika 改自己的设置:默认关,打开后任务里才有 settings_list、settings_set
-        GroupCard {
+        GroupCard(note = stringResource(R.string.settings_self_config_sub)) {
             ListRow(
                 MikaIcons.Spark, stringResource(R.string.settings_self_config),
-                note = stringResource(R.string.settings_self_config_sub),
                 first = true,
                 onClick = { onSelfConfig(!selfConfig) },
                 modifier = Modifier.focusHighlightTarget(SettingsFocusKey.SELF_CONFIG),
@@ -201,10 +200,9 @@ fun DuringWorkScreen(
             }
         }
         // 允许 Mika 操作自己的界面:默认关;打开后任务里才有 mika_open_screen/open_file/notify/copy
-        GroupCard {
+        GroupCard(note = stringResource(R.string.settings_self_operate_sub)) {
             ListRow(
                 MikaIcons.Screens, stringResource(R.string.settings_self_operate),
-                note = stringResource(R.string.settings_self_operate_sub),
                 first = true,
                 onClick = { onSelfOperate(!selfOperate) },
                 modifier = Modifier.focusHighlightTarget(SettingsFocusKey.SELF_OPERATE),
@@ -224,10 +222,9 @@ fun DuringWorkScreen(
             }
         }
         // 允许外部脚本经广播建定时任务;默认关,开着时仍受每分钟限流并标记来源
-        GroupCard {
+        GroupCard(note = stringResource(R.string.settings_external_schedule_sub)) {
             ListRow(
                 MikaIcons.Code, stringResource(R.string.settings_external_schedule),
-                note = stringResource(R.string.settings_external_schedule_sub),
                 first = true,
                 onClick = { onExternalSchedule(!externalSchedule) },
                 modifier = Modifier.focusHighlightTarget(SettingsFocusKey.EXTERNAL_SCHEDULE),
