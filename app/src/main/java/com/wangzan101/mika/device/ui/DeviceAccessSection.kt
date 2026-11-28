@@ -1,12 +1,13 @@
 package com.wangzan101.mika.device.ui
 
-import android.app.Activity
 import android.app.KeyguardManager
-import android.content.Context
-import android.content.ContextWrapper
-import android.view.WindowManager
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +19,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.SecureFlagPolicy
 import com.wangzan101.mika.R
 import com.wangzan101.mika.core.device.CredentialKind
 import com.wangzan101.mika.core.device.DeviceCredential
@@ -30,6 +34,7 @@ import com.wangzan101.mika.ui.components.GroupLabel
 import com.wangzan101.mika.ui.components.InputRow
 import com.wangzan101.mika.ui.components.ListRow
 import com.wangzan101.mika.ui.components.MikaButton
+import com.wangzan101.mika.ui.components.MikaDialog
 import com.wangzan101.mika.ui.components.MikaSwitch
 import com.wangzan101.mika.ui.components.RadioRow
 import com.wangzan101.mika.ui.components.RowActions
@@ -37,6 +42,8 @@ import com.wangzan101.mika.settings.ui.SettingsFocusKey
 import com.wangzan101.mika.ui.components.TileTone
 import com.wangzan101.mika.ui.components.focusHighlightTarget
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaTheme
+import com.wangzan101.mika.ui.theme.MikaType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -57,12 +64,6 @@ fun DeviceAccessSection(settings: DeviceAccessSettings, localTasks: Boolean = fa
     var busy by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val window = context.activity()?.window
-    DisposableEffect(editing, window) {
-        val alreadySecure = window?.attributes?.flags?.and(WindowManager.LayoutParams.FLAG_SECURE) != 0
-        if (editing) window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        onDispose { if (editing && !alreadySecure) window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE) }
-    }
     fun change(action: () -> Unit, done: () -> Unit = {}) {
         if (busy) return
         busy = true
@@ -110,40 +111,61 @@ fun DeviceAccessSection(settings: DeviceAccessSettings, localTasks: Boolean = fa
             onClick = { if (!busy) { kind = config.kind ?: CredentialKind.Pin; editing = true } },
             modifier = if (localTasks) Modifier.focusHighlightTarget(SettingsFocusKey.LOCK_SCREEN_CREDENTIAL) else Modifier,
         )
-        if (config.kind != null && !editing) RowActions {
+        if (config.kind != null) RowActions {
             MikaButton(stringResource(R.string.device_access_clear), { change({ settings.clearCredential() }) }, kind = ButtonKind.Tonal, size = ButtonSize.Small, enabled = !busy)
         }
     }
     FooterNote(stringResource(if (localTasks) R.string.device_local_foot else R.string.device_access_foot))
+    if (failed && !editing) FooterNote(stringResource(R.string.device_access_save_failed))
     if (editing) {
-        GroupCard {
-            RadioRow(stringResource(R.string.device_access_pin), kind == CredentialKind.Pin, first = true,
-                onClick = { kind = CredentialKind.Pin; value = ""; repeat = "" }, enabled = !busy)
-            RadioRow(stringResource(R.string.device_access_password), kind == CredentialKind.Password,
-                onClick = { kind = CredentialKind.Password; value = ""; repeat = "" }, enabled = !busy)
-            InputRow(stringResource(R.string.device_access_value), value, { if (!busy) value = it.take(64) },
-                stringResource(R.string.device_access_value_hint), secret = true,
-                keyboard = if (kind == CredentialKind.Pin) KeyboardType.NumberPassword else KeyboardType.Password,
-                modifier = Modifier.testTag("device-access-credential"))
-            InputRow(stringResource(R.string.device_access_repeat), repeat, { if (!busy) repeat = it.take(64) },
-                stringResource(R.string.device_access_repeat_hint), secret = true,
-                keyboard = if (kind == CredentialKind.Pin) KeyboardType.NumberPassword else KeyboardType.Password,
-                modifier = Modifier.testTag("device-access-repeat"))
-            RowActions {
-                MikaButton(stringResource(R.string.device_access_save), {
-                    val k = kind; val v = value
-                    change({ settings.setCredential(k, v) }, ::closeEditor)
-                }, size = ButtonSize.Small, enabled = !busy && value == repeat && DeviceCredential.valid(kind, value.toCharArray()))
-                MikaButton(stringResource(R.string.cancel), ::closeEditor, kind = ButtonKind.Tonal, size = ButtonSize.Small, enabled = !busy)
-            }
-        }
-        FooterNote(stringResource(if (kind == CredentialKind.Pin) R.string.device_access_pin_hint else R.string.device_access_password_hint))
+        MikaDialog(
+            onDismissRequest = { if (!busy) closeEditor() },
+            title = { Text(stringResource(R.string.device_access_credential)) },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    GroupCard {
+                        RadioRow(stringResource(R.string.device_access_pin), kind == CredentialKind.Pin, first = true,
+                            onClick = { kind = CredentialKind.Pin; value = ""; repeat = "" }, enabled = !busy)
+                        RadioRow(stringResource(R.string.device_access_password), kind == CredentialKind.Password,
+                            onClick = { kind = CredentialKind.Password; value = ""; repeat = "" }, enabled = !busy)
+                        InputRow(stringResource(R.string.device_access_value), value, { if (!busy) value = it.take(64) },
+                            stringResource(R.string.device_access_value_hint), secret = true,
+                            keyboard = if (kind == CredentialKind.Pin) KeyboardType.NumberPassword else KeyboardType.Password,
+                            modifier = Modifier.testTag("device-access-credential"))
+                        InputRow(stringResource(R.string.device_access_repeat), repeat, { if (!busy) repeat = it.take(64) },
+                            stringResource(R.string.device_access_repeat_hint), secret = true,
+                            keyboard = if (kind == CredentialKind.Pin) KeyboardType.NumberPassword else KeyboardType.Password,
+                            modifier = Modifier.testTag("device-access-repeat"))
+                    }
+                    Text(
+                        stringResource(if (kind == CredentialKind.Pin) R.string.device_access_pin_hint else R.string.device_access_password_hint),
+                        style = MikaType.Hint,
+                        color = MikaTheme.colors.ink3,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                    if (failed) {
+                        Text(
+                            stringResource(R.string.device_access_save_failed),
+                            style = MikaType.Hint,
+                            color = MikaTheme.colors.bad,
+                            modifier = Modifier.padding(top = 6.dp),
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val k = kind; val v = value
+                        change({ settings.setCredential(k, v) }, ::closeEditor)
+                    },
+                    enabled = !busy && value == repeat && DeviceCredential.valid(kind, value.toCharArray()),
+                ) { Text(stringResource(R.string.device_access_save)) }
+            },
+            dismissButton = {
+                TextButton(onClick = ::closeEditor, enabled = !busy) { Text(stringResource(R.string.cancel)) }
+            },
+            properties = DialogProperties(securePolicy = SecureFlagPolicy.SecureOn),
+        )
     }
-    if (failed) FooterNote(stringResource(R.string.device_access_save_failed))
-}
-
-private fun Context.activity(): Activity? = when (this) {
-    is Activity -> this
-    is ContextWrapper -> baseContext.takeIf { it !== this }?.activity()
-    else -> null
 }
