@@ -221,7 +221,7 @@ internal fun VoiceOptionList(
                                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                                 ) {
                                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        VoiceWave(probe.level, flat = false, reduceMotion = false, color = c.accent)
+                                        VoiceWave(probe.level, flat = false, reduceMotion = MikaTheme.reduceMotion, color = c.accent)
                                         Text(probe.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) }, style = MikaType.Hint, color = c.ink2)
                                     }
                                     if (probe.canFinish) {

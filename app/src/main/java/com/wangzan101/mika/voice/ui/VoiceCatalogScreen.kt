@@ -410,7 +410,7 @@ private fun CapabilityBadge(
                         .padding(horizontal = 10.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    VoiceWave(ui.level, flat = false, reduceMotion = false, color = c.accent)
+                    VoiceWave(ui.level, flat = false, reduceMotion = MikaTheme.reduceMotion, color = c.accent)
                     Text(
                         ui.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) },
                         style = MikaType.Hint, color = c.ink2,
