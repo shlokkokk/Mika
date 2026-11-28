@@ -141,9 +141,13 @@
     <string name="calls_history_summary_updated">Özet güncellendi</string>
     <string name="calls_voice_briefing_left_foreground">Ön plandan ayrılındı, arama yapılmadı</string>
     <string name="calls_voice_briefing_greeting">Lütfen bu aramanın ne için olduğunu anlatın, dinliyorum.</string>
-    <string name="calls_draft_placeholder">Bu aramadan sonra gönderilecek kısa bir takip mesajı yazın...</string>
+    <string name="calls_draft_placeholder">Bu aramadan sonra gönderilecek kısa bir takip mesajı yazın…</string>
     <string name="calls_result_farewell_ended">Arama sonlandırıldı · Android tarafından kapatıldı</string>
     <string name="calls_result_max_duration_ended">Süre sınırına ulaşıldı · Android tarafından kapatıldı</string>
     <string name="calls_result_user_hangup">Sizin tarafınızdan kapatıldı</string>
     <string name="calls_result_android_ended">Arama sonlandı</string>
+    <string name="calls_result_busy">Hat meşgul · arama bitti</string>
+    <string name="calls_result_missed">Cevapsız arama</string>
+    <string name="calls_result_failed">Android aramanın başarısız olduğunu bildirdi</string>
+    <string name="calls_label_value">%1$s: %2$s</string>
 </resources>

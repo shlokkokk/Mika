@@ -141,9 +141,13 @@
     <string name="calls_history_summary_updated">Đã cập nhật tóm tắt</string>
     <string name="calls_voice_briefing_left_foreground">Đã rời khỏi nền trước, chưa thực hiện cuộc gọi</string>
     <string name="calls_voice_briefing_greeting">Hãy cho tôi biết cuộc gọi này để làm gì, tôi đang nghe.</string>
-    <string name="calls_draft_placeholder">Viết tin nhắn ngắn để theo dõi sau cuộc gọi này...</string>
+    <string name="calls_draft_placeholder">Viết tin nhắn ngắn để theo dõi sau cuộc gọi này…</string>
     <string name="calls_result_farewell_ended">Cuộc gọi đã kết thúc · Android đã gác máy</string>
     <string name="calls_result_max_duration_ended">Đã đạt giới hạn thời gian · Android đã gác máy</string>
     <string name="calls_result_user_hangup">Bạn đã gác máy</string>
     <string name="calls_result_android_ended">Cuộc gọi đã kết thúc</string>
+    <string name="calls_result_busy">Máy bận · cuộc gọi đã kết thúc</string>
+    <string name="calls_result_missed">Cuộc gọi nhỡ</string>
+    <string name="calls_result_failed">Android báo cuộc gọi thất bại</string>
+    <string name="calls_label_value">%1$s: %2$s</string>
 </resources>

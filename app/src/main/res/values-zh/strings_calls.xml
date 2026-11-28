@@ -141,9 +141,13 @@
     <string name="calls_history_summary_updated">摘要已更新</string>
     <string name="calls_voice_briefing_left_foreground">已离开前台，未拨号</string>
     <string name="calls_voice_briefing_greeting">请交代这通电话要办的事，我在听。</string>
-    <string name="calls_draft_placeholder">输入通话后的简短跟进消息...</string>
+    <string name="calls_draft_placeholder">输入通话后的简短跟进消息…</string>
     <string name="calls_result_farewell_ended">通话已收尾，Android 已挂断</string>
     <string name="calls_result_max_duration_ended">达到时长上限，Android 已挂断</string>
     <string name="calls_result_user_hangup">用户挂断</string>
-    <string name="calls_result_android_ended">Android 已确认通话结束</string>
+    <string name="calls_result_android_ended">通话已结束</string>
+    <string name="calls_result_busy">对方占线，通话已结束</string>
+    <string name="calls_result_missed">来电未接</string>
+    <string name="calls_result_failed">Android 报告通话失败</string>
+    <string name="calls_label_value">%1$s：%2$s</string>
 </resources>

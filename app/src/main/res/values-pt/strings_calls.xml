@@ -141,9 +141,13 @@
     <string name="calls_history_summary_updated">Resumo atualizado</string>
     <string name="calls_voice_briefing_left_foreground">Saiu do primeiro plano, chamada não realizada</string>
     <string name="calls_voice_briefing_greeting">Diga para que é esta ligação, estou ouvindo.</string>
-    <string name="calls_draft_placeholder">Escreva uma mensagem curta de acompanhamento após esta ligação...</string>
+    <string name="calls_draft_placeholder">Escreva uma mensagem curta de acompanhamento após esta ligação…</string>
     <string name="calls_result_farewell_ended">Ligação encerrada · finalizada pelo Android</string>
     <string name="calls_result_max_duration_ended">Limite de tempo atingido · finalizada pelo Android</string>
     <string name="calls_result_user_hangup">Desligada por você</string>
     <string name="calls_result_android_ended">Ligação encerrada</string>
+    <string name="calls_result_busy">Linha ocupada · chamada encerrada</string>
+    <string name="calls_result_missed">Chamada perdida</string>
+    <string name="calls_result_failed">O Android informou que a chamada falhou</string>
+    <string name="calls_label_value">%1$s: %2$s</string>
 </resources>

@@ -134,9 +134,9 @@ suspend fun CallRuntime.hangup(expectedCallId: String? = null): CallActionResult
     // Shared by local and validated remote hangup; stop keys before waiting for AI cleanup.
     dtmf.cancelPending()
     call.suppressed = true
-    val active = cancelWork("用户挂断")
+    val active = cancelWork(CallEndText.USER_HANGUP)
     val cleaned = awaitCleanup(active)
-    val endedMessage = if (cleaned) "Android 已确认通话结束" else "Android 已确认通话结束；音频恢复尚未确认"
+    val endedMessage = if (cleaned) CallEndText.ANDROID_CONFIRMED else CallEndText.ANDROID_CONFIRMED + "；音频恢复尚未确认"
     if (confirmedEnded(call)) return@onMain ok(endedMessage)
     if (!isCurrentCall(call, expectedCallId) || call.phase == CallPhase.DISCONNECTING) return@onMain report(CALL_CHANGED)
     if (runCatching {

@@ -141,9 +141,13 @@
     <string name="calls_history_summary_updated">تم تحديث الملخص</string>
     <string name="calls_voice_briefing_left_foreground">تمت مغادرة الواجهة، لم يتم إجراء المكالمة</string>
     <string name="calls_voice_briefing_greeting">من فضلك أخبرني بالغرض من هذه المكالمة، أنا أستمع.</string>
-    <string name="calls_draft_placeholder">اكتب رسالة متابعة قصيرة لإرسالها بعد هذه المكالمة...</string>
+    <string name="calls_draft_placeholder">اكتب رسالة متابعة قصيرة لإرسالها بعد هذه المكالمة…</string>
     <string name="calls_result_farewell_ended">انتهت المكالمة · تم الإنهاء عبر Android</string>
     <string name="calls_result_max_duration_ended">تم بلوغ الحد الزمني · تم الإنهاء عبر Android</string>
     <string name="calls_result_user_hangup">تم الإنهاء بواسطتك</string>
     <string name="calls_result_android_ended">انتهت المكالمة</string>
+    <string name="calls_result_busy">الخط مشغول · انتهت المكالمة</string>
+    <string name="calls_result_missed">مكالمة فائتة</string>
+    <string name="calls_result_failed">أبلغ Android بفشل المكالمة</string>
+    <string name="calls_label_value">%1$s: %2$s</string>
 </resources>

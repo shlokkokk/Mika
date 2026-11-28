@@ -141,9 +141,13 @@
     <string name="calls_history_summary_updated">خلاصه به‌روزرسانی شد</string>
     <string name="calls_voice_briefing_left_foreground">برنامه از پیش‌زمینه خارج شد، تماس برقرار نشد</string>
     <string name="calls_voice_briefing_greeting">لطفاً بگویید این تماس برای چه کاری است، گوش می‌دهم.</string>
-    <string name="calls_draft_placeholder">یک پیام پیگیری کوتاه برای ارسال پس از این تماس بنویسید...</string>
+    <string name="calls_draft_placeholder">یک پیام پیگیری کوتاه برای ارسال پس از این تماس بنویسید…</string>
     <string name="calls_result_farewell_ended">تماس جمع‌بندی شد · توسط Android قطع شد</string>
     <string name="calls_result_max_duration_ended">به سقف زمان رسید · توسط Android قطع شد</string>
     <string name="calls_result_user_hangup">توسط شما قطع شد</string>
     <string name="calls_result_android_ended">تماس پایان یافت</string>
+    <string name="calls_result_busy">خط اشغال است · تماس پایان یافت</string>
+    <string name="calls_result_missed">تماس بی‌پاسخ</string>
+    <string name="calls_result_failed">Android شکست تماس را گزارش کرد</string>
+    <string name="calls_label_value">%1$s: %2$s</string>
 </resources>

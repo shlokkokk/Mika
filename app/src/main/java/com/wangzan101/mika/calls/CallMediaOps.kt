@@ -243,7 +243,7 @@ internal suspend fun CallRuntime.runAudio(w: Work, helper: IMikaShell, session: 
         ended = runCatching { target.call.disconnect() }.isSuccess &&
             (waitFor(CallPolicy.CONTROL_TIMEOUT_MS) { confirmedEnded(target) } || confirmedEnded(target))
     }
-    w.stopReason.refine(ending, if (ended) "达到时长上限，Android 已挂断"
+    w.stopReason.refine(ending, if (ended) CallEndText.MAX_DURATION_ENDED
         else "达到时长上限，Android 未确认挂断，已交还系统")
 }
 

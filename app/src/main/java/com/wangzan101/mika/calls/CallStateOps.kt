@@ -256,8 +256,8 @@ internal fun CallRuntime.subscription(handle: PhoneAccountHandle): Int? =
     }.getOrNull()
 
 internal fun CallRuntime.callEndMessage(call: Tracked): String = when (call.call.details?.disconnectCause?.code) {
-    android.telecom.DisconnectCause.BUSY -> "对方占线，通话已结束"
-    android.telecom.DisconnectCause.ERROR, android.telecom.DisconnectCause.RESTRICTED -> "Android 报告通话失败"
-    android.telecom.DisconnectCause.MISSED -> "来电未接"
-    else -> "通话已结束"
+    android.telecom.DisconnectCause.BUSY -> CallEndText.BUSY
+    android.telecom.DisconnectCause.ERROR, android.telecom.DisconnectCause.RESTRICTED -> CallEndText.FAILED
+    android.telecom.DisconnectCause.MISSED -> CallEndText.MISSED
+    else -> CallEndText.ENDED
 }

@@ -39,6 +39,7 @@ import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.R
 import com.wangzan101.mika.calls.CallActionResult
 import com.wangzan101.mika.calls.CallDirection
+import com.wangzan101.mika.calls.CallEndText
 import com.wangzan101.mika.calls.CallTaskBrief
 import com.wangzan101.mika.calls.CallRecord
 import com.wangzan101.mika.calls.CallTranscriptLine
@@ -418,12 +419,12 @@ private fun CallHistoryItem(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(c.fill).padding(12.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        summary.purpose?.let { Text("${stringResource(R.string.calls_summary_purpose)}: $it", style = MaterialTheme.typography.bodyMedium, color = c.ink) }
+                        summary.purpose?.let { Text(stringResource(R.string.calls_label_value, stringResource(R.string.calls_summary_purpose), it), style = MaterialTheme.typography.bodyMedium, color = c.ink) }
                         if (summary.highlights.isNotEmpty()) {
                             Text(stringResource(R.string.calls_summary_highlights), style = MaterialTheme.typography.labelLarge, color = c.ink2)
                             summary.highlights.forEach { Text("• $it", style = MaterialTheme.typography.bodyMedium, color = c.ink) }
                         }
-                        summary.conclusion?.let { Text("${stringResource(R.string.calls_summary_conclusion)}: $it", style = MaterialTheme.typography.bodyMedium, color = c.ink) }
+                        summary.conclusion?.let { Text(stringResource(R.string.calls_label_value, stringResource(R.string.calls_summary_conclusion), it), style = MaterialTheme.typography.bodyMedium, color = c.ink) }
                         if (summary.uncertainties.isNotEmpty()) {
                             Text(stringResource(R.string.calls_summary_uncertainties), style = MaterialTheme.typography.labelLarge, color = c.ink2)
                             summary.uncertainties.forEach { Text("• $it", style = MaterialTheme.typography.bodyMedium, color = c.ink) }
@@ -436,7 +437,7 @@ private fun CallHistoryItem(
                                     com.wangzan101.mika.calls.CallFollowUp.Status.DONE -> R.string.calls_summary_done
                                     com.wangzan101.mika.calls.CallFollowUp.Status.UNKNOWN -> R.string.calls_summary_unknown
                                 }
-                                Text("${stringResource(state)}: ${item.text}", style = MaterialTheme.typography.bodyMedium, color = c.ink)
+                                Text(stringResource(R.string.calls_label_value, stringResource(state), item.text), style = MaterialTheme.typography.bodyMedium, color = c.ink)
                             }
                         }
                     }
@@ -643,12 +644,16 @@ private fun CallHistoryAccordionCard(
     }
 }
 
+/** 记录里存的是固定的中文说法([CallEndText]);认得的换成界面语言,其余照原文显示。 */
 @Composable
 private fun localizedCallResult(result: String): String = when (result) {
-    "通话已收尾，Android 已挂断" -> stringResource(R.string.calls_result_farewell_ended)
-    "达到时长上限，Android 已挂断" -> stringResource(R.string.calls_result_max_duration_ended)
-    "用户挂断" -> stringResource(R.string.calls_result_user_hangup)
-    "Android 已确认通话结束", "通话已结束" -> stringResource(R.string.calls_result_android_ended)
+    CallEndText.FAREWELL_ENDED -> stringResource(R.string.calls_result_farewell_ended)
+    CallEndText.MAX_DURATION_ENDED -> stringResource(R.string.calls_result_max_duration_ended)
+    CallEndText.USER_HANGUP -> stringResource(R.string.calls_result_user_hangup)
+    CallEndText.ANDROID_CONFIRMED, CallEndText.ENDED -> stringResource(R.string.calls_result_android_ended)
+    CallEndText.BUSY -> stringResource(R.string.calls_result_busy)
+    CallEndText.MISSED -> stringResource(R.string.calls_result_missed)
+    CallEndText.FAILED -> stringResource(R.string.calls_result_failed)
     else -> result
 }
 

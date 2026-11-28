@@ -141,9 +141,13 @@
     <string name="calls_history_summary_updated">Сводка обновлена</string>
     <string name="calls_voice_briefing_left_foreground">Приложение свернуто, звонок не выполнен</string>
     <string name="calls_voice_briefing_greeting">Расскажите, зачем нужен этот звонок, я слушаю.</string>
-    <string name="calls_draft_placeholder">Напишите короткое сообщение по итогам этого звонка...</string>
+    <string name="calls_draft_placeholder">Напишите короткое сообщение по итогам этого звонка…</string>
     <string name="calls_result_farewell_ended">Звонок завершён · отключено Android</string>
     <string name="calls_result_max_duration_ended">Достигнут лимит времени · отключено Android</string>
     <string name="calls_result_user_hangup">Завершено вами</string>
     <string name="calls_result_android_ended">Звонок завершён</string>
+    <string name="calls_result_busy">Линия занята · звонок завершён</string>
+    <string name="calls_result_missed">Пропущенный звонок</string>
+    <string name="calls_result_failed">Android сообщил о сбое звонка</string>
+    <string name="calls_label_value">%1$s: %2$s</string>
 </resources>

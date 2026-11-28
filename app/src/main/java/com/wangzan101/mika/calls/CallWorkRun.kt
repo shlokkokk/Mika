@@ -282,7 +282,7 @@ internal suspend fun CallRuntime.runWork(w: Work) {
                 val target = w.track
                 val ended = target != null && (confirmedEnded(target) ||
                     waitFor(CallPolicy.CONTROL_TIMEOUT_MS) { confirmedEnded(target) } || confirmedEnded(target))
-                w.stopReason.refine(FAREWELL_ENDING, if (ended) "通话已收尾，Android 已挂断"
+                w.stopReason.refine(FAREWELL_ENDING, if (ended) CallEndText.FAREWELL_ENDED
                     else "通话已收尾，Android 未确认挂断，已交还系统")
             }
             val reason = w.stopReason.value ?: "AI 已退出，电话由系统处理"
