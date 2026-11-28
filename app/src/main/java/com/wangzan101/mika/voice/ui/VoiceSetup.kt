@@ -1,6 +1,5 @@
 package com.wangzan101.mika.voice.ui
 
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -42,7 +41,6 @@ import com.wangzan101.mika.ui.components.SheetAction
 import com.wangzan101.mika.ui.components.SheetTrailing
 import com.wangzan101.mika.ui.components.StatusPill
 import com.wangzan101.mika.ui.components.TagTone
-import com.wangzan101.mika.ui.components.ValueTone
 import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
@@ -97,9 +95,11 @@ internal fun rememberVoiceCatalogViewModel(voiceModels: VoiceModelEnvironment): 
             probe = probe,
             scope = scope,
             playAudio = { bytes, mime -> player.play(bytes, mime) },
+            playAudioWithStatus = { bytes, mime, onStarted -> player.playAndAwait(bytes, mime, onStarted) },
+            onStopAudio = { player.stop() },
         )
     }
-    DisposableEffect(viewModel) { onDispose { player.stop() } }
+    DisposableEffect(viewModel) { onDispose { viewModel.stopAllProbes() } }
     return viewModel
 }
 
@@ -125,11 +125,11 @@ internal fun VoiceCatalogViewModel.ensureInCatalog(choice: VoiceOption): VoiceMo
 }
 
 /** Runs the capability's own test: a real sentence for speech input, a played sample for reading, a connection for calls. */
-internal fun VoiceCatalogViewModel.tryChoice(choice: VoiceOption, sample: String) {
+internal fun VoiceCatalogViewModel.tryChoice(choice: VoiceOption, sample: String, ttsRequest: TtsRequest = TtsRequest(sample)) {
     val ref = ensureInCatalog(choice)
     when (ref.capability) {
         VoiceCapability.STT -> verifyStt(ref)
-        VoiceCapability.TTS -> verifyTts(ref, TtsRequest(sample))
+        VoiceCapability.TTS -> verifyTts(ref, ttsRequest)
         VoiceCapability.REALTIME -> verifyRealtime(ref)
     }
 }
@@ -204,6 +204,7 @@ internal fun VoiceOptionList(
                             VoiceProbeUi.Idle -> if (choice.verified) Text(stringResource(R.string.voice_catalog_verified), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ok)
                             VoiceProbeUi.Running -> Text(stringResource(R.string.voice_catalog_testing), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink3)
                             is VoiceProbeUi.Listening -> Text(probe.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) }, Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink2)
+                            VoiceProbeUi.Playing -> Text(stringResource(R.string.voice_playing), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ink2)
                             is VoiceProbeUi.Failed -> Text(voiceErrorText(probe.error), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.bad)
                             VoiceProbeUi.Verified -> Text(stringResource(R.string.voice_catalog_verified), Modifier.padding(top = 4.dp), style = MikaType.Hint, color = c.ok)
                         }
@@ -211,8 +212,10 @@ internal fun VoiceOptionList(
                 },
                 trailing = {
                     MikaButton(
-                        testLabel, onClick = { onTest(choice) }, kind = ButtonKind.Tonal, size = ButtonSize.Small,
-                        enabled = probe !is VoiceProbeUi.Running && probe !is VoiceProbeUi.Listening,
+                        if (probe.isActive) stringResource(R.string.chat_audio_stop) else testLabel,
+                        onClick = { if (probe.isActive) viewModel.stopProbe(choice.ref) else onTest(choice) },
+                        kind = if (probe.isActive) ButtonKind.Secondary else ButtonKind.Tonal,
+                        size = ButtonSize.Small,
                         modifier = Modifier.testTag("voice-try-${choice.ref.serviceId}-${choice.ref.modelId}"),
                     )
                 },
@@ -234,6 +237,7 @@ internal fun VoicePickerSheet(
     onDismiss: () -> Unit,
     model: VoiceModel? = null,
     onAudition: ((String) -> Unit)? = null,
+    auditioningVoice: String? = null,
 ) {
     var typing by remember { mutableStateOf(false) }
     if (typing) {
@@ -246,7 +250,16 @@ internal fun VoicePickerSheet(
     val actions = listOf(SheetAction(stringResource(R.string.voice_voice_default), searchable = false) { onPick("") }) +
         voices.filter { it.isNotBlank() }.map { voice ->
             val label = VoiceVoices.label(model, voice)
-            SheetAction(label, trailing = onAudition?.let { play -> SheetTrailing(MikaIcons.Sound, stringResource(R.string.voice_audition, label)) { play(voice) } }) {
+            val playing = auditioningVoice == voice
+            SheetAction(
+                label,
+                trailing = onAudition?.let { play ->
+                    SheetTrailing(
+                        if (playing) MikaIcons.Stop else MikaIcons.Sound,
+                        if (playing) stringResource(R.string.chat_audio_stop) else stringResource(R.string.voice_audition, label),
+                    ) { play(voice) }
+                },
+            ) {
                 onPick(voice)
             }
         } +
@@ -263,6 +276,7 @@ internal fun VoicePickerSheet(
 internal fun voiceErrorText(error: VoiceModelError): String = when (error) {
     is VoiceModelError.PackMissing -> stringResource(R.string.voice_pack_needs_download)
     is VoiceModelError.OnDeviceFailed -> stringResource(onDeviceFailureText(error))
+    is VoiceModelError.NoSpeechDetected -> stringResource(R.string.voice_catalog_no_speech)
     else -> error.detail
 }
 
@@ -408,11 +422,4 @@ fun RealtimeVoiceScreen(store: ProviderStore, onBack: () -> Unit, onOpenCalls: (
         VoiceMoreServices(onOpenServices)
         FooterNote(stringResource(R.string.realtime_footer), Modifier.padding(top = 8.dp))
     }
-}
-
-/** Status pill helper kept here so pages agree on wording. */
-@Composable
-internal fun RowScope.VoiceUsablePill(usable: Boolean) {
-    if (usable) RowValue(stringResource(R.string.voice_hub_ready), ValueTone.Ok)
-    else StatusPill(stringResource(R.string.voice_hub_setup), PillTone.Warn)
 }

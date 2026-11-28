@@ -23,6 +23,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -42,8 +43,12 @@ sealed interface VoiceProbeUi {
     data object Idle : VoiceProbeUi
     data object Running : VoiceProbeUi
     data class Listening(val transcript: String) : VoiceProbeUi
+    data object Playing : VoiceProbeUi
     data class Failed(val error: VoiceModelError) : VoiceProbeUi
     data object Verified : VoiceProbeUi
+
+    val isActive: Boolean
+        get() = this is Running || this is Listening || this is Playing
 }
 
 /**
@@ -58,6 +63,8 @@ class VoiceCatalogViewModel(
     private val scope: CoroutineScope,
     private val playAudio: suspend (ByteArray, String) -> Unit,
     private val io: CoroutineDispatcher = Dispatchers.IO,
+    private val playAudioWithStatus: (suspend (ByteArray, String, () -> Unit) -> Unit)? = null,
+    private val onStopAudio: () -> Unit = {},
 ) {
     val catalog: VoiceCatalogStore = environment.catalog
     val snapshot: StateFlow<VoiceCatalogSnapshot> = catalog.state
@@ -70,6 +77,7 @@ class VoiceCatalogViewModel(
 
     private val _probes = MutableStateFlow<Map<String, VoiceProbeUi>>(emptyMap())
     val probes: StateFlow<Map<String, VoiceProbeUi>> = _probes.asStateFlow()
+    private val activeJobs = mutableMapOf<String, Job>()
 
     // ---------- accounts, models and services ----------
 
@@ -96,8 +104,6 @@ class VoiceCatalogViewModel(
         if (serviceId == SttSelectionController.SYSTEM_STT_SERVICE.id) return
         catalog.deleteService(serviceId)
     }
-
-    fun deleteProvider(providerId: String): List<VoiceModelRef> = manager.deleteProviderWithVoiceUsage(providerId)
 
     fun providerVoiceUsage(providerId: String): List<VoiceModelRef> = manager.providerVoiceUsage(providerId)
 
@@ -132,9 +138,12 @@ class VoiceCatalogViewModel(
 
     private fun startProbe(ref: VoiceModelRef): Pair<CompletableDeferred<ProbeResult>, String> {
         val fingerprint = probe.connection(ref)
+        stopOtherProbes(except = fingerprint)
+        activeJobs.remove(fingerprint)?.cancel()
         setProbe(fingerprint, VoiceProbeUi.Running)
         val pending = CompletableDeferred<ProbeResult>()
         pending.invokeOnCompletion {
+            activeJobs.remove(fingerprint)
             if (pending.isCancelled) return@invokeOnCompletion
             when (val result = pending.getCompleted()) {
                 is ProbeResult.Success -> {
@@ -148,6 +157,30 @@ class VoiceCatalogViewModel(
         return pending to fingerprint
     }
 
+    private fun stopOtherProbes(except: String?) {
+        val toStop = activeJobs.keys.filter { it != except }
+        toStop.forEach { fp ->
+            activeJobs.remove(fp)?.cancel()
+            if (_probes.value[fp]?.isActive == true) setProbe(fp, VoiceProbeUi.Idle)
+        }
+        onStopAudio()
+    }
+
+    /** Stops all active probes (e.g. when leaving the screen so mic and audio always release). */
+    fun stopAllProbes() {
+        stopOtherProbes(except = null)
+    }
+
+    /** Stops an in-progress STT capture, TTS synthesis/playback, or Realtime connection probe for [ref]. */
+    fun stopProbe(ref: VoiceModelRef) {
+        val fingerprint = probeFingerprint(ref)
+        if (fingerprint != null) {
+            activeJobs.remove(fingerprint)?.cancel()
+            if (_probes.value[fingerprint]?.isActive == true) setProbe(fingerprint, VoiceProbeUi.Idle)
+        }
+        onStopAudio()
+    }
+
     private fun setProbe(fingerprint: String, state: VoiceProbeUi) {
         _probes.update { it + (fingerprint to state) }
     }
@@ -155,7 +188,7 @@ class VoiceCatalogViewModel(
     /** Holds a real microphone capture through [VoiceModelProbe.verifyStt] and records a passing probe. */
     fun verifyStt(ref: VoiceModelRef) {
         val (pending, fingerprint) = startProbe(ref)
-        scope.launch {
+        val job = scope.launch {
             try {
                 probe.verifyStt(ref).collect { state ->
                     when (state) {
@@ -172,12 +205,13 @@ class VoiceCatalogViewModel(
                 pending.complete(ProbeResult.Failed(VoiceModelError.from(e)))
             }
         }
+        activeJobs[fingerprint] = job
     }
 
-    /** Synthesizes once, then starts the returned audio through the injected player before reporting success. */
+    /** Synthesizes once, then plays through the injected player before reporting success. */
     fun verifyTts(ref: VoiceModelRef, request: TtsRequest) {
-        val (pending, _) = startProbe(ref)
-        scope.launch {
+        val (pending, fingerprint) = startProbe(ref)
+        val job = scope.launch {
             val response = try {
                 withContext(io) { probe.verifyTts(ref, request) }
             } catch (e: CancellationException) {
@@ -188,7 +222,16 @@ class VoiceCatalogViewModel(
                 return@launch
             }
             try {
-                withContext(io) { playAudio(response.bytes, response.mime) }
+                if (playAudioWithStatus != null) {
+                    withContext(io) {
+                        playAudioWithStatus(response.bytes, response.mime) {
+                            setProbe(fingerprint, VoiceProbeUi.Playing)
+                        }
+                    }
+                } else {
+                    setProbe(fingerprint, VoiceProbeUi.Playing)
+                    withContext(io) { playAudio(response.bytes, response.mime) }
+                }
             } catch (e: CancellationException) {
                 pending.cancel()
                 throw e
@@ -205,12 +248,13 @@ class VoiceCatalogViewModel(
             }
             pending.complete(ProbeResult.Success)
         }
+        activeJobs[fingerprint] = job
     }
 
     /** Records a Realtime handshake outcome; success is gated on an unchanged fingerprint like every probe. */
     fun verifyRealtime(ref: VoiceModelRef) {
-        val (pending, _) = startProbe(ref)
-        scope.launch {
+        val (pending, fingerprint) = startProbe(ref)
+        val job = scope.launch {
             try {
                 withContext(io) { probe.verifyRealtimeConnection(ref) }
             } catch (e: CancellationException) {
@@ -222,5 +266,6 @@ class VoiceCatalogViewModel(
             }
             pending.complete(ProbeResult.Success)
         }
+        activeJobs[fingerprint] = job
     }
 }

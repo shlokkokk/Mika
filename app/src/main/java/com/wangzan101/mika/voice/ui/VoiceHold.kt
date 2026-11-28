@@ -1,7 +1,6 @@
 package com.wangzan101.mika.voice.ui
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -86,7 +85,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.compose.LifecycleStartEffect
 import com.wangzan101.mika.R
 import com.wangzan101.mika.i18n.tr
@@ -114,7 +112,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import com.wangzan101.mika.browser.ui.findActivity
 import com.wangzan101.mika.chat.ui.ChatCopy
 import com.wangzan101.mika.chat.ui.ComposerMode
 import com.wangzan101.mika.chat.ui.Spinner
@@ -295,17 +292,6 @@ internal object VoiceCopy {
     }
 }
 
-/** 录音权限被拒过的记号:系统不再弹框时(拒过、也不该再解释)改弹说明,按钮直达 App 的权限页。 */
-private object MicPermission {
-    private const val PREFS = "voice_input"
-    private const val DENIED = "mic_denied"
-
-    fun denied(context: Context) = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(DENIED, false)
-
-    fun record(context: Context, granted: Boolean) =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(DENIED, !granted).apply()
-}
-
 /**
  * 输入栏一次按住说话的界面状态:手指是不是还按着([holding])、卡片上的引擎标签、弹层和轻提示。
  * 开会话、转事件、收尾都交给 [hold]。
@@ -408,7 +394,7 @@ internal fun rememberVoiceHold(voice: VoiceSource?, onText: (String) -> Unit, on
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        MicPermission.record(context, granted)
+        MicDenial.InputBar.record(context, denied = !granted)
     }
     vh.haptic = { haptics.performHapticFeedback(HapticFeedbackType.LongPress) }
     vh.canSend = onSend != null
@@ -416,10 +402,7 @@ internal fun rememberVoiceHold(voice: VoiceSource?, onText: (String) -> Unit, on
         if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) true
         else {
             // 第一次按住才要权限;拒过且系统不再弹框时,改成说明 + 去系统设置
-            val activity = context.findActivity()
-            val blocked = MicPermission.denied(context) && activity != null &&
-                !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.RECORD_AUDIO)
-            if (blocked) vh.sheet = VoiceSheet.Permission else launcher.launch(Manifest.permission.RECORD_AUDIO)
+            if (MicDenial.InputBar.blocked(context)) vh.sheet = VoiceSheet.Permission else launcher.launch(Manifest.permission.RECORD_AUDIO)
             false
         }
     }

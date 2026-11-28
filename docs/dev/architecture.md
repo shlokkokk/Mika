@@ -51,16 +51,16 @@
 
 | 组 | 包 |
 |---|---|
-| `agent/` | 主循环、上下文、压缩、停止规则 |
+| `agent/` | 主循环、上下文、压缩、停止规则;一轮对话里生成的音频、图片、视频记录(`GeneratedAudio` 等) |
 | `run/` | 运行契约、子任务、资源协调;`run/record/` 运行事件,`run/trace/` 追踪 |
 | `tool/`、`general/`、`action/` | 工具引擎与插件工具;通用工具;唯一执行入口 |
 | `capability/`、`assembly/`、`cap/<能力>/` | 能力接口;装配层;各能力(含 `cap/wechat/`) |
 | `screen/` | 读屏:`uistate/`、`observation/`、`map/`(界面地图)、`user/`(用户发来的屏)、`vision/`、`visual/` |
-| `safety/` | `gate/`(确认闸、不可逆判定)、`guard/`、`verify/`(核查与来源) |
+| `safety/` | `gate/`(确认闸、不可逆判定)、`guard/`(含脚本源码检查 `JsSource`)、`verify/`(核查与来源) |
 | `learn/` | `memory/`、`knowledge/`、`skills/`、`teach/`、`replay/` |
 | `model/` | 模型调用;`chatgpt/`、`oauth/`(账号登录)、`decision/`、`usage/`(用量) |
 | `device/` | 设备访问;`adb/`、`shell/`(内置手机助手)、`access/`(App 访问名单) |
-| 其余 | `proactive/`、`trigger/`、`mcp/`、`remote/`、`calls/`、`frontdesk/`(前台)、`search/`、`net/`、`export/`、`eval/`、`prompt/`、`self/`、`selfcheck/`、`workspace/` 等单一职责的包 |
+| 其余 | `proactive/`、`trigger/`、`mcp/`、`remote/`、`calls/`、`frontdesk/`(前台)、`search/`、`net/`、`export/`、`eval/`、`prompt/`、`self/`、`selfcheck/`、`workspace/`、`personal/`(个人助手) 等单一职责的包 |
 
 `:app`(`app/…`)顶层每个包就是一个功能(`chat/`、`task/`、`calls/`、`voice/`、`browser/`、`mcp/`、`settings/`、`files/`……),该功能的页面放在它自己的 `ui/` 子包(如 `chat/ui/`、`settings/ui/models/`)。`download/` 是通用的带校验下载器(`VerifiedDownload`)和下载地址白名单(`DownloadUrls`),App 更新(`about/`)和离线语音包共用,所以不放在任何一个功能包里。`voice/ondevice/` 是本机离线识别:语音包清单、存放与安装、推理后端和模型常驻(见 §16)。`ui/` 只放全局共用的:`MainActivity`、`Navigation`、`components/`、`theme/`、`viewer/`、`terminal/`、Markdown 渲染。`cap/` 是各能力的安卓实现。
 

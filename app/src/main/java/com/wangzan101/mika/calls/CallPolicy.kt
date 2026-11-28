@@ -73,7 +73,6 @@ internal object CallPolicy {
         remainingMs?.takeIf { it > CLOSING_LEAD_MS }?.minus(CLOSING_LEAD_MS)
 
     const val MAX_ALLOWED_NUMBERS = 100
-    const val MAX_AUTO_ANSWER_PAUSE_MINUTES = 24 * 60
     const val MAX_PROMPT_CHARS = 1_200
     const val MAX_GREETING_CHARS = 180
     const val MAX_SPEAKER_CHARS = 100

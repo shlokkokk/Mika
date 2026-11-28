@@ -164,6 +164,7 @@ internal fun VoiceCatalogContent(viewModel: VoiceCatalogViewModel, onBack: () ->
                 },
                 onDelete = { model -> deleting = model },
                 onTest = { ref, request -> viewModel.test(ref, request) },
+                onStop = { ref -> viewModel.stopProbe(ref) },
                 probeState = { ref -> viewModel.probeFingerprint(ref)?.let { probes[it] } ?: VoiceProbeUi.Idle },
             )
         }
@@ -230,6 +231,7 @@ private fun ServiceGroup(
     onEdit: (VoiceModel) -> Unit,
     onDelete: (VoiceModel) -> Unit,
     onTest: (VoiceModelRef, TtsRequest?) -> Unit,
+    onStop: (VoiceModelRef) -> Unit,
     probeState: (VoiceModelRef) -> VoiceProbeUi,
 ) {
     val system = service.id == SttSelectionController.SYSTEM_STT_SERVICE.id
@@ -256,6 +258,7 @@ private fun ServiceGroup(
                 onEdit = { onEdit(model) },
                 onDelete = { onDelete(model) },
                 onTest = onTest,
+                onStop = onStop,
                 probeState = probeState,
             )
         }
@@ -272,6 +275,7 @@ private fun ModelRow(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onTest: (VoiceModelRef, TtsRequest?) -> Unit,
+    onStop: (VoiceModelRef) -> Unit,
     probeState: (VoiceModelRef) -> VoiceProbeUi,
 ) {
     val c = MikaTheme.colors
@@ -305,6 +309,7 @@ private fun ModelRow(
                     testLabel = stringResource(R.string.voice_catalog_test),
                     tag = "voice-cap-stt-${model.id}",
                     onTest = { onTest(VoiceModelRef(model.serviceId, model.id, VoiceCapability.STT), null) },
+                    onStop = { onStop(VoiceModelRef(model.serviceId, model.id, VoiceCapability.STT)) },
                 )
             }
             model.tts?.let { binding ->
@@ -317,6 +322,7 @@ private fun ModelRow(
                     testLabel = stringResource(R.string.voice_catalog_try_tts),
                     tag = "voice-cap-tts-${model.id}",
                     onTest = { onTest(VoiceModelRef(model.serviceId, model.id, VoiceCapability.TTS), TtsRequest(ttsSampleText)) },
+                    onStop = { onStop(VoiceModelRef(model.serviceId, model.id, VoiceCapability.TTS)) },
                 )
             }
             model.realtime?.let { binding ->
@@ -329,6 +335,7 @@ private fun ModelRow(
                     testLabel = stringResource(R.string.voice_catalog_test_realtime),
                     tag = "voice-cap-rt-${model.id}",
                     onTest = { onTest(VoiceModelRef(model.serviceId, model.id, VoiceCapability.REALTIME), null) },
+                    onStop = { onStop(VoiceModelRef(model.serviceId, model.id, VoiceCapability.REALTIME)) },
                 )
             }
         }
@@ -355,13 +362,16 @@ private fun CapabilityBadge(
     testLabel: String,
     tag: String,
     onTest: () -> Unit,
+    onStop: () -> Unit,
 ) {
     val c = MikaTheme.colors
     Column(Modifier.testTag(tag)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(label, style = MikaType.Hint.copy(fontWeight = FontWeight.SemiBold), color = c.ink2)
             Text(protocol, style = MikaType.Hint, color = c.ink3)
-            if (ui !is VoiceProbeUi.Running) {
+            if (ui.isActive) {
+                TextButton(onClick = onStop) { Text(stringResource(R.string.chat_audio_stop), style = MikaType.Hint) }
+            } else {
                 TextButton(onClick = onTest) { Text(testLabel, style = MikaType.Hint) }
             }
         }
@@ -372,7 +382,8 @@ private fun CapabilityBadge(
                 ui.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) },
                 style = MikaType.Hint, color = c.ink2,
             )
-            is VoiceProbeUi.Failed -> Text(ui.error.detail, style = MikaType.Hint, color = c.bad)
+            VoiceProbeUi.Playing -> StatusPill(stringResource(R.string.voice_playing), PillTone.Ok)
+            is VoiceProbeUi.Failed -> Text(voiceErrorText(ui.error), style = MikaType.Hint, color = c.bad)
             VoiceProbeUi.Verified -> StatusPill(stringResource(R.string.voice_catalog_verified), PillTone.Ok)
         }
         if (ui == VoiceProbeUi.Idle && verified) {

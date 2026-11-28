@@ -79,12 +79,10 @@
     <string name="about_mirror_download">Использовать зеркала для загрузок</string>
     <string name="about_mirror_download_detail">Для обновлений приложения и офлайн-голосовых пакетов: проверка обновлений использует зеркала и GitHub, загрузка сначала пробует зеркала. Приложение по-прежнему проверяется по подписи, голосовые пакеты — по контрольной сумме.</string>
     <string name="about_mirror_sources">Зеркала обновлений</string>
-    <string name="about_mirror_sources_detail">Изменить порядок, добавить или удалить</string>
     <string name="about_mirrors_intro">При проверке обновлений зеркала и GitHub проверяются параллельно. При загрузке зеркала пробуются по порядку, затем используется GitHub. Перед установкой по-прежнему проверяются имя пакета, версия и подпись.</string>
     <string name="about_mirrors_empty">Зеркал нет</string>
     <string name="about_mirrors_empty_sub">Добавьте зеркало ниже или продолжайте пользоваться официальным GitHub.</string>
     <string name="about_mirrors_official">Официальный GitHub</string>
-    <string name="about_mirrors_official_sub">Всегда последний запасной вариант; нельзя удалить</string>
     <string name="about_mirrors_add">Добавить зеркало</string>
     <string name="about_mirrors_edit">Изменить зеркало</string>
     <string name="about_mirrors_name">Название (необязательно)</string>

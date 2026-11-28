@@ -2,7 +2,7 @@ package com.wangzan101.mika.core.model.usage
 
 import com.wangzan101.mika.core.agent.ContextBuilder
 import com.wangzan101.mika.core.agent.ContextKind
-import com.wangzan101.mika.core.agent.TokenEstimate
+import com.wangzan101.mika.core.model.TokenEstimate
 import com.wangzan101.mika.core.frontdesk.DeskBackground
 import com.wangzan101.mika.core.frontdesk.LlmBrain
 import com.wangzan101.mika.core.model.Author

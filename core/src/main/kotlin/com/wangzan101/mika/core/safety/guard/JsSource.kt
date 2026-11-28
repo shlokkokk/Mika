@@ -1,4 +1,4 @@
-package com.wangzan101.mika.core.script
+package com.wangzan101.mika.core.safety.guard
 
 /**
  * 模型或站点命令写的 JS 源码的词法检查。

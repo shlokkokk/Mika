@@ -153,10 +153,6 @@ class VoicePacksViewModel(
         _prompt.value = null
     }
 
-    fun dismissNotice() {
-        _notice.value = null
-    }
-
     private fun start(entry: VoicePackEntry) {
         if (!ops.download(entry)) _notice.value = VoicePackNotice.NotStarted
     }

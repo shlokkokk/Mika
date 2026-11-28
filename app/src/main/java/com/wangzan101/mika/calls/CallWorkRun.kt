@@ -1,5 +1,6 @@
 package com.wangzan101.mika.calls
 
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.os.PowerManager
@@ -324,13 +325,17 @@ internal suspend fun CallRuntime.runWork(w: Work) {
 /** Only a pending AI attempt or active call can hold a timed partial wake lock. */
 internal fun CallRuntime.acquireCallWakeLock(w: Work, timeoutMs: Long = CallStandbyPolicy.activeWakeBudgetMs(w.config.maxCallSeconds)) {
     releaseCallWakeLock(w)
-    runCatching {
-        val power = app.getSystemService(PowerManager::class.java) ?: return
-        val lock = power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Mika:ActiveCall")
-        lock.setReferenceCounted(false)
-        w.wakeLock = lock
-        lock.acquire(timeoutMs)
-    }.onFailure { debugMediaException(w, it) }
+    runCatching { w.wakeLock = app.timedPartialWakeLock("Mika:ActiveCall", timeoutMs) }
+        .onFailure { debugMediaException(w, it) }
+}
+
+/** 不计数、到点自己放开的 CPU 锁(不点亮屏幕);拿不到电源服务时为 null,acquire 出错照常抛出。 */
+internal fun Context.timedPartialWakeLock(tag: String, timeoutMs: Long): PowerManager.WakeLock? {
+    val power = getSystemService(PowerManager::class.java) ?: return null
+    return power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, tag).apply {
+        setReferenceCounted(false)
+        acquire(timeoutMs)
+    }
 }
 
 internal fun CallRuntime.releaseCallWakeLock(w: Work) {

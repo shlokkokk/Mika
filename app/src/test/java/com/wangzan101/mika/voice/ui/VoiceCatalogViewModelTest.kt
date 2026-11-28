@@ -10,6 +10,8 @@ import com.wangzan101.mika.voice.model.MemoryVoiceCatalogBackend
 import com.wangzan101.mika.voice.model.SttBinding
 import com.wangzan101.mika.voice.model.SttProtocol
 import com.wangzan101.mika.voice.model.SttSelectionController
+import com.wangzan101.mika.voice.model.TtsBinding
+import com.wangzan101.mika.voice.model.TtsProtocol
 import com.wangzan101.mika.voice.model.TtsSelectionController
 import com.wangzan101.mika.voice.model.VoiceAccount
 import com.wangzan101.mika.voice.model.VoiceAccountManager
@@ -192,5 +194,91 @@ class VoiceCatalogViewModelTest {
 
         viewModel.deleteService(SttSelectionController.SYSTEM_STT_SERVICE.id)
         assertTrue(env.catalog.state.value.services.any { it.id == "android-system" })
+    }
+
+    @Test fun `stopProbe cancels active listening and resets probe to idle`() = runTest {
+        val env = environment()
+        val session = FakeSession(kotlinx.coroutines.flow.flow {
+            emit(SpeechEvent.Partial(stable = "", tail = ""))
+            kotlinx.coroutines.awaitCancellation()
+        })
+        val probe = VoiceModelProbe(
+            env,
+            startStt = { session },
+            synthesize = { _, _ -> TtsResponse(byteArrayOf(), "audio/wav") },
+            connectRealtime = {},
+        )
+        var stoppedAudio = 0
+        val vm = VoiceCatalogViewModel(
+            environment = env,
+            manager = VoiceAccountManager(env.catalog, testStore()),
+            probe = probe,
+            scope = backgroundScope,
+            playAudio = { _, _ -> },
+            io = StandardTestDispatcher(testScheduler),
+            onStopAudio = { stoppedAudio++ },
+        )
+        vm.verifyStt(ref)
+        runCurrent()
+        assertEquals(VoiceProbeUi.Listening(""), vm.probeState(ref))
+
+        vm.stopProbe(ref)
+        runCurrent()
+        assertEquals(VoiceProbeUi.Idle, vm.probeState(ref))
+        assertTrue(stoppedAudio >= 1)
+    }
+
+    @Test fun `stopAllProbes cancels active probe and resets state to idle`() = runTest {
+        val env = environment()
+        val session = FakeSession(kotlinx.coroutines.flow.flow {
+            emit(SpeechEvent.Partial(stable = "", tail = ""))
+            kotlinx.coroutines.awaitCancellation()
+        })
+        val probe = VoiceModelProbe(
+            env,
+            startStt = { session },
+            synthesize = { _, _ -> TtsResponse(byteArrayOf(), "audio/wav") },
+            connectRealtime = {},
+        )
+        val vm = viewModel(env, backgroundScope, StandardTestDispatcher(testScheduler), probe)
+        vm.verifyStt(ref)
+        runCurrent()
+        assertTrue(vm.probeState(ref).isActive)
+
+        vm.stopAllProbes()
+        runCurrent()
+        assertEquals(VoiceProbeUi.Idle, vm.probeState(ref))
+    }
+
+    @Test fun `verifyTts reports Playing while playAudioWithStatus is active`() = runTest {
+        val env = environment()
+        val ttsRef = VoiceModelRef("provider:p1", "m1-tts", VoiceCapability.TTS)
+        env.catalog.upsertModel(VoiceModel("provider:p1", "m1-tts", "M1", tts = TtsBinding(TtsProtocol.OpenAiSpeech)))
+        val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+        val probe = VoiceModelProbe(
+            env,
+            startStt = { FakeSession(flowOf()) },
+            synthesize = { _, _ -> TtsResponse(byteArrayOf(1, 2), "audio/wav") },
+            connectRealtime = {},
+        )
+        val vm = VoiceCatalogViewModel(
+            environment = env,
+            manager = VoiceAccountManager(env.catalog, testStore()),
+            probe = probe,
+            scope = backgroundScope,
+            playAudio = { _, _ -> },
+            io = StandardTestDispatcher(testScheduler),
+            playAudioWithStatus = { _, _, onStarted ->
+                onStarted()
+                gate.await()
+            },
+        )
+        vm.verifyTts(ttsRef, TtsRequest("hi"))
+        runCurrent()
+        assertEquals(VoiceProbeUi.Playing, vm.probeState(ttsRef))
+
+        gate.complete(Unit)
+        runCurrent()
+        assertEquals(VoiceProbeUi.Verified, vm.probeState(ttsRef))
     }
 }
