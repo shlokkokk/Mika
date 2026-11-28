@@ -238,7 +238,7 @@ fun StateCard(
             } else Box(Modifier.size(36.dp).background(bg, CircleShape), contentAlignment = Alignment.Center) {
                 Icon(icon, null, Modifier.size(20.dp), tint = fg)
             }
-            Column(Modifier.weight(1f)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text(title, style = MikaType.BodyStrong, color = c.ink)
                 if (!subtitle.isNullOrEmpty()) Text(subtitle, style = MikaType.Caption, color = c.ink3)
             }
