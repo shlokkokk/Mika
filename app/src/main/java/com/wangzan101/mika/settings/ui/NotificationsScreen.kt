@@ -58,7 +58,7 @@ fun NotificationsScreen(status: SystemStatus, onFix: (Fix) -> Unit, onBack: () -
             }
         }
         GroupLabel(stringResource(R.string.settings_task_notifs))
-        GroupCard {
+        GroupCard(note = StatusCopy.NOTIF_FOOTER) {
             ChannelRowItem(StatusCopy.ATTENTION_CHANNEL, StatusCopy.NOTIF_ATTENTION_WHEN, o.attention, Fix.OpenAttentionChannel, onFix, first = true)
             ChannelRowItem(StatusCopy.RESULT_CHANNEL, StatusCopy.NOTIF_RESULT_WHEN, o.result, Fix.OpenResultChannel, onFix)
             ChannelRowItem(StatusCopy.PROGRESS_CHANNEL, StatusCopy.NOTIF_PROGRESS_WHEN, o.progress, Fix.OpenProgressChannel, onFix)
@@ -71,8 +71,7 @@ fun NotificationsScreen(status: SystemStatus, onFix: (Fix) -> Unit, onBack: () -
                 }
             }
         }
-        FooterNote(StatusCopy.NOTIF_FOOTER)
-        GroupCard {
+        GroupCard(note = if (quietHours.enabled && quietHours.start == quietHours.end) stringResource(R.string.settings_scheduled_quiet_equal) else null) {
             ListRow(
                 MikaIcons.Mute, stringResource(R.string.settings_scheduled_quiet),
                 first = true,
@@ -90,9 +89,6 @@ fun NotificationsScreen(status: SystemStatus, onFix: (Fix) -> Unit, onBack: () -
                     updateQuietHours(quietHours.copy(end = it))
                 }
             }
-        }
-        if (quietHours.enabled && quietHours.start == quietHours.end) {
-            FooterNote(stringResource(R.string.settings_scheduled_quiet_equal))
         }
     }
 }

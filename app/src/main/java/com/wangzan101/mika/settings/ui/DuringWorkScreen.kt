@@ -236,7 +236,7 @@ fun DuringWorkScreen(
             }
         }
         GroupLabel(stringResource(R.string.settings_pace))
-        GroupCard {
+        GroupCard(note = stringResource(R.string.settings_pace_foot)) {
             Column(Modifier.fillMaxWidth().focusHighlightTarget(SettingsFocusKey.OPERATING_PACE)) {
                 OperatingPace.entries.forEachIndexed { i, p ->
                     RadioRow(paceLabel(p), selected = p == operatingPace, onClick = { onOperatingPace(p) }, note = paceDetail(p), first = i == 0)
@@ -248,7 +248,6 @@ fun DuringWorkScreen(
                 onClick = onOpenAppPace,
             )
         }
-        FooterNote(stringResource(R.string.settings_pace_foot))
     }
 }
 

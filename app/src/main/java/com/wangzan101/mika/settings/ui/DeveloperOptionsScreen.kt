@@ -99,13 +99,12 @@ fun DeveloperOptionsScreen(
             }
         }
         GroupLabel(tr(R.string.dev_run_log))
-        GroupCard {
+        GroupCard(note = DEVELOPER_NOTE) {
             TraceSettingsRows()
             if (onOpenRunStats != null) {
                 ListRow(null, RunMetricsCopy.STATS_TITLE, onClick = onOpenRunStats) { RowChevron() }
             }
         }
-        FooterNote(DEVELOPER_NOTE)
     }
 }
 
