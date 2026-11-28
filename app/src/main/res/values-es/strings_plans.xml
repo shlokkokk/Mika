@@ -130,6 +130,7 @@
     <string name="plans_preauth_call_title">Preautorizar llamada IA</string>
     <string name="plans_preauth_call_sub">Permitir que esta tarea programada marque un número exacto sin confirmación en vivo</string>
     <string name="plans_preauth_call_number">Número aprobado</string>
-    <string name="plans_preauth_call_number_hint">ej. +91 91155 57175</string>
+    <string name="plans_preauth_call_number_hint">ej. +1 202 555 0123</string>
     <string name="plans_preauth_call_foot">Solo este número exacto podrá marcarse automáticamente al ejecutarse el plan. Cualquier otro número seguirá requiriendo confirmación.</string>
+    <string name="plans_preauth_call_invalid">Introduce un número de teléfono: de 7 a 15 dígitos, puede empezar con +</string>
 </resources>

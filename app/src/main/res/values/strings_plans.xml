@@ -129,6 +129,7 @@
     <string name="plans_preauth_call_title">Pre-authorize AI call</string>
     <string name="plans_preauth_call_sub">Allow this scheduled task to dial one exact number without live confirmation</string>
     <string name="plans_preauth_call_number">Approved number</string>
-    <string name="plans_preauth_call_number_hint">e.g. +91 91155 57175</string>
+    <string name="plans_preauth_call_number_hint">e.g. +1 202 555 0123</string>
     <string name="plans_preauth_call_foot">Only this exact number can be dialed automatically when this schedule fires. Any other number still requires live confirmation.</string>
+    <string name="plans_preauth_call_invalid">Enter a phone number: 7–15 digits, optionally starting with +</string>
 </resources>

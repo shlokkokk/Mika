@@ -130,6 +130,7 @@
     <string name="plans_preauth_call_title">Pré-autorizar ligação de IA</string>
     <string name="plans_preauth_call_sub">Permitir que esta tarefa agendada ligue para um número exato sem confirmação ao vivo</string>
     <string name="plans_preauth_call_number">Número aprovado</string>
-    <string name="plans_preauth_call_number_hint">ex. +91 91155 57175</string>
+    <string name="plans_preauth_call_number_hint">ex. +1 202 555 0123</string>
     <string name="plans_preauth_call_foot">Apenas este número exato pode ser discado automaticamente quando o agendamento rodar. Qualquer outro número ainda exige confirmação.</string>
+    <string name="plans_preauth_call_invalid">Informe um número de telefone: de 7 a 15 dígitos, pode começar com +</string>
 </resources>

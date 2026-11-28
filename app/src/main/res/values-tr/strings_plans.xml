@@ -129,6 +129,7 @@
     <string name="plans_preauth_call_title">Yapay zeka aramasını önceden onayla</string>
     <string name="plans_preauth_call_sub">Bu zamanlanmış görevin canlı onay olmadan tam bir numarayı aramasına izin ver</string>
     <string name="plans_preauth_call_number">Onaylı numara</string>
-    <string name="plans_preauth_call_number_hint">örn. +91 91155 57175</string>
+    <string name="plans_preauth_call_number_hint">örn. +1 202 555 0123</string>
     <string name="plans_preauth_call_foot">Zamanlama çalıştığında yalnızca bu tam numara otomatik aranabilir. Diğer tüm numaralar yine canlı onay gerektirir.</string>
+    <string name="plans_preauth_call_invalid">Bir telefon numarası girin: 7–15 rakam, + ile başlayabilir</string>
 </resources>

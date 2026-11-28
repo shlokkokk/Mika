@@ -131,6 +131,7 @@
     <string name="plans_preauth_call_title">Предварительно разрешить AI-звонок</string>
     <string name="plans_preauth_call_sub">Разрешить запланированной задаче звонить на один точный номер без подтверждения во время запуска</string>
     <string name="plans_preauth_call_number">Разрешённый номер</string>
-    <string name="plans_preauth_call_number_hint">напр. +91 91155 57175</string>
+    <string name="plans_preauth_call_number_hint">напр. +1 202 555 0123</string>
     <string name="plans_preauth_call_foot">При срабатывании расписания автоматический звонок разрешён только на этот точный номер. Любой другой номер по-прежнему требует подтверждения.</string>
+    <string name="plans_preauth_call_invalid">Введите номер телефона: от 7 до 15 цифр, можно начать с +</string>
 </resources>

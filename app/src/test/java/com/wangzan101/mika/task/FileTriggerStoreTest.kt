@@ -126,6 +126,15 @@ class FileTriggerStoreTest {
     }
 
     // 来源属于扩展状态:存进 sidecar,不写进主文件,旧版严格解码仍能读整份计划。
+    @Test fun preauthorizedCallNumberSurvivesReopenWithoutEnteringTheMainFile() {
+        val file = Files.createTempDirectory("trigger-preauth").resolve("triggers.json").toFile()
+        FileTriggerStore(file).upsert(TriggerDefinition("call", "thread", "打电话", 1_000, preauthorizedCallNumber = "+12025550123"))
+
+        assertEquals("+12025550123", FileTriggerStore(file).get("call")!!.preauthorizedCallNumber)
+        assertEquals(false, file.readText().contains("preauthorized"))
+        Json.decodeFromString<TriggerSnapshot>(file.readText())
+    }
+
     @Test fun sourceSurvivesStoreReopenWithoutEnteringTheMainFile() {
         val file = Files.createTempDirectory("trigger-source").resolve("triggers.json").toFile()
         val store = FileTriggerStore(file)

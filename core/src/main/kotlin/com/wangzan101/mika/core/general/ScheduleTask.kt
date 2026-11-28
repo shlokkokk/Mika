@@ -302,7 +302,10 @@ internal object ScheduleTask : AgentTool {
             val first = runCatching { Instant.parse(at).toEpochMilli() }.getOrElse { throw ArgError("at", "must be ISO 8601 with timezone") }
             maxOf(now, first - 1)
         } else now
-        val updated = editedTrigger(draft, original, original.id, original.threadId, floor).copy(goal = goal, reminderText = reminder)
+        // 预授权的号码是用户为这件事、这个时机同意的:模型改了目标或条件就作废,要用户回编辑界面重新开
+        val keepsCallAuthorization = goal == original.goal && reminder == null && draft.condition.trim().ifEmpty { null } == original.conditionGoal
+        val updated = editedTrigger(draft, original, original.id, original.threadId, floor).copy(goal = goal, reminderText = reminder,
+            preauthorizedCallNumber = original.preauthorizedCallNumber.takeIf { keepsCallAuthorization })
         val timingChanged = listOf("at", "intervalMinutes", "repeatAt", "repeatTimes", "repeatZone", "weekdays")
             .any { a.o[it] != null && a.o[it] !is JsonNull }
         return if (timingChanged) updated else updated.copy(nextAtMs = original.nextAtMs)

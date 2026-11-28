@@ -209,4 +209,5 @@ internal fun planValidationText(reason: PlanValidation): String = tr(when (reaso
     PlanValidation.InvalidWeekdays -> R.string.plans_error_weekdays
     PlanValidation.InvalidCooldown -> R.string.plans_error_cooldown
     PlanValidation.InvalidExecutionWindow -> R.string.plans_error_window
+    PlanValidation.InvalidCallNumber -> R.string.plans_preauth_call_invalid
 })

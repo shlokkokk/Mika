@@ -128,6 +128,7 @@
     <string name="plans_preauth_call_title">预先授权 AI 通话</string>
     <string name="plans_preauth_call_sub">允许此定时任务在执行时无需再次确认即可拨打指定号码</string>
     <string name="plans_preauth_call_number">授权号码</string>
-    <string name="plans_preauth_call_number_hint">例如 +91 91155 57175</string>
+    <string name="plans_preauth_call_number_hint">例如 +1 202 555 0123</string>
     <string name="plans_preauth_call_foot">仅此指定号码可在定时触发时自动拨打；其他任何号码仍需实时确认。</string>
+    <string name="plans_preauth_call_invalid">请填电话号码：7–15 位数字，可以 + 开头</string>
 </resources>

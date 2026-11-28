@@ -128,6 +128,7 @@
     <string name="plans_preauth_call_title">AI 전화 사전 승인</string>
     <string name="plans_preauth_call_sub">이 예약 작업이 실행 시 확인 없이 지정된 단일 번호로 전화를 걸 수 있도록 허용합니다</string>
     <string name="plans_preauth_call_number">승인된 번호</string>
-    <string name="plans_preauth_call_number_hint">예: +91 91155 57175</string>
+    <string name="plans_preauth_call_number_hint">예: +1 202 555 0123</string>
     <string name="plans_preauth_call_foot">예약 실행 시 이 정확한 번호로만 자동 발신할 수 있습니다. 다른 번호는 계속 실시간 확인이 필요합니다.</string>
+    <string name="plans_preauth_call_invalid">전화번호를 입력하세요: 숫자 7–15자리, + 로 시작 가능</string>
 </resources>

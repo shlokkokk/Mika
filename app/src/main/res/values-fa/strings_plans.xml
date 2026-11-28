@@ -129,6 +129,7 @@
     <string name="plans_preauth_call_title">پیش‌مجوز تماس هوش مصنوعی</string>
     <string name="plans_preauth_call_sub">به این کار زمان‌بندی‌شده اجازه دهید بدون تأیید لحظه‌ای با یک شماره مشخص تماس بگیرد</string>
     <string name="plans_preauth_call_number">شماره تأییدشده</string>
-    <string name="plans_preauth_call_number_hint">مثلاً +91 91155 57175</string>
+    <string name="plans_preauth_call_number_hint">مثلاً +1 202 555 0123</string>
     <string name="plans_preauth_call_foot">هنگام اجرای زمان‌بندی فقط همین شماره دقیق می‌تواند خودکار شماره‌گیری شود. هر شماره دیگری همچنان نیاز به تأیید دارد.</string>
+    <string name="plans_preauth_call_invalid">یک شماره تلفن وارد کنید: ۷ تا ۱۵ رقم، می‌تواند با + شروع شود</string>
 </resources>

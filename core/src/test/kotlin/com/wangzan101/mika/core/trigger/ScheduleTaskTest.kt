@@ -34,6 +34,27 @@ class ScheduleTaskTest {
         }
     }
 
+    // 预授权的号码是用户为这件事同意的:模型改目标或条件就作废,只改时间等其他字段保留
+    @Test fun modelEditOfGoalOrConditionDropsThePreauthorizedCallNumber() = runBlocking {
+        val plan = TriggerDefinition("plan", "conversation", "call the clinic", Long.MAX_VALUE,
+            calendarTime = "09:00", calendarZone = "UTC", conditionGoal = "clinic opens", preauthorizedCallNumber = "+12025550123")
+        suspend fun edit(admin: EditingAdmin, json: String) = toolDispatcher(FakeScreen(), conversationId = "conversation", scheduleAdmin = admin)
+            .execute(Part.ToolCall("e", "schedule_task", json), ActionPass())
+
+        val timeOnly = EditingAdmin(plan)
+        edit(timeOnly, """{"op":"edit","triggerId":"plan","repeatAt":"10:00"}""")
+        assertEquals("+12025550123", timeOnly.plan.preauthorizedCallNumber)
+
+        val newGoal = EditingAdmin(plan)
+        edit(newGoal, """{"op":"edit","triggerId":"plan","goal":"call someone else"}""")
+        assertEquals("call someone else", newGoal.plan.goal)
+        assertEquals(null, newGoal.plan.preauthorizedCallNumber)
+
+        val newCondition = EditingAdmin(plan)
+        edit(newCondition, """{"op":"edit","triggerId":"plan","condition":"always"}""")
+        assertEquals(null, newCondition.plan.preauthorizedCallNumber)
+    }
+
     @Test fun partialEditUsesTheLatestPlanAndKeepsAnUnchangedCalendarStart() = runBlocking {
         val first = java.time.Instant.parse("2099-01-01T00:00:00Z").toEpochMilli()
         val admin = EditingAdmin(TriggerDefinition("plan", "conversation", "old", first,

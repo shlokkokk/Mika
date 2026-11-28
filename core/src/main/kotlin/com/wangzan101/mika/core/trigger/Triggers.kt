@@ -48,6 +48,10 @@ data class TriggerDefinition(
     val calendarTimes: List<String> = emptyList(),
     /** 计划是谁建的:用户手动 / 模型 / 外部脚本,只影响展示与追溯。 */
     val source: TriggerSource = TriggerSource.Model,
+    /**
+     * 用户在计划编辑里预先同意这件计划拨打的唯一号码(规范写法,见 [normalizedCallNumber]);这件计划跑起来时拨它不再逐次确认,
+     * 拨别的号码照常要确认。只有用户在编辑界面能设;模型改了计划的目标或条件就清掉(见 ScheduleTask)。
+     */
     val preauthorizedCallNumber: String? = null,
     /** 模型任务允许执行的当地窗口；空表示随时执行。固定提醒和手动立即执行不受此限制。 */
     val executionWindowZone: String? = null,

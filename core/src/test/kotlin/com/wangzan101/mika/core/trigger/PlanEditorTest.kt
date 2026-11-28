@@ -286,6 +286,15 @@ class PlanEditorTest {
         assertNull(edited.lastValue)
     }
 
+    @Test fun preauthorizedCallNumberIsNormalizedAndRejectsCodesOrJunk() {
+        val base = draft().copy(firstAt = "2026-11-07 08:30")
+        assertEquals("+12025550123", editedTrigger(base.copy(preauthorizedCallNumber = " +1 (202) 555-0123 "), null, "id", "t", now).preauthorizedCallNumber)
+        assertNull(editedTrigger(base.copy(preauthorizedCallNumber = "  "), null, "id", "t", now).preauthorizedCallNumber)
+        assertNull(editedTrigger(base.copy(reminder = true, preauthorizedCallNumber = "+12025550123"), null, "id", "t", now).preauthorizedCallNumber)
+        assertInvalid(base.copy(preauthorizedCallNumber = "*#06#"), PlanValidation.InvalidCallNumber)
+        assertInvalid(base.copy(preauthorizedCallNumber = "call mom"), PlanValidation.InvalidCallNumber)
+    }
+
     private fun assertInvalid(input: PlanDraft, expected: PlanValidation) {
         val error = runCatching { editedTrigger(input, null, "id", "thread", now) }.exceptionOrNull()
         assertTrue("expected $expected but got $error", error is PlanValidationException)

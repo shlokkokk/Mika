@@ -128,6 +128,7 @@
     <string name="plans_preauth_call_title">AI通話を事前承認</string>
     <string name="plans_preauth_call_sub">この予定タスクが実行時の確認なしで指定した1件の番号へ発信できるようにします</string>
     <string name="plans_preauth_call_number">承認済み番号</string>
-    <string name="plans_preauth_call_number_hint">例: +91 91155 57175</string>
+    <string name="plans_preauth_call_number_hint">例: +1 202 555 0123</string>
     <string name="plans_preauth_call_foot">予定の実行時に自動発信できるのはこの番号のみです。他の番号には引き続き確認が必要です。</string>
+    <string name="plans_preauth_call_invalid">電話番号を入力してください（7～15 桁の数字、先頭に + 可）</string>
 </resources>

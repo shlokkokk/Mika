@@ -7,6 +7,7 @@ import com.wangzan101.mika.core.safety.gate.ConfirmationRequest
 import com.wangzan101.mika.core.prompt.Prompts
 import com.wangzan101.mika.core.safety.gate.IrrevAction
 import com.wangzan101.mika.core.tool.*
+import com.wangzan101.mika.core.trigger.normalizedCallNumber
 import kotlinx.serialization.json.*
 
 /** [ownerConversationId] 是这次运行所在的对话:拨出的电话归这件任务,电话里的前台看得到它的状态。 */
@@ -70,6 +71,7 @@ private class CallAgentTool(
             when (action) {
                 "dial" -> {
                     val (number, simId, task) = dialArgs(a)
+                    // 用户在计划里预先同意过这个号码:降成对外动作直接拨,不再逐次问;审批记录照样留痕(对外动作都记)
                     if (preauthorizedCallNumber != null && samePhoneNumber(number, preauthorizedCallNumber)) {
                         return ApprovalRisk(ActionRisk.External)
                     }
@@ -108,10 +110,9 @@ private class CallAgentTool(
 
     private fun dialArgs(a: Args) = Triple(a.str("number", min = 3, max = 32)!!, a.str("simId", max = 200), parsePhoneCallTask(a.o[CALL_TASK_FIELD]))
     private fun callId(a: Args) = a.str(CALL_ID_FIELD, max = MAX_CALL_ID_LENGTH)!!
+    /** 预授权只认同一个号码:两边规范写法完全相同才算,不按尾号模糊匹配(尾号相同的别的号码照常要确认)。 */
     private fun samePhoneNumber(a: String, b: String): Boolean {
-        val da = a.filter(Char::isDigit)
-        val db = b.filter(Char::isDigit)
-        if (da.isEmpty() || db.isEmpty()) return false
-        return da == db || (da.length >= 10 && db.length >= 10 && da.takeLast(10) == db.takeLast(10))
+        val na = normalizedCallNumber(a) ?: return false
+        return na == normalizedCallNumber(b)
     }
 }

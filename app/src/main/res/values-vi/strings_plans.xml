@@ -128,6 +128,7 @@
     <string name="plans_preauth_call_title">Cấp phép trước cuộc gọi AI</string>
     <string name="plans_preauth_call_sub">Cho phép tác vụ đã lên lịch gọi đến một số chính xác mà không cần xác nhận trực tiếp</string>
     <string name="plans_preauth_call_number">Số đã duyệt</string>
-    <string name="plans_preauth_call_number_hint">vd. +91 91155 57175</string>
+    <string name="plans_preauth_call_number_hint">vd. +1 202 555 0123</string>
     <string name="plans_preauth_call_foot">Chỉ số chính xác này mới được gọi tự động khi lịch chạy. Mọi số khác vẫn cần xác nhận trực tiếp.</string>
+    <string name="plans_preauth_call_invalid">Nhập số điện thoại: 7–15 chữ số, có thể bắt đầu bằng +</string>
 </resources>
