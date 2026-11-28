@@ -10,7 +10,7 @@ internal class SseFramer {
     /** 喂一行;这一行结束了一件事件时返回它,否则返回 null。 */
     fun feed(line: String): String? = when {
         line.isEmpty() -> flush()
-        line.startsWith("data:") -> { data += line.removePrefix("data:").removePrefix(" "); null }
+        isData(line) -> { data += line.removePrefix("data:").removePrefix(" "); null }
         else -> null
     }
 
@@ -20,5 +20,10 @@ internal class SseFramer {
         val event = data.joinToString("\n")
         data.clear()
         return event
+    }
+
+    companion object {
+        /** 这一行在交付数据(`data:` 字段);注释、event / id / retry 和空行都只是流的框架,不带内容。 */
+        fun isData(line: String): Boolean = line.startsWith("data:")
     }
 }
