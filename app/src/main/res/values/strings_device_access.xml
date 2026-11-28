@@ -24,5 +24,5 @@
     <string name="device_local_sub">Tasks started on this phone can wake and unlock the screen to work unattended.</string>
     <string name="device_local_foot">Off by default. Works on its own: it does not change “Allow remote wake and unlock” under Connect a computer, and that switch does not change this one. Uses the same encrypted screen-lock credential below; one failed attempt pauses further attempts.</string>
     <string name="device_local_unlock_failed">The task couldn’t wake or unlock the phone. Unlock it yourself, or check “Run tasks while locked” and the saved screen-lock credential under Settings › Task running.</string>
-    <string name="device_access_credential_required">Not saved — without your phone PIN or password, automatic unlock won\'t work.</string>
+    <string name="device_access_credential_required">Not configured · this phone has a screen lock, so automatic unlock needs its PIN or password</string>
 </resources>

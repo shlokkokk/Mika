@@ -25,5 +25,5 @@
     <string name="device_local_sub">Bu telefonda başlatılan görevler, gözetimsiz çalışmak için ekranı uyandırıp kilidini açabilir.</string>
     <string name="device_local_foot">Varsayılan olarak kapalı. Bağımsız çalışır: Bilgisayara bağlan altındaki “Uzaktan uyandırma ve kilit açmaya izin ver” anahtarını değiştirmez, o anahtar da bunu değiştirmez. Aşağıdaki şifrelenmiş ekran kilidi kimliğini paylaşır; bir başarısız deneme sonraki denemeleri duraklatır.</string>
     <string name="device_local_unlock_failed">Görev telefonu uyandıramadı veya kilidini açamadı. Kendiniz açın ya da Ayarlar › Görev çalışıyor altındaki “Kilitliyken görev çalıştır” anahtarını ve kayıtlı ekran kilidi kimliğini kontrol edin.</string>
-    <string name="device_access_credential_required">Kaydedilmedi — telefon PIN kodu veya şifresi olmadan otomatik kilit açma çalışmaz.</string>
+    <string name="device_access_credential_required">Yapılandırılmadı · bu telefonda ekran kilidi var; otomatik kilit açma için PIN veya şifre gerekir</string>
 </resources>

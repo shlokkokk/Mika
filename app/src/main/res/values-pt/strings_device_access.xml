@@ -25,5 +25,5 @@
     <string name="device_local_sub">Tarefas iniciadas neste celular podem ativar e desbloquear a tela para trabalhar sem supervisão.</string>
     <string name="device_local_foot">Desativado por padrão. Funciona sozinho: não muda “Permitir ativação e desbloqueio remotos” em Conectar um computador, e essa chave também não muda esta. Usa a mesma credencial criptografada do bloqueio de tela abaixo; uma tentativa errada pausa as próximas.</string>
     <string name="device_local_unlock_failed">A tarefa não conseguiu ativar nem desbloquear o celular. Desbloqueie você mesmo, ou confira “Executar tarefas com a tela bloqueada” e a credencial do bloqueio de tela salva em Ajustes › Execução de tarefas.</string>
-    <string name="device_access_credential_required">Não salvo — sem o PIN ou a senha do telefone, o desbloqueio automático não funcionará.</string>
+    <string name="device_access_credential_required">Não configurada · este celular tem bloqueio de tela; o desbloqueio automático precisa do PIN ou da senha</string>
 </resources>

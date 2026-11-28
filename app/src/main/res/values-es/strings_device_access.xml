@@ -24,5 +24,5 @@
     <string name="device_local_sub">Las tareas iniciadas en este teléfono pueden activar y desbloquear la pantalla para trabajar sin supervisión.</string>
     <string name="device_local_foot">Desactivado por defecto. Funciona por su cuenta: no cambia «Permitir activación y desbloqueo remotos» en Conectar un ordenador, y ese interruptor tampoco cambia este. Usa la misma credencial cifrada del bloqueo de pantalla de abajo; un intento fallido pausa los siguientes.</string>
     <string name="device_local_unlock_failed">La tarea no pudo activar ni desbloquear el teléfono. Desbloquéalo tú mismo, o revisa «Ejecutar tareas con la pantalla bloqueada» y la credencial del bloqueo de pantalla guardada en Ajustes › Ejecución de tareas.</string>
-    <string name="device_access_credential_required">No guardado — sin el PIN o la contraseña del teléfono, el desbloqueo automático no funcionará.</string>
+    <string name="device_access_credential_required">Sin configurar · este teléfono tiene bloqueo de pantalla; el desbloqueo automático necesita su PIN o contraseña</string>
 </resources>
