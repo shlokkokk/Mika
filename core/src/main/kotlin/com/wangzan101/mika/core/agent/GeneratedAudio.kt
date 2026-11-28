@@ -1,4 +1,4 @@
-package com.wangzan101.mika.core.chat
+package com.wangzan101.mika.core.agent
 
 /**
  * 一轮对话里 Mika 生成并留在工作区的一段音频。路径是沙箱路径 `/workspace/out/audio/…`；

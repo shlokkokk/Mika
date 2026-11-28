@@ -141,8 +141,6 @@ class VoiceCatalogViewModel(
         catalog.deleteService(serviceId)
     }
 
-    fun deleteProvider(providerId: String): List<VoiceModelRef> = manager.deleteProviderWithVoiceUsage(providerId)
-
     fun providerVoiceUsage(providerId: String): List<VoiceModelRef> = manager.providerVoiceUsage(providerId)
 
     /** Edits one capability's endpoint; also invalidates that capability's verification in the catalog. */

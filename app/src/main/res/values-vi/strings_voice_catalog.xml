@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="models_voice_catalog">Mô hình giọng nói</string>
-    <string name="models_voice_catalog_sub">Quản lý mô hình chuyển lời nói thành văn bản, chuyển văn bản thành lời nói và cuộc gọi trực tiếp ở một nơi</string>
     <string name="voice_catalog_title">Mô hình giọng nói</string>
     <string name="voice_catalog_sub">Quản lý mô hình chuyển lời nói thành văn bản, chuyển văn bản thành lời nói và cuộc gọi trực tiếp ở một nơi. Khả năng và giao thức được khai báo tại đây; nhập liệu bằng giọng nói, đọc thành tiếng và cài đặt cuộc gọi chỉ chọn và dùng các tùy chọn.</string>
     <string name="voice_catalog_add">Thêm mô hình</string>

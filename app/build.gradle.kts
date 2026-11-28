@@ -140,8 +140,6 @@ dependencies {
 
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test.junit4)
-    // Older transitive Espresso reflects on InputManager.getInstance(), removed on newer devices.
-    androidTestImplementation(libs.androidx.test.espresso)
     debugImplementation(libs.compose.ui.test.manifest)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.ext.junit)
@@ -149,6 +147,11 @@ dependencies {
     androidTestImplementation(libs.androidx.test.espresso)
     androidTestImplementation(libs.okhttp.mockwebserver)
     androidTestImplementation(libs.junit)
+}
+
+// JVM 单测只在 debug 上跑:release/perf/logs 的代码与 debug 相同,各编一遍、跑一遍只是重复(裸 :app:test 还会因此内存不够)
+androidComponents {
+    beforeVariants { variant -> if (variant.buildType != "debug") variant.enableUnitTest = false }
 }
 
 // LicensesTest 读仓库的 licenses/THIRD_PARTY_NOTICES.md:让它参与测试的增量判断

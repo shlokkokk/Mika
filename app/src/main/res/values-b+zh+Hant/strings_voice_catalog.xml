@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="models_voice_catalog">語音模型</string>
-    <string name="models_voice_catalog_sub">統一管理語音轉文字、文字轉語音和實時通話的模型</string>
     <string name="voice_catalog_title">語音模型</string>
     <string name="voice_catalog_sub">統一管理語音轉文字、文字轉語音和實時通話的模型。能力與協定在此宣告；語音輸入、朗讀和通話設定頁只負責選擇與使用偏好。</string>
     <string name="voice_catalog_add">新增模型</string>

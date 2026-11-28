@@ -7,7 +7,7 @@ import com.wangzan101.mika.core.run.record.RunMetricsStore
 import com.wangzan101.mika.core.model.usage.ConversationUsage
 import com.wangzan101.mika.core.model.usage.RequestComposition
 import com.wangzan101.mika.core.agent.Turn
-import com.wangzan101.mika.core.chat.GeneratedAudio
+import com.wangzan101.mika.core.agent.GeneratedAudio
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.first
@@ -164,9 +164,27 @@ class ConversationStoreTest {
         store.append("c", Turn("二", "乙", "succeeded", atMs = 42L))
         now = 3_000L
         store.append("c", Turn("三", "丙", "succeeded"))
-        assertEquals(listOf(1_000L, 42L, 3_000L), ConversationStore(dir).turns("c").map { it.atMs })
+        // 自带时刻的排回它被说出的位置
+        assertEquals(listOf(42L, 1_000L, 3_000L), ConversationStore(dir).turns("c").map { it.atMs })
         val saved = Json.parseToJsonElement(java.io.File(dir, "c.json").readText()) as JsonArray
-        assertEquals(listOf("1000", "42", "3000"), saved.map { (it as JsonObject).getValue("atMs").toString() })
+        assertEquals(listOf("42", "1000", "3000"), saved.map { (it as JsonObject).getValue("atMs").toString() })
+    }
+
+    /**
+     * 通话里最后一轮挂断时才写,期间任务办好的那一行先写进来了:那一轮仍排在汇报前面,不跑到后面。
+     * 同一时刻的按存进来的先后;没有时刻的老记录照旧在前。
+     */
+    @Test fun lateTurnGoesBackToWhenItWasSaid() {
+        val dir = tmp.newFolder("late")
+        val store = ConversationStore(dir, clock = { 0L })
+        store.append("c", Turn("你能听到吗", "能听到", "desk", atMs = 887L))
+        store.append("c", Turn("", "深圳今天多云", "desk_report", atMs = 946L))
+        store.append("c", Turn("看下深圳天气", "正在查", "desk", atMs = 898L))
+        store.append("c", Turn("", "同一时刻后到的", "desk_report", atMs = 946L))
+        assertEquals(
+            listOf("能听到", "正在查", "深圳今天多云", "同一时刻后到的"),
+            ConversationStore(dir).turns("c").map { it.outcome },
+        )
     }
 
     @Test fun oldTurnKeepsUnknownTimeWhenANewTurnIsAppended() {
@@ -868,8 +886,8 @@ class ConversationStoreTest {
         val dir = tmp.newFolder("video")
         val store = ConversationStore(dir)
         val videos = listOf(
-            com.wangzan101.mika.core.chat.GeneratedVideo("/workspace/out/video/take.mp4", 5_000L, 1280, 720, "海边日落", 42L),
-            com.wangzan101.mika.core.chat.GeneratedVideo("/workspace/out/video/raw.mp4"),
+            com.wangzan101.mika.core.agent.GeneratedVideo("/workspace/out/video/take.mp4", 5_000L, 1280, 720, "海边日落", 42L),
+            com.wangzan101.mika.core.agent.GeneratedVideo("/workspace/out/video/raw.mp4"),
         )
         store.append("a", Turn("生成一段", "好", "succeeded", videos = videos))
         assertEquals(videos, ConversationStore(dir).turns("a").single().videos)

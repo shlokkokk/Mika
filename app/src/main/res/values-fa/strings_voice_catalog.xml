@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="models_voice_catalog">مدل‌های گفتار</string>
-    <string name="models_voice_catalog_sub">مدیریت مدل‌های گفتار به متن، متن به گفتار و تماس زنده در یک‌جا</string>
     <string name="voice_catalog_title">مدل‌های گفتار</string>
     <string name="voice_catalog_sub">مدیریت مدل‌های گفتار به متن، متن به گفتار و تماس زنده در یک‌جا. قابلیت‌ها و پروتکل‌ها این‌جا اعلام می‌شوند؛ صفحات ورودی صوتی، خواندن و تماس فقط ترجیحات را انتخاب و استفاده می‌کنند.</string>
     <string name="voice_catalog_add">افزودن مدل</string>

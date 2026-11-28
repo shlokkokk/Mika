@@ -1,7 +1,5 @@
-package com.wangzan101.mika.core.agent
+package com.wangzan101.mika.core.model
 
-import com.wangzan101.mika.core.model.Message
-import com.wangzan101.mika.core.model.Part
 import kotlin.math.ceil
 
 /**

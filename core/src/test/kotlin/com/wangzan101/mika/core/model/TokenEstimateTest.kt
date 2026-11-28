@@ -1,4 +1,4 @@
-package com.wangzan101.mika.core.agent
+package com.wangzan101.mika.core.model
 
 import com.wangzan101.mika.core.model.Author
 import com.wangzan101.mika.core.model.Message
