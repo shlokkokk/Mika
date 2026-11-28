@@ -20,15 +20,20 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import com.wangzan101.mika.ui.theme.MikaSize
 import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.R
@@ -149,7 +154,12 @@ internal fun CallTaskScreen(
     val number = CallPolicy.outgoingNumber(draft.number)
     val goalLength = draft.goal.trim().length
     val maxGoal = CallTaskBrief.MAX_GOAL_CHARS
-    val questions = remember(draft.questions) { draft.questions.lineSequence().map(String::trim).filter(String::isNotEmpty).toList() }
+    var pendingQuestion by rememberSaveable { mutableStateOf("") }
+    val savedQuestions = remember(draft.questions) { draft.questions.lineSequence().map(String::trim).filter(String::isNotEmpty).toList() }
+    val questions = remember(savedQuestions, pendingQuestion) {
+        val pending = pendingQuestion.trim()
+        if (pending.isEmpty()) savedQuestions else savedQuestions + pending
+    }
     val badQuestions = questions.size > CallTaskBrief.MAX_QUESTIONS ||
         questions.any { it.length > CallTaskBrief.MAX_QUESTION_CHARS }
     val contextLength = draft.context.trim().length
@@ -182,32 +192,41 @@ internal fun CallTaskScreen(
             error = if (goalLength > maxGoal) stringResource(R.string.calls_task_limit, goalLength, maxGoal) else null)
     }
 
-    val pendingUndo = cleared?.takeIf { !draft.hasContent }
-    if (draft.hasContent || pendingUndo != null) {
+    val hasAnyContent = draft.hasContent || pendingQuestion.isNotBlank()
+    val pendingUndo = cleared?.takeIf { !hasAnyContent }
+    if (hasAnyContent || pendingUndo != null) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             if (pendingUndo != null) TextButton(onClick = { draft.undoClear(pendingUndo); cleared = null }, enabled = editable,
                 modifier = Modifier.testTag("call-task-undo-clear")) { Text(stringResource(R.string.undo)) }
-            else TextButton(onClick = { cleared = draft.clearText() }, enabled = editable,
+            else TextButton(onClick = { cleared = draft.clearText(); pendingQuestion = "" }, enabled = editable,
                 modifier = Modifier.testTag("call-task-clear")) { Text(stringResource(R.string.calls_clear_draft)) }
         }
     }
 
     // 三个可选项收在一行里;填过的草稿(例如从记录里复用)直接展开
-    val anyExtra = draft.questions.isNotBlank() || draft.context.isNotBlank() || draft.constraints.isNotBlank()
+    val filledExtras = listOf(questions.isNotEmpty(), draft.context.isNotBlank(), draft.constraints.isNotBlank()).count { it }
+    val anyExtra = filledExtras > 0
     var extrasOpen by rememberSaveable { mutableStateOf(false) }
     val showExtras = extrasOpen || anyExtra
     GroupCard {
         ListRow(if (showExtras) MikaIcons.ListChecks else MikaIcons.Plus,
             stringResource(R.string.calls_task_more), first = true, titleColor = MikaTheme.colors.accent,
             onClick = { if (!anyExtra) extrasOpen = !extrasOpen }.takeIf { !anyExtra },
-            modifier = Modifier.testTag("call-task-more"))
+            modifier = Modifier.testTag("call-task-more")) {
+            if (filledExtras > 0) RowValue("$filledExtras/3")
+            if (!anyExtra) CallExpandIcon(showExtras)
+        }
         if (showExtras) {
             Hairline()
-            CallFieldRow(MikaIcons.Doc, draft.questions, { draft.questions = it },
-                stringResource(R.string.calls_task_questions) + " · " + stringResource(R.string.calls_task_questions_hint),
-                editable, "call-task-questions", minLines = 2, maxLines = 5,
+            CallQuestionsField(
+                questions = savedQuestions,
+                pending = pendingQuestion,
+                onPendingChange = { pendingQuestion = it },
+                onQuestionsChange = { draft.questions = it.joinToString("\n") },
+                enabled = editable,
                 error = if (badQuestions) stringResource(R.string.calls_task_questions_limit,
-                    CallTaskBrief.MAX_QUESTIONS, CallTaskBrief.MAX_QUESTION_CHARS) else null)
+                    CallTaskBrief.MAX_QUESTIONS, CallTaskBrief.MAX_QUESTION_CHARS) else null,
+            )
             Hairline()
             CallFieldRow(MikaIcons.Message, draft.context, { draft.context = it }, stringResource(R.string.calls_task_context),
                 editable, "call-task-context", minLines = 1, maxLines = 5,
@@ -224,7 +243,10 @@ internal fun CallTaskScreen(
     GroupLabel(stringResource(R.string.calls_this_call))
     GroupCard {
         ListRow(MikaIcons.Mic, stringResource(R.string.calls_voice_title), first = true,
-            onClick = onVoiceProfiles.takeIf { editable }) { RowValue(callVoiceShort(voiceSummary)); RowChevron() }
+            onClick = onVoiceProfiles.takeIf { editable }) {
+            Text(callVoiceShort(voiceSummary), style = MikaType.Body, color = MikaTheme.colors.ink3, maxLines = 1)
+            RowChevron()
+        }
         val simValue = when {
             sim != null -> sim.label
             config.defaultOutgoingSimId != null && draft.simOverride == null -> stringResource(R.string.calls_sim_unavailable)
@@ -232,7 +254,13 @@ internal fun CallTaskScreen(
         }
         ListRow(MikaIcons.Phone, stringResource(R.string.calls_sim),
             onClick = if (editable) ({ showSims = true }) else null) {
-            RowValue(simValue, if (sim == null) ValueTone.Warn else ValueTone.Plain); RowChevron()
+            Text(
+                simValue,
+                style = MikaType.Body,
+                color = if (sim == null) MikaTheme.colors.warn else MikaTheme.colors.ink3,
+                maxLines = 1,
+            )
+            RowChevron()
         }
     }
 
@@ -307,6 +335,118 @@ private fun CallFieldRow(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun CallQuestionsField(
+    questions: List<String>,
+    pending: String,
+    onPendingChange: (String) -> Unit,
+    onQuestionsChange: (List<String>) -> Unit,
+    enabled: Boolean,
+    error: String? = null,
+) {
+    val c = MikaTheme.colors
+    fun commitPending() {
+        val trimmed = pending.trim()
+        if (trimmed.isEmpty()) {
+            if (pending.isNotEmpty()) onPendingChange("")
+            return
+        }
+        if (questions.size >= CallTaskBrief.MAX_QUESTIONS) return
+        if (trimmed !in questions) onQuestionsChange(questions + trimmed)
+        onPendingChange("")
+    }
+    val canAdd = enabled && pending.isNotBlank() && questions.size < CallTaskBrief.MAX_QUESTIONS
+    CallFieldRowFrame(
+        icon = MikaIcons.Doc,
+        empty = pending.isEmpty(),
+        placeholder = stringResource(R.string.calls_task_questions),
+        single = questions.isEmpty(),
+        error = error,
+        trailing = if (canAdd) ({
+            IconButton(
+                onClick = ::commitPending,
+                modifier = Modifier.size(32.dp).testTag("call-task-question-add"),
+            ) {
+                Icon(MikaIcons.Plus, stringResource(R.string.calls_task_questions), Modifier.size(18.dp), tint = c.accent)
+            }
+        }) else null,
+    ) {
+        Column(Modifier.fillMaxWidth()) {
+            BasicTextField(
+                value = pending,
+                onValueChange = { raw ->
+                    if (!raw.contains('\n')) {
+                        onPendingChange(raw)
+                    } else {
+                        val parts = raw.split('\n')
+                        val updated = questions.toMutableList()
+                        for (line in parts.dropLast(1)) {
+                            val trimmed = line.trim()
+                            if (trimmed.isNotEmpty() && updated.size < CallTaskBrief.MAX_QUESTIONS && trimmed !in updated) {
+                                updated += trimmed
+                            }
+                        }
+                        if (updated != questions) onQuestionsChange(updated)
+                        onPendingChange(parts.last())
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().testTag("call-task-questions"),
+                enabled = enabled,
+                singleLine = true,
+                textStyle = MikaType.Body.copy(color = c.ink, textDirection = TextDirection.Content),
+                cursorBrush = SolidColor(c.accent),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { commitPending() }),
+            )
+            if (questions.isNotEmpty()) {
+                Box(
+                    Modifier.fillMaxWidth().padding(top = 8.dp).heightIn(max = 124.dp).verticalScroll(rememberScrollState()),
+                ) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        questions.forEachIndexed { index, item ->
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = c.fill,
+                                border = BorderStroke(1.dp, c.ink3.copy(alpha = 0.22f)),
+                            ) {
+                                Row(
+                                    Modifier.padding(start = 10.dp, end = 6.dp, top = 5.dp, bottom = 5.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                ) {
+                                    Text(
+                                        item,
+                                        Modifier.weight(1f, fill = false).clickable(enabled = enabled && pending.isBlank()) {
+                                            onPendingChange(item)
+                                            onQuestionsChange(questions.filterIndexed { i, _ -> i != index })
+                                        },
+                                        style = MikaType.Caption,
+                                        color = c.ink,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    Icon(
+                                        MikaIcons.Close,
+                                        stringResource(R.string.calls_delete_digit),
+                                        Modifier.size(16.dp).clip(CircleShape).clickable(enabled = enabled, role = Role.Button) {
+                                            onQuestionsChange(questions.filterIndexed { i, _ -> i != index })
+                                        }.padding(2.dp),
+                                        tint = c.ink3,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 /** The number row: keeps the cursor/selection (the dial pad edits there), reads left to right, and has a [trailing] action. */
 @Composable
 private fun CallFieldRow(
@@ -329,20 +469,21 @@ private fun CallFieldRowFrame(
     trailing: (@Composable () -> Unit)? = null, field: @Composable () -> Unit,
 ) {
     val c = MikaTheme.colors
+    val compact = single && error == null
     Row(
         Modifier.fillMaxWidth().heightIn(min = MikaSize.RowMin)
-            .padding(start = 16.dp, end = if (trailing != null) 4.dp else 16.dp, top = if (single) 0.dp else 12.dp,
-                bottom = if (single) 0.dp else 12.dp),
-        verticalAlignment = if (single) Alignment.CenterVertically else Alignment.Top,
+            .padding(start = 16.dp, end = if (trailing != null) 4.dp else 16.dp, top = if (compact) 0.dp else 12.dp,
+                bottom = if (compact) 0.dp else 12.dp),
+        verticalAlignment = if (compact) Alignment.CenterVertically else Alignment.Top,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         IconTile(icon)
-        Column(Modifier.weight(1f).padding(top = if (single) 0.dp else 5.dp)) {
+        Column(Modifier.weight(1f).padding(top = if (compact) 0.dp else 5.dp)) {
             Box {
                 if (empty) Text(placeholder, style = MikaType.Body, color = c.ink3)
                 field()
             }
-            error?.let { Text(it, Modifier.padding(top = 4.dp), style = MikaType.Caption, color = c.bad) }
+            error?.let { Text(it, Modifier.padding(top = 6.dp), style = MikaType.Caption, color = c.bad) }
         }
         trailing?.invoke()
     }
