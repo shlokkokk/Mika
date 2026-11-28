@@ -1,5 +1,9 @@
 package com.wangzan101.mika.calls
 
+import com.wangzan101.mika.i18n.ResFileTexts
+import java.io.File
+import java.util.Locale
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -44,7 +48,7 @@ class CallFarewellPolicyTest {
             "You can hang up now, thank you.", "That's all, see you later!",
             "Gracias, adiós.", "Au revoir, merci!", "Vielen Dank, auf Wiedersehen!",
             "Obrigado, tchau!", "Grazie, arrivederci!", "До свидания, спасибо!",
-            "ありがとうございました。失礼します。", "감사합니다. 안녕히 계세요.",
+            "ありがとうございました。失礼いたします。", "감사합니다. 안녕히 계세요.",
             "धन्यवाद, अलविदा।", "شكرا، مع السلامة", "Terima kasih, sampai jumpa!",
             "Teşekkürler, hoşça kalın!", "Cảm ơn, tạm biệt!", "ขอบคุณครับ ลาก่อน",
         ).forEach { assertTrue(it, CallFarewellPolicy.isExplicitCallerFarewell(it)) }
@@ -63,5 +67,27 @@ class CallFarewellPolicyTest {
         assertTrue(CallFarewellPolicy.isAssistantClosing("Bye~"))
         assertFalse(CallFarewellPolicy.isAssistantClosing("Could you say goodbye?"))
         assertFalse(CallFarewellPolicy.isExplicitCallerFarewell("x".repeat(5000)))
+    }
+
+    @Test fun everyLocalesTimeLimitClosingLineIsRecognized() {
+        val folders = File("src/main/res").listFiles { f -> f.isDirectory && File(f, "strings_calls.xml").isFile }!!
+            .map { it.name }.sorted()
+        assertEquals(13, folders.size)
+        folders.forEach { folder ->
+            val line = ResFileTexts(folder, Locale.ROOT).strings.getValue("calls_closing_line")
+            assertTrue("$folder: $line", CallFarewellPolicy.isAssistantClosing(line))
+        }
+        assertTrue(CallFarewellPolicy.isAssistantClosing("时间差不多了，那我们先这样吧"))
+    }
+
+    @Test fun ambiguousForeignWordsAloneAreNotCallerFarewells() {
+        // 打招呼也说的(buen día、ciao、пока、失礼します),光一个挂断动词(可能在问或转述),都不当成要挂
+        listOf("Buen día", "Ciao!", "はい、失礼します", "Colgar", "Desligar", "Hang up", "Пока", "End the call").forEach {
+            assertFalse(it, CallFarewellPolicy.isExplicitCallerFarewell(it))
+        }
+        listOf("I'll hang up now, bye.", "You can hang up now.", "Vale, voy a colgar.", "Obrigado, vou desligar.",
+            "Puedes colgar.", "ありがとうございました。お先に失礼します。").forEach {
+            assertTrue(it, CallFarewellPolicy.isExplicitCallerFarewell(it))
+        }
     }
 }

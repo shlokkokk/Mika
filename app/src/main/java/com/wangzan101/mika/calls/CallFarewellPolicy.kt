@@ -1,8 +1,13 @@
 package com.wangzan101.mika.calls
 
-/** Accepts only an unambiguous closing from a caller's or assistant's final utterance across languages. */
+/**
+ * Accepts only an unambiguous closing from a caller's or assistant's final utterance. No transcript is retained.
+ *
+ * 中文和其他语言分两条路径各判各的,任一条认下就算:中文路径的规则和切分与原来逐字相同(只多认繁体字形),
+ * 其他语言的词表、否定和转述规则都不影响中文。
+ */
 internal object CallFarewellPolicy {
-    // --- Chinese (Simplified & Traditional) patterns ---
+    // --- 中文(简体、繁体) ---
     private const val ZH_THANKS = "[谢謝]{2}(?:你|您)?(?:啊|了)?|多[谢謝]|辛苦了"
     private const val ZH_COURTESY = "好(?:的|吧|啊)?|行(?:吧|啊)?|嗯{1,3}|那(?:好吧?)?|$ZH_THANKS"
     private const val ZH_CLOSING_CONTEXT = "(?:那)?就(?:先)?[这這][样樣]吧|(?:我[这這][边邊]|我)?[没沒](?:有)?[别別]的事了|不打[扰擾]了|(?:改天|回[头頭])再聊"
@@ -45,13 +50,13 @@ internal object CallFarewellPolicy {
             "talk\\s+(?:to\\s+you\\s+)?(?:later|soon)|ttyl|take\\s+care|" +
             "have\\s+a\\s+(?:good|great|nice|wonderful|lovely)\\s+(?:day|evening|night|weekend|one)|" +
             "catch\\s+you\\s+later|until\\s+next\\s+time|farewell|" +
-            "adiós|chao|chau|hasta\\s+(?:luego|pronto|mañana)|nos\\s+vemos|buen\\s+día|" +
+            "adiós|chao|chau|hasta\\s+(?:luego|pronto|mañana)|nos\\s+vemos|" +
             "au\\s+revoir|à\\s+(?:bientôt|plus(?:\\s+tard)?)|bonne\\s+(?:journée|soirée)|" +
             "tschüss|tschau|auf\\s+wieder(?:sehen|hören)|bis\\s+(?:bald|dann|später)|schönen\\s+(?:tag|abend)(?:\\s+noch)?|" +
             "tchau|adeus|até\\s+(?:logo|mais|breve)|tenha\\s+um\\s+bom\\s+dia|" +
-            "arrivederci|a\\s+presto|buona\\s+(?:giornata|serata)|ciao|" +
-            "до\\s+свидания|пока|всего\\s+(?:доброго|хорошего)|увидимся|хорошего\\s+дня|" +
-            "さようなら|さよなら|バイバイ|じゃあね|またね|お先に失礼(?:します|いたします)?|失礼(?:します|いたします)|" +
+            "arrivederci|a\\s+presto|buona\\s+(?:giornata|serata)|" +
+            "до\\s+свидания|всего\\s+(?:доброго|хорошего)|увидимся|хорошего\\s+дня|" +
+            "さようなら|さよなら|バイバイ|じゃあね|またね|お先に失礼(?:します|いたします)|失礼いたします|" +
             "안녕히\\s*(?:계세요|가세요)|바이바이|잘\\s*가|수고하세요|좋은\\s*하루\\s*되세요|" +
             "अलविदा|बाय(?:\\s+बाय)?|फिर\\s+मिलेंगे|ख़ुदा\\s+हाफ़िज़|अल्लाह\\s+हाफ़िज़|alvida|khuda\\s+hafiz|allah\\s+hafiz|phir\\s+milenge|" +
             "مع\\s+السلامة|وداعا|إلى\\s+اللقاء|باي|خداحافظ|بدرود|" +
@@ -60,29 +65,44 @@ internal object CallFarewellPolicy {
             "tạm\\s+biệt|chào\\s+tạm\\s+biệt|hẹn\\s+gặp\\s+lại|" +
             "ลาก่อน|บ๊ายบาย|tot\\s+ziens|doei|do\\s+widzenia"
 
+    // 挂断只认自述(我要挂了)或请对方挂(你可以挂了);光一个动词「colgar」「hang up」可能是在问、在转述,不算
     private const val MULTI_HANGUP =
         "(?:i(?:'m|\\s+am)\\s+)?hanging\\s+up(?:\\s+now)?|" +
-            "(?:you\\s+can|please|go\\s+ahead\\s+and)\\s+(?:hang\\s+up|end\\s+(?:the|this)\\s+call)(?:\\s+(?:now|please))?|" +
-            "hang\\s+up(?:\\s+(?:now|please))?|end\\s+(?:the|this)\\s+call(?:\\s+(?:now|please))?|" +
-            "(?:puedes\\s+)?colgar|voy\\s+a\\s+colgar|" +
+            "(?:i(?:'ll|\\s+will)|i(?:'m|\\s+am)\\s+going\\s+to|i(?:'m|\\s+am)\\s+gonna|let\\s+me|you\\s+can|you\\s+may|please|go\\s+ahead\\s+and)\\s+" +
+            "(?:hang\\s+up|end\\s+(?:the|this)\\s+call)(?:\\s+(?:now|please))?|" +
+            "(?:puedes|puede|ya\\s+puedes|ya\\s+puede)\\s+colgar|voy\\s+a\\s+colgar|te\\s+cuelgo|le\\s+cuelgo|ya\\s+cuelgo|" +
             "(?:tu\\s+peux|vous\\s+pouvez)\\s+raccrocher|je\\s+raccroche|" +
             "(?:du\\s+kannst|sie\\s+können)\\s+auflegen|ich\\s+lege\\s+auf|" +
-            "(?:pode\\s+)?desligar|(?:puoi\\s+)?riattaccare|" +
+            "(?:pode|podes|já\\s+pode)\\s+desligar|vou\\s+desligar|" +
+            "(?:puoi|può)\\s+riattaccare|riattacco|" +
             "(?:можешь\\s+|можете\\s+)?положить\\s+трубку|клади\\s+трубку|завершай\\s+звонок|" +
             "(?:電話を)?切(?:ります|っていい(?:です)?)|" +
             "(?:전화\\s*)?끊(?:을게요|어도\\s*돼요|어)|" +
             "(?:फ़ोन|कॉल)\\s*(?:रखो|रख\\s+दो|काटो|काट\\s+दो)|(?:phone|call)\\s+(?:rakho|kaat\\s+do)|" +
             "أغلق\\s+المكالمة|يمكنك\\s+إنهاء\\s+المكالمة|" +
-            "tutup\\s+telepon|telefonu\\s+kapat|cúp\\s+máy|วางสายได้เลย|ophangen|rozłącz\\s+się"
+            "tutup\\s+telepon|telefonu\\s+kapat|cúp\\s+máy|วางสายได้เลย|(?:je\\s+kunt|u\\s+kunt)\\s+ophangen|ik\\s+hang\\s+op|rozłącz\\s+się"
 
-    private val splitClause = Regex("[,，、。.!！；;।،·~～…]+")
     private val spaces = Regex("[ \\t\\r\\n　]+")
-    private val boundaryQuote = Regex("(?:^|[\\s:：,，(（])['’]|['’](?:$|[\\s,，.。!！)）])")
-    private val alwaysQuoteOrQuestion = "?？¿؟\"“”「」『』《》〈〉＂"
 
+    private val zhSplitClause = Regex("[,，、。.!！；;]+")
     private val zhClosing = Regex("(?:$ZH_COURTESY){0,4}(?:(?:$ZH_GOODBYE){1,2}|$ZH_SELF_HANGUP|$ZH_REQUEST_HANGUP)(?:$ZH_THANKS)?")
     private val zhBefore = Regex("(?:$ZH_COURTESY)|(?:$ZH_CLOSING_CONTEXT)")
     private val zhAfter = Regex(ZH_THANKS)
+    private val zhQuoteOrQuestion = "?？\"'“”‘’「」『』《》〈〉＂＇"
+    private val zhReportedSpeech = Regex(
+        "例如|比如|举例|示例|假如|假设|假设说|引用|原话|(?:的|这)句(?:话)?|" +
+            "(?:可以|可|建议|不妨|就|应该|请|要|试着|用来)(?:先|直接|跟\\S{1,8}|对\\S{1,8}|这么|这样)?(?:说|回答|回复|念)|" +
+            "(?:他说|她说|对方说|他当时说|她当时说|转述|复述)[：:]?",
+    )
+    private val zhSettledEnding = Regex(
+        "(?:那|好|行)?(?:我[们們])?(?:就(?:先)?[这這][样樣]|先[这這][样樣]|(?:就|先)(?:到[这這][里裡]|聊到[这這][里裡]|[说說]到[这這][里裡]))(?:吧|了)?|" +
+            "(?:那)?(?:我)?(?:就)?(?:先)?不打[扰擾](?:您|你)?了|祝您(?:[顺順]利|生活愉快)",
+    )
+
+    // --- 其他语言:按小写、保留单词间空格匹配 ---
+    private val multiSplitClause = Regex("[,，、。.!！；;।،·~～…]+")
+    private val boundaryQuote = Regex("(?:^|[\\s:：,，(（])['’]|['’](?:$|[\\s,，.。!！)）])")
+    private val alwaysQuoteOrQuestion = "?？¿؟\"“”「」『』《》〈〉＂"
 
     private val multiClosing = Regex(
         "(?:(?:$MULTI_COURTESY)\\s+){0,3}(?:(?:$MULTI_GOODBYE)(?:\\s+(?:$MULTI_GOODBYE))?|(?:$MULTI_HANGUP))(?:\\s+(?:$MULTI_THANKS))?",
@@ -96,7 +116,6 @@ internal object CallFarewellPolicy {
             "another\\s+question|before\\s+(?:you|we)\\s+go|just\\s+kidding|joking|" +
             "for\\s+example|such\\s+as|write\\s+down|repeat\\s+after)\\b|" +
             "\\bno,?\\s*(?:wait|hold|don't|stop)\\b|" +
-            "不要挂|别挂|先别挂|还没说|不是叫你|不是让你|等一下|等会|等等|不过|顺便|还有个|再确认|开玩笑|" +
             "no\\s+cuelgues|espera|un\\s+momento|ne\\s+raccroche\\s+pas|attends|attendez|" +
             "nicht\\s+auflegen|warte|warten|не\\s+клади|подожди|подождите|" +
             "待って|切らないで|잠깐|끊지\\s*마|मत\\s+काटो|रुको|रुकिए|لا\\s+تغلق|انتظر",
@@ -104,66 +123,78 @@ internal object CallFarewellPolicy {
     )
 
     private val reportedSpeech = Regex(
-        "例如|比如|举例|示例|假如|假设|假设说|引用|原话|(?:的|这)句(?:话)?|" +
-            "(?:可以|可|建议|不妨|就|应该|请|要|试着|用来)(?:先|直接|跟\\S{1,8}|对\\S{1,8}|这么|这样)?(?:说|回答|回复|念)|" +
-            "(?:他说|她说|对方说|他当时说|她当时说|转述|复述)[：:]?|" +
-            "\\b(?:he|she|they)\\s+said\\b|\\bfor\\s+(?:example|instance)\\b|\\bremember\\s+the\\s+word\\b",
+        "\\b(?:he|she|they)\\s+said\\b|\\bfor\\s+(?:example|instance)\\b|\\bremember\\s+the\\s+word\\b",
         RegexOption.IGNORE_CASE,
     )
 
     private val settledEnding = Regex(
-        "(?:那|好|行)?(?:我[们們])?(?:就(?:先)?[这這][样樣]|先[这這][样樣]|(?:就|先)(?:到[这這][里裡]|聊到[这這][里裡]|[说說]到[这這][里裡]))(?:吧|了)?|" +
-            "(?:那)?(?:我)?(?:就)?(?:先)?不打[扰擾](?:您|你)?了|祝您(?:[顺順]利|生活愉快)|" +
-            "(?:let(?:'s|\\s+us)|we(?:'ll|\\s+will))\\s+wrap\\s+up(?:\\s+here)?|" +
+        "(?:let(?:'s|\\s+us)|we(?:'ll|\\s+will))\\s+wrap\\s+up(?:\\s+here)?|" +
             "our\\s+time\\s+is\\s+(?:almost\\s+)?up|" +
             "(?:have\\s+a\\s+)?(?:good|great|nice|wonderful)\\s+(?:day|evening|night|weekend)|" +
             "wish\\s+you\\s+(?:all\\s+)?the\\s+best|take\\s+care|" +
             "goodbye|(?:good\\s*)?bye(?:\\s+bye)?|" +
             "adiós|au\\s+revoir|auf\\s+wieder(?:sehen|hören)|tschüss|tchau|arrivederci|до\\s+свидания|" +
-            "さようなら|失礼いたします|안녕히\\s*(?:계세요|가세요)|अलविदा|مع\\s+السلامة|خداحافظ|sampai\\s+jumpa|hoşça\\s+kalın|tạm\\s+biệt|ลาก่อน|tot\\s+ziens|do\\s+widzenia",
+            "さようなら|(?:このあたりで|ここで|これで|それでは|では)?(?:お先に)?失礼いたします|(?:このあたりで|ここで|これで)失礼します|안녕히\\s*(?:계세요|가세요)|अलविदा|مع\\s+السلامة|خداحافظ|sampai\\s+jumpa|hoşça\\s+kalın|tạm\\s+biệt|ลาก่อน|tot\\s+ziens|do\\s+widzenia",
         RegexOption.IGNORE_CASE,
     )
 
-    private fun hasDisqualifyingQuoteOrQuestion(text: String): Boolean =
-        text.any { it in alwaysQuoteOrQuestion } || boundaryQuote.containsMatchIn(text)
-
-    private fun matchesClosing(clause: String): Boolean {
-        val compact = clause.replace(" ", "")
-        return zhClosing.matches(compact) || multiClosing.matches(clause)
-    }
-
-    private fun matchesBefore(clause: String): Boolean {
-        val compact = clause.replace(" ", "")
-        return zhBefore.matches(compact) || multiBefore.matches(clause)
-    }
-
-    private fun matchesAfter(clause: String): Boolean {
-        val compact = clause.replace(" ", "")
-        return zhAfter.matches(compact) || multiAfter.matches(clause)
-    }
-
     /** A natural closing sentence, never a lone acknowledgement, a question or quoted words. */
-    fun isAssistantClosing(text: String): Boolean {
-        if (isExplicitCallerFarewell(text)) return true
-        if (text.length !in 1..220 || hasDisqualifyingQuoteOrQuestion(text)) return false
-        if (negationOrHold.containsMatchIn(text) || reportedSpeech.containsMatchIn(text)) return false
-        val clauses = text.split(splitClause).map { it.replace(spaces, " ").trim().lowercase() }.filter(String::isNotEmpty)
-        val ending = clauses.lastOrNull() ?: return false
-        return settledEnding.matches(ending) || matchesClosing(ending)
+    fun isAssistantClosing(text: String): Boolean = zhAssistantClosing(text) || multiAssistantClosing(text)
+
+    fun isExplicitCallerFarewell(text: String): Boolean = zhCallerFarewell(text) || multiCallerFarewell(text)
+
+    private fun zhAssistantClosing(text: String): Boolean {
+        if (zhCallerFarewell(text)) return true
+        if (text.length !in 1..180 || text.any { it in zhQuoteOrQuestion }) return false
+        val normalized = text.replace(spaces, "")
+        if (zhReportedSpeech.containsMatchIn(normalized)) return false
+        val ending = normalized.split(zhSplitClause).lastOrNull(String::isNotEmpty) ?: return false
+        return zhSettledEnding.matches(ending)
     }
 
-    fun isExplicitCallerFarewell(text: String): Boolean {
-        if (text.length !in 1..140 || hasDisqualifyingQuoteOrQuestion(text)) return false
-        if (negationOrHold.containsMatchIn(text) || reportedSpeech.containsMatchIn(text)) return false
-        val clauses = text.split(splitClause).map { it.replace(spaces, " ").trim().lowercase() }.filter(String::isNotEmpty)
+    private fun zhCallerFarewell(text: String): Boolean {
+        if (text.length !in 1..100 || text.any { it in zhQuoteOrQuestion }) return false
+        val clauses = text.split(zhSplitClause).map { it.replace(spaces, "") }.filter(String::isNotEmpty)
         if (clauses.size !in 1..8) return false
 
         var foundClosing = false
         for (clause in clauses) {
             when {
-                matchesClosing(clause) -> foundClosing = true
-                !foundClosing && matchesBefore(clause) -> Unit
-                foundClosing && matchesAfter(clause) -> Unit
+                zhClosing.matches(clause) -> foundClosing = true
+                !foundClosing && zhBefore.matches(clause) -> Unit
+                foundClosing && zhAfter.matches(clause) -> Unit
+                else -> return false
+            }
+        }
+        return foundClosing
+    }
+
+    private fun hasDisqualifyingQuoteOrQuestion(text: String): Boolean =
+        text.any { it in alwaysQuoteOrQuestion } || boundaryQuote.containsMatchIn(text)
+
+    private fun multiClauses(text: String): List<String> =
+        text.split(multiSplitClause).map { it.replace(spaces, " ").trim().lowercase() }.filter(String::isNotEmpty)
+
+    private fun multiAssistantClosing(text: String): Boolean {
+        if (multiCallerFarewell(text)) return true
+        if (text.length !in 1..220 || hasDisqualifyingQuoteOrQuestion(text)) return false
+        if (negationOrHold.containsMatchIn(text) || reportedSpeech.containsMatchIn(text)) return false
+        val ending = multiClauses(text).lastOrNull() ?: return false
+        return settledEnding.matches(ending) || multiClosing.matches(ending)
+    }
+
+    private fun multiCallerFarewell(text: String): Boolean {
+        if (text.length !in 1..140 || hasDisqualifyingQuoteOrQuestion(text)) return false
+        if (negationOrHold.containsMatchIn(text) || reportedSpeech.containsMatchIn(text)) return false
+        val clauses = multiClauses(text)
+        if (clauses.size !in 1..8) return false
+
+        var foundClosing = false
+        for (clause in clauses) {
+            when {
+                multiClosing.matches(clause) -> foundClosing = true
+                !foundClosing && multiBefore.matches(clause) -> Unit
+                foundClosing && multiAfter.matches(clause) -> Unit
                 else -> return false
             }
         }
