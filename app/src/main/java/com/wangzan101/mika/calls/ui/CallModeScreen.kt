@@ -30,6 +30,7 @@ import com.wangzan101.mika.ui.components.GroupCard
 import com.wangzan101.mika.ui.components.GroupLabel
 import com.wangzan101.mika.ui.components.ListRow
 import com.wangzan101.mika.ui.components.MikaSwitch
+import com.wangzan101.mika.ui.components.PageIntro
 import com.wangzan101.mika.ui.components.PillTone
 import com.wangzan101.mika.ui.components.RadioRow
 import com.wangzan101.mika.ui.components.RowChevron
@@ -107,7 +108,7 @@ fun CallModeScreen(onBack: () -> Unit, onOpenStt: () -> Unit, onOpenTts: () -> U
     val engine = s.resolvedEngine
     val c = MikaTheme.colors
     Page(stringResource(R.string.voice_hub_call_mode), onBack) {
-        Text(stringResource(R.string.call_mode_lead), Modifier.padding(top = 4.dp, bottom = 12.dp), style = MikaType.Body, color = c.ink2)
+        PageIntro(stringResource(R.string.call_mode_lead))
         GroupCard {
             RadioRow(
                 stringResource(R.string.call_mode_standard), engine == CallEngine.Standard,
@@ -174,7 +175,7 @@ fun CallModeScreen(onBack: () -> Unit, onOpenStt: () -> Unit, onOpenTts: () -> U
             }
         } else {
             GroupLabel(stringResource(R.string.call_mode_realtime_model))
-            GroupCard {
+            GroupCard(note = stringResource(R.string.call_mode_realtime_note)) {
                 val name = snapshot.nameOf(s.realtime)
                 ListRow(MikaIcons.Handset, stringResource(R.string.call_mode_realtime_model), name ?: stringResource(R.string.voice_hub_none),
                     first = true, onClick = onOpenRealtime, modifier = Modifier.testTag("call-mode-realtime-model")) {
@@ -182,7 +183,6 @@ fun CallModeScreen(onBack: () -> Unit, onOpenStt: () -> Unit, onOpenTts: () -> U
                     RowChevron()
                 }
             }
-            FooterNote(stringResource(R.string.call_mode_realtime_note), Modifier.padding(top = 6.dp))
         }
         IdleHangup(s.idleMinutes) { catalog.setCallStyle(idleMinutes = it) }
     }
@@ -211,7 +211,7 @@ private fun IdleHangup(minutes: Int, onChange: (Int) -> Unit) {
     val choice = idleChoiceOf(minutes)
     var editing by rememberSaveable { mutableStateOf(false) }
     GroupLabel(stringResource(R.string.call_mode_idle))
-    GroupCard {
+    GroupCard(note = stringResource(R.string.call_mode_idle_note)) {
         VoiceSelections.IDLE_PRESETS.forEachIndexed { i, preset ->
             RadioRow(
                 stringResource(R.string.call_mode_idle_minutes, preset), choice == IdleChoice.Preset(preset),
@@ -229,7 +229,6 @@ private fun IdleHangup(minutes: Int, onChange: (Int) -> Unit) {
             onClick = { onChange(VoiceSelections.NEVER_IDLE) }, modifier = Modifier.testTag("call-idle-never"),
         )
     }
-    FooterNote(stringResource(R.string.call_mode_idle_note), Modifier.padding(top = 6.dp))
     if (editing) {
         CustomIdleDialog(
             initial = (choice as? IdleChoice.Custom)?.minutes ?: (choice as? IdleChoice.Preset)?.minutes ?: VoiceSelections.DEFAULT_IDLE_MINUTES,

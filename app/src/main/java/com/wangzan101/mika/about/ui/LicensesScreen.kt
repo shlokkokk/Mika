@@ -111,7 +111,7 @@ fun LicensesScreen(onBack: () -> Unit) {
             }
         }
         GroupLabel(stringResource(R.string.licenses_third_party, thirdParty.size))
-        GroupCard {
+        GroupCard(note = stringResource(R.string.licenses_footer)) {
             thirdParty.forEachIndexed { i, e ->
                 Column {
                     ListRow(null, e.name, e.license, first = i == 0)
@@ -119,7 +119,6 @@ fun LicensesScreen(onBack: () -> Unit) {
                 }
             }
         }
-        FooterNote(stringResource(R.string.licenses_footer))
     }
 }
 

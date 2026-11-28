@@ -54,7 +54,7 @@ internal fun CallVoiceProfilesScreen(runtime: CallRuntime, onBack: () -> Unit) {
     }
 
     PageScaffold(stringResource(R.string.calls_voice_service), onBack, Modifier.testTag("call-voice-profiles")) {
-        FooterNote(stringResource(R.string.calls_voice_profiles_intro))
+        PageIntro(stringResource(R.string.calls_voice_profiles_intro))
         feedback?.let { CallFeedback(it) }
         profiles.forEach { profile ->
             val selected = profile.id == config.activeVoiceProfileId

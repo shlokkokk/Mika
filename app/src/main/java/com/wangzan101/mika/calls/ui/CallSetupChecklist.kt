@@ -28,6 +28,7 @@ import com.wangzan101.mika.ui.components.IconTile
 import com.wangzan101.mika.ui.components.ListRow
 import com.wangzan101.mika.ui.components.MikaButton
 import com.wangzan101.mika.ui.components.MikaCard
+import com.wangzan101.mika.ui.components.PageIntro
 import com.wangzan101.mika.ui.components.TileTone
 import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaShapes
@@ -117,9 +118,8 @@ internal fun CallChecklistPage(
 ) {
     val checks = device.readiness
     Page(stringResource(R.string.calls_checklist_title), onBack) {
-        Text(stringResource(R.string.calls_checklist_lead), Modifier.padding(top = 4.dp, bottom = 12.dp),
-            style = MikaType.Body, color = MikaTheme.colors.ink2)
-        GroupCard(Modifier.testTag("call-checklist")) {
+        PageIntro(stringResource(R.string.calls_checklist_lead))
+        GroupCard(Modifier.testTag("call-checklist"), note = stringResource(R.string.calls_checklist_note)) {
             CallSetupStep.entries.forEachIndexed { index, step ->
                 val todo = step in missing
                 val subtitle = when (step) {
@@ -163,10 +163,13 @@ internal fun CallChecklistPage(
                 }
             }
         }
-        FooterNote(stringResource(R.string.calls_checklist_note), Modifier.padding(top = 6.dp))
         if (config.enabled) {
             GroupLabel(stringResource(R.string.calls_background_settings))
-            GroupCard {
+            val bgNote = listOfNotNull(
+                state.backgroundStandbyBlockedReason?.takeIf { !state.backgroundStandbyStarting },
+                stringResource(R.string.calls_background_lock_screen_note),
+            ).joinToString("\n")
+            GroupCard(note = bgNote) {
                 if (config.autoAnswer) CallBackgroundStandbyRow(config, state, canStartStandby, onStartStandby)
                 CallBatterySettingsRow(device, canConfigure)
                 if (checks.callNotificationsAllowed) ListRow(
@@ -174,8 +177,6 @@ internal fun CallChecklistPage(
                     onClick = device.callChannelAction.takeIf { canConfigure },
                 )
             }
-            if (!state.backgroundStandbyStarting) state.backgroundStandbyBlockedReason?.let { FooterNote(it) }
-            FooterNote(stringResource(R.string.calls_background_lock_screen_note))
         }
     }
 }

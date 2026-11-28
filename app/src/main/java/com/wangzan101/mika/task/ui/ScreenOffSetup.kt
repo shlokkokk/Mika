@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.window.DialogProperties
@@ -40,6 +41,7 @@ import com.wangzan101.mika.ui.components.RowChevron
 import com.wangzan101.mika.ui.components.RowValue
 import com.wangzan101.mika.ui.components.ValueTone
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaTheme
 
 /**
  * 「熄屏时运行」:列出计划熄屏、锁屏时按时跑要的三项(精确闹钟、电池策略、锁屏解锁),哪项没好点哪项去处理。
@@ -66,7 +68,10 @@ internal fun ScreenOffSetupCard(settings: DeviceAccessSettings, showAlarm: Boole
     val appDetails = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null))
 
     GroupLabel(tr(R.string.plans_screen_off_title))
-    GroupCard {
+    GroupCard(
+        note = tr(if (openFailed) R.string.plans_screen_off_open_failed else R.string.plans_screen_off_foot),
+        noteColor = if (openFailed) MikaTheme.colors.bad else Color.Unspecified,
+    ) {
         if (showAlarm) {
             ListRow(
                 MikaIcons.Alarm, tr(R.string.plans_screen_off_alarm), first = true,
@@ -115,7 +120,6 @@ internal fun ScreenOffSetupCard(settings: DeviceAccessSettings, showAlarm: Boole
             RowChevron()
         }
     }
-    FooterNote(tr(if (openFailed) R.string.plans_screen_off_open_failed else R.string.plans_screen_off_foot))
 
     if (configuring) ScreenOffUnlockDialog(settings, onDismiss = { configuring = false })
 }

@@ -60,7 +60,7 @@ internal fun CallInstructionsScreen(runtime: CallRuntime, onBack: () -> Unit) {
 
     PageScaffold(stringResource(R.string.call_instructions_title), onBack,
         Modifier.testTag("call-instructions").imePadding()) {
-        FooterNote(stringResource(R.string.call_instructions_intro))
+        PageIntro(stringResource(R.string.call_instructions_intro))
         MikaButton(stringResource(R.string.call_instructions_add), {
             draft = CallInstruction("", "", "", "")
         }, Modifier.fillMaxWidth().testTag("call-instruction-add"))

@@ -77,7 +77,7 @@ fun DeviceAccessSection(settings: DeviceAccessSettings, localTasks: Boolean = fa
     fun closeEditor() { value = ""; repeat = ""; editing = false }
 
     GroupLabel(stringResource(if (localTasks) R.string.device_local_group else R.string.device_access_group))
-    GroupCard {
+    GroupCard(note = stringResource(if (localTasks) R.string.device_local_foot else R.string.device_access_foot)) {
         ListRow(
             if (localTasks) MikaIcons.Phone else MikaIcons.Desktop,
             stringResource(if (localTasks) R.string.device_local_title else R.string.device_access_title),
@@ -114,9 +114,8 @@ fun DeviceAccessSection(settings: DeviceAccessSettings, localTasks: Boolean = fa
             MikaButton(stringResource(R.string.device_access_clear), { change({ settings.clearCredential() }) }, kind = ButtonKind.Tonal, size = ButtonSize.Small, enabled = !busy)
         }
     }
-    FooterNote(stringResource(if (localTasks) R.string.device_local_foot else R.string.device_access_foot))
     if (editing) {
-        GroupCard {
+        GroupCard(note = stringResource(if (kind == CredentialKind.Pin) R.string.device_access_pin_hint else R.string.device_access_password_hint)) {
             RadioRow(stringResource(R.string.device_access_pin), kind == CredentialKind.Pin, first = true,
                 onClick = { kind = CredentialKind.Pin; value = ""; repeat = "" }, enabled = !busy)
             RadioRow(stringResource(R.string.device_access_password), kind == CredentialKind.Password,
@@ -137,7 +136,6 @@ fun DeviceAccessSection(settings: DeviceAccessSettings, localTasks: Boolean = fa
                 MikaButton(stringResource(R.string.cancel), ::closeEditor, kind = ButtonKind.Tonal, size = ButtonSize.Small, enabled = !busy)
             }
         }
-        FooterNote(stringResource(if (kind == CredentialKind.Pin) R.string.device_access_pin_hint else R.string.device_access_password_hint))
     }
     if (failed) FooterNote(stringResource(R.string.device_access_save_failed))
 }

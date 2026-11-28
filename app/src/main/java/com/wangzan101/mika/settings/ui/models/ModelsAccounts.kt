@@ -25,7 +25,7 @@ internal fun ChatGptConnection(ui: ModelSetupUi, state: ListState?, actions: Pro
     val c = MikaTheme.colors
     val account = ui.chatGptAccount
     val signedIn = account?.signedIn == true
-    GroupCard {
+    GroupCard(note = if (signedIn) ModelsCopy.CHATGPT_PLAN_NOTE else ModelsCopy.CHATGPT_SIGNED_OUT_NOTE) {
         ListRow(null, ModelsCopy.STATUS, first = true) {
             when {
                 !signedIn -> RowValue(ModelsCopy.CHATGPT_SIGNED_OUT, ValueTone.Warn)
@@ -45,7 +45,6 @@ internal fun ChatGptConnection(ui: ModelSetupUi, state: ListState?, actions: Pro
             )
         }
     }
-    FooterNote(if (signedIn) ModelsCopy.CHATGPT_PLAN_NOTE else ModelsCopy.CHATGPT_SIGNED_OUT_NOTE)
     if (ui.chatGptRevokeUnconfirmed) FooterNote(ModelsCopy.CHATGPT_REVOKE_UNCONFIRMED, color = c.warn)
     (ui.chatGptSignIn as? ListState.Failed)?.let { FooterNote(it.message, color = c.bad) }
 }
@@ -72,7 +71,7 @@ internal fun AccountConnection(ui: ModelSetupUi, p: Provider, state: ListState?,
             }
         }
     }
-    GroupCard {
+    GroupCard(note = ModelsCopy.accountNote(kind, signedIn)) {
         // 主模型已经在这家就不放这一行
         val isMain = ui.configFor(ModelRole.Main)?.providerId == p.id
         if (signedIn && !isMain && ui.options(p).isNotEmpty()) {
@@ -90,7 +89,6 @@ internal fun AccountConnection(ui: ModelSetupUi, p: Provider, state: ListState?,
             ListRow(null, if (waiting) ModelsCopy.SIGN_IN_RUNNING else ModelsCopy.signInStart(kind), titleColor = c.accent, onClick = actions.signIn)
         }
     }
-    FooterNote(ModelsCopy.accountNote(kind, signedIn))
     (ui.manualPick[p.id] as? ListState.Failed)?.let { FooterNote(it.message, Modifier.testTag("set-main-failed"), color = c.bad) }
     if (signedIn && kind == SignInKind.Xai) FooterNote(ModelsCopy.XAI_403_NOTE, Modifier.testTag("account-403-note"), color = c.warn)
     failure?.let { FooterNote(it, color = c.bad) }

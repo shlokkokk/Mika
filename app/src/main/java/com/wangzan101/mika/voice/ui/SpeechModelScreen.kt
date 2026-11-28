@@ -39,6 +39,7 @@ import com.wangzan101.mika.ui.components.CapabilityTag
 import com.wangzan101.mika.ui.components.FooterNote
 import com.wangzan101.mika.ui.components.GroupCard
 import com.wangzan101.mika.ui.components.GroupLabel
+import com.wangzan101.mika.ui.components.PageIntro
 import com.wangzan101.mika.ui.components.PillTone
 import com.wangzan101.mika.ui.components.RadioRow
 import com.wangzan101.mika.ui.components.StatusPill
@@ -242,9 +243,7 @@ private fun MigratedSpeechModelContent(
         (selection == SttSelection.Model(SttSelectionController.SYSTEM_STT_REF) || selection == SttSelection.Auto)
     val c = MikaTheme.colors
     Page(tr(R.string.voice_hub_stt), onBack) {
-        Text(
-            tr(R.string.speech_hint), Modifier.padding(top = 4.dp, bottom = 12.dp), style = MikaType.Body, color = c.ink2,
-        )
+        PageIntro(tr(R.string.speech_hint))
         GroupCard {
             RadioRow(
                 tr(R.string.speech_system), selected = systemSelected, enabled = system.available,
@@ -308,9 +307,7 @@ fun SpeechModelContent(
     // 记成不响应时不标选中;行仍可点,重新选它就清掉记号再试
     val systemSelected = system.usable && (choice == SpeechChoice.System || choice == SpeechChoice.Auto)
     Page(tr(R.string.role_speech), onBack) {
-        Text(
-            tr(R.string.speech_hint), Modifier.padding(top = 4.dp, bottom = 12.dp), style = MikaType.Body, color = c.ink2,
-        )
+        PageIntro(tr(R.string.speech_hint))
         GroupCard {
             RadioRow(
                 tr(R.string.speech_system), selected = systemSelected, enabled = system.available,
@@ -369,7 +366,7 @@ fun SpeechModelContent(
                 testing && rows.isNotEmpty() -> FooterNote(ModelSetupCopy.TESTING, Modifier.testTag("speech-pick-running"))
             }
         }
-        FooterNote(tr(R.string.speech_footer), Modifier.padding(top = 8.dp))
+        FooterNote(tr(R.string.speech_footer))
     }
 }
 
@@ -422,7 +419,7 @@ fun DoubaoSetupPage(choice: SpeechChoice, configured: Boolean, actions: SpeechPi
     val credentials = DoubaoCredentials(if (legacy) "" else key.trim(), if (legacy) appId.trim() else "", if (legacy) token.trim() else "")
     val unchanged = key.isBlank() && appId.isBlank() && token.isBlank()
     Page(tr(R.string.speech_doubao_model), onBack) {
-        Text(tr(R.string.speech_doubao_setup_hint), Modifier.padding(top = 4.dp, bottom = 4.dp), style = MikaType.Body, color = c.ink2)
+        PageIntro(tr(R.string.speech_doubao_setup_hint))
         GroupLabel(tr(R.string.speech_doubao_credentials))
         SegmentedControl(
             listOf(tr(R.string.speech_doubao_new), tr(R.string.speech_doubao_legacy)), if (legacy) 1 else 0,
@@ -438,7 +435,7 @@ fun DoubaoSetupPage(choice: SpeechChoice, configured: Boolean, actions: SpeechPi
             }
         }
         GroupLabel(tr(R.string.speech_doubao_plan))
-        GroupCard {
+        GroupCard(note = tr(R.string.speech_doubao_privacy)) {
             RadioRow(
                 tr(R.string.speech_doubao_duration), selected = resource == DoubaoProtocol.DURATION, first = true,
                 onClick = { resource = DoubaoProtocol.DURATION }, note = tr(R.string.speech_doubao_duration_note),
@@ -448,7 +445,6 @@ fun DoubaoSetupPage(choice: SpeechChoice, configured: Boolean, actions: SpeechPi
                 onClick = { resource = DoubaoProtocol.CONCURRENT }, note = tr(R.string.speech_doubao_concurrent_note),
             )
         }
-        FooterNote(tr(R.string.speech_doubao_privacy), Modifier.padding(top = 8.dp))
         MikaButton(
             tr(R.string.speech_doubao_save),
             onClick = {

@@ -118,7 +118,7 @@ internal fun KeyPoolSection(
             )
         }
     }
-    GroupCard {
+    GroupCard(note = KeyPoolCopy.footerNote(keys.size)) {
         if (keys.isEmpty()) {
             ListRow(
                 null, stringResource(R.string.model_key_not_configured),
@@ -155,7 +155,6 @@ internal fun KeyPoolSection(
             onClick = onAdd,
         ) { RowChevron() }
     }
-    KeyPoolCopy.footerNote(keys.size)?.let { FooterNote(it) }
 }
 
 /**
@@ -239,7 +238,7 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
             GroupLabel(ModelsCopy.MODELS, Modifier.weight(1f))
             BarIconButton(MikaIcons.Refresh, ModelsCopy.REFRESH, actions.refresh, enabled = state != ListState.Running)
         }
-        GroupCard {
+        GroupCard(note = if (list.isNotEmpty()) ModelsCopy.MODELS_NOTE else null) {
             list.take(MODEL_PREVIEW).forEachIndexed { i, o ->
                 ModelListRow(o, ui.rolesOf(p.id, o.id), first = i == 0) { using = o.id }
             }
@@ -248,7 +247,6 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
             }
             ManualModel(p, state = null, first = list.isEmpty()) { using = it }
         }
-        if (list.isNotEmpty()) FooterNote(ModelsCopy.MODELS_NOTE)
         // 跳过测试直接存下的:说清它还没测过,别说成「这家不提供模型列表」——那个说法对它不成立
         val untested = ui.untested(p)
         val unverified = ui.unverified(p)

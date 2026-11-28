@@ -36,6 +36,7 @@ import com.wangzan101.mika.ui.components.GroupCard
 import com.wangzan101.mika.ui.components.GroupLabel
 import com.wangzan101.mika.ui.components.ListRow
 import com.wangzan101.mika.ui.components.MikaButton
+import com.wangzan101.mika.ui.components.PageIntro
 import com.wangzan101.mika.ui.components.PillTone
 import com.wangzan101.mika.ui.components.RadioRow
 import com.wangzan101.mika.ui.components.RowChevron
@@ -381,12 +382,11 @@ internal fun VoiceHubSection(
             RowChevron()
         }
     }
-    GroupCard(Modifier.padding(top = 8.dp)) {
+    GroupCard(Modifier.padding(top = 8.dp), note = stringResource(R.string.voice_hub_footer)) {
         ListRow(MikaIcons.Key, stringResource(R.string.voice_hub_services),
             stringResource(R.string.voice_hub_services_sub, voiceServiceCount(snapshot, providers)),
             first = true, onClick = onServices, modifier = Modifier.testTag("voice-hub-services")) { RowChevron() }
     }
-    FooterNote(stringResource(R.string.voice_hub_footer), Modifier.padding(top = 6.dp))
 }
 
 /**
@@ -406,7 +406,7 @@ fun RealtimeVoiceScreen(store: ProviderStore, onBack: () -> Unit, onOpenCalls: (
     var voicesOpen by rememberSaveable { mutableStateOf(false) }
     val c = MikaTheme.colors
     Page(stringResource(R.string.voice_hub_realtime), onBack) {
-        Text(stringResource(R.string.realtime_lead), Modifier.padding(top = 4.dp, bottom = 12.dp), style = MikaType.Body, color = c.ink2)
+        PageIntro(stringResource(R.string.realtime_lead))
         if (selected == null) {
             GroupCard {
                 ListRow(null, stringResource(R.string.realtime_empty), subtitle = stringResource(R.string.realtime_empty_note), first = true)
@@ -454,6 +454,6 @@ fun RealtimeVoiceScreen(store: ProviderStore, onBack: () -> Unit, onOpenCalls: (
             ) { RowChevron() }
         }
         VoiceMoreServices(onOpenServices)
-        FooterNote(stringResource(R.string.realtime_footer), Modifier.padding(top = 8.dp))
+        FooterNote(stringResource(R.string.realtime_footer))
     }
 }

@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -30,6 +31,7 @@ import com.wangzan101.mika.ui.components.GroupCard
 import com.wangzan101.mika.ui.components.GroupLabel
 import com.wangzan101.mika.ui.components.InputRow
 import com.wangzan101.mika.ui.components.MikaButton
+import com.wangzan101.mika.ui.components.PageIntro
 import com.wangzan101.mika.ui.components.PillTone
 import com.wangzan101.mika.ui.components.RadioRow
 import com.wangzan101.mika.ui.components.RowChevron
@@ -206,7 +208,7 @@ private fun LocalFunAsr(savedUrl: String?, savedLanguage: AsrLanguage, probe: Li
     var address by remember { mutableStateOf(savedUrl.orEmpty()) }
     var language by remember { mutableStateOf(savedLanguage) }
     val url = FunAsrProtocol.normalize(address)
-    Text(tr(R.string.speech_funasr_setup_hint), Modifier.padding(top = 4.dp, bottom = 4.dp), style = MikaType.Body, color = c.ink2)
+    PageIntro(tr(R.string.speech_funasr_setup_hint))
     // 两种模型各怎么部署写在仓库文档里;没有能打开网页的应用时 openUri 会抛错,这时什么都不做
     val context = androidx.compose.ui.platform.LocalContext.current
     Text(
@@ -216,14 +218,20 @@ private fun LocalFunAsr(savedUrl: String?, savedLanguage: AsrLanguage, probe: Li
         style = MikaType.Body, color = c.accent,
     )
     GroupLabel(tr(R.string.speech_funasr_server))
-    GroupCard {
+    val serverNote = when {
+        address.isNotBlank() && url == null -> tr(R.string.speech_funasr_invalid)
+        url != null && url != address.trim() -> url
+        else -> null
+    }
+    GroupCard(
+        note = serverNote,
+        noteColor = if (address.isNotBlank() && url == null) c.bad else Color.Unspecified,
+    ) {
         InputRow(
             tr(R.string.speech_funasr_address), address, { address = it }, tr(R.string.speech_funasr_enter_address),
             first = true, keyboard = KeyboardType.Uri, labelWidth = 84.dp, modifier = Modifier.testTag("speech-funasr-address"),
         )
     }
-    if (address.isNotBlank() && url == null) FooterNote(tr(R.string.speech_funasr_invalid), Modifier.padding(top = 8.dp), color = c.bad)
-    else if (url != null && url != address.trim()) FooterNote(url, Modifier.padding(top = 8.dp))
     LanguagePicker(language) { language = it }
     FooterNote(tr(R.string.speech_funasr_privacy), Modifier.padding(top = 8.dp))
     MikaButton(
@@ -247,9 +255,14 @@ private fun BailianFunAsr(
     var language by remember { mutableStateOf(savedLanguage) }
     val workspace = BailianProtocol.workspace(workspaceText)
     val modelOk = BailianProtocol.validModel(model)
-    Text(tr(R.string.speech_bailian_setup_hint), Modifier.padding(top = 4.dp, bottom = 4.dp), style = MikaType.Body, color = c.ink2)
+    PageIntro(tr(R.string.speech_bailian_setup_hint))
     GroupLabel(tr(R.string.speech_doubao_credentials))
-    GroupCard {
+    val bailianNote = when {
+        workspace == null -> tr(R.string.speech_bailian_workspace_invalid)
+        workspace.isEmpty() -> tr(R.string.speech_bailian_workspace_note)
+        else -> region.endpoint(workspace).removeSuffix("/api-ws/v1/inference")
+    }
+    GroupCard(note = bailianNote, noteColor = if (workspace == null) c.bad else Color.Unspecified) {
         InputRow(
             "API Key", key, { key = it },
             tr(if (configured) R.string.speech_bailian_keep_key else R.string.speech_bailian_enter_key),
@@ -258,13 +271,6 @@ private fun BailianFunAsr(
         InputRow(
             tr(R.string.speech_bailian_workspace), workspaceText, { workspaceText = it }, tr(R.string.speech_bailian_workspace_hint),
             labelWidth = 116.dp, modifier = Modifier.testTag("speech-bailian-workspace"),
-        )
-    }
-    when {
-        workspace == null -> FooterNote(tr(R.string.speech_bailian_workspace_invalid), Modifier.padding(top = 8.dp), color = c.bad)
-        else -> FooterNote(
-            if (workspace.isEmpty()) tr(R.string.speech_bailian_workspace_note) else region.endpoint(workspace).removeSuffix("/api-ws/v1/inference"),
-            Modifier.padding(top = 8.dp),
         )
     }
     GroupLabel(tr(R.string.speech_bailian_model_label))

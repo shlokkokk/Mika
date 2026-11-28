@@ -51,7 +51,7 @@ fun WebSitesSection(state: WebSitesState, labeled: Boolean = true) {
     var notice by remember { mutableStateOf<String?>(null) }
 
     if (labeled) GroupLabel(tr(R.string.settings_web_logins))
-    GroupCard {
+    GroupCard(note = WEB_DATA_NOTE) {
         if (state.sites.isEmpty()) {
             ListRow(MikaIcons.Globe, tr(R.string.web_none), subtitle = tr(R.string.web_none_sub), first = true)
         }
@@ -73,7 +73,6 @@ fun WebSitesSection(state: WebSitesState, labeled: Boolean = true) {
             onClick = { confirmAll = true },
         )
     }
-    FooterNote(WEB_DATA_NOTE)
 
     picked?.let { s ->
         MikaDialog(

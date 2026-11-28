@@ -53,6 +53,7 @@ import com.wangzan101.mika.ui.components.GroupCard
 import com.wangzan101.mika.ui.components.GroupLabel
 import com.wangzan101.mika.ui.components.ListRow
 import com.wangzan101.mika.ui.components.MikaButton
+import com.wangzan101.mika.ui.components.PageIntro
 import com.wangzan101.mika.ui.components.PageScaffold
 import com.wangzan101.mika.ui.components.RowValue
 import com.wangzan101.mika.ui.components.TileTone
@@ -251,7 +252,7 @@ fun SelfCheckContent(
 ) {
     val running = state.phase == SelfCheckState.Phase.Running
     PageScaffold(stringResource(R.string.selfcheck_title), onBack) {
-        FooterNote(stringResource(R.string.selfcheck_intro))
+        PageIntro(stringResource(R.string.selfcheck_intro))
         if (running) {
             MikaButton(stringResource(R.string.selfcheck_cancel), onCancel, Modifier.fillMaxWidth().testTag("selfcheck-cancel"), kind = ButtonKind.Tonal)
         } else {

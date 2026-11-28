@@ -23,6 +23,7 @@ import com.wangzan101.mika.ui.components.GroupCard
 import com.wangzan101.mika.ui.components.GroupLabel
 import com.wangzan101.mika.ui.components.InputRow
 import com.wangzan101.mika.ui.components.ListRow
+import com.wangzan101.mika.ui.components.PageIntro
 import com.wangzan101.mika.ui.components.RadioRow
 import com.wangzan101.mika.ui.components.SearchField
 import com.wangzan101.mika.ui.components.TileTone
@@ -68,7 +69,7 @@ fun RolePickerContent(ui: ModelSetupUi, role: ModelRole, actions: RolePickerActi
     Page(titleOverride ?: ModelsCopy.roleName(role), onBack) {
         val hint = hintOverride ?: ModelsCopy.roleHint(role)
         if (hint.isNotEmpty()) {
-            Text(hint, Modifier.padding(top = 4.dp, bottom = 12.dp), style = MikaType.Body, color = c.ink2)
+            PageIntro(hint)
         }
         if (ui.groups.isNotEmpty()) {
             GroupLabel(ModelsCopy.GROUPS)
@@ -114,10 +115,9 @@ fun RolePickerContent(ui: ModelSetupUi, role: ModelRole, actions: RolePickerActi
             listing = ui.listing,
         )
         if (providers.isEmpty()) FooterNote(ModelsCopy.ROLE_EMPTY)
-        GroupCard(Modifier.padding(top = 8.dp)) {
+        GroupCard(Modifier.padding(top = 8.dp), note = ModelsCopy.PICKER_NOTE) {
             ListRow(MikaIcons.Plus, ModelsCopy.ADD_PROVIDER, first = true, titleColor = c.accent, tone = TileTone.Accent, onClick = actions.addProvider)
         }
-        FooterNote(ModelsCopy.PICKER_NOTE)
     }
 }
 

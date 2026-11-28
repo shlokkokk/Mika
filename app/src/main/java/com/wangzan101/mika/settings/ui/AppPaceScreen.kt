@@ -54,7 +54,7 @@ fun AppPaceScreen(global: OperatingPace, flags: FeatureFlags, onBack: () -> Unit
     }
 
     PageScaffold(stringResource(R.string.settings_pace_per_app), onBack) {
-        FooterNote(stringResource(R.string.settings_pace_per_app_intro, paceName(global)))
+        PageIntro(stringResource(R.string.settings_pace_per_app_intro, paceName(global)))
         val list = overrides.orEmpty()
         if (list.isEmpty()) {
             FooterNote(stringResource(R.string.settings_pace_per_app_empty))

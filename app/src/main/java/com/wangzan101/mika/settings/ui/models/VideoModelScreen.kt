@@ -126,6 +126,6 @@ fun VideoModelScreen(store: ProviderStore, onBack: () -> Unit) {
             }
         }
 
-        FooterNote(tr(R.string.video_footer), Modifier.padding(top = 10.dp))
+        FooterNote(tr(R.string.video_footer))
     }
 }

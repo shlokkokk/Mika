@@ -264,7 +264,7 @@ fun WechatSettingsScreen(runtime: WechatRuntime, onBack: () -> Unit) {
         actionError?.let { FooterNote(it, color = MikaTheme.colors.bad) }
 
         GroupLabel(stringResource(R.string.wechat_capabilities))
-        GroupCard {
+        GroupCard(note = stringResource(R.string.wechat_footer)) {
             ListRow(null, stringResource(R.string.wechat_capability_text), first = true) {
                 CapabilityTag(stringResource(R.string.wechat_supported))
             }
@@ -278,7 +278,6 @@ fun WechatSettingsScreen(runtime: WechatRuntime, onBack: () -> Unit) {
                 CapabilityTag(stringResource(R.string.wechat_later))
             }
         }
-        FooterNote(stringResource(R.string.wechat_footer))
     }
 
     if (confirmUnbind) {

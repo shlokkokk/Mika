@@ -60,7 +60,7 @@ fun RootSection(
     }
     if (helperRow) {
         GroupLabel(stringResource(R.string.settings_phone_ops))
-        GroupCard {
+        GroupCard(note = PhoneSetupCopy.ROOT_NOTE) {
             val request = state.startGrant != RootGrant.Granted && state.startGrant != RootGrant.Pending
             ListRow(
                 MikaIcons.Refresh, PhoneSetupCopy.ROOT_START, PhoneSetupCopy.rootStartLine(state.startGrant), first = true,
@@ -68,10 +68,9 @@ fun RootSection(
                 onClick = if (request) onRequestStart else null,
             ) { RowValue(PhoneSetupCopy.ROOT_AUTO, if (state.startGrant == RootGrant.Granted) ValueTone.Ok else ValueTone.Plain) }
         }
-        FooterNote(PhoneSetupCopy.ROOT_NOTE)
     }
     GroupLabel(PhoneSetupCopy.ROOT_COMMANDS_GROUP)
-    GroupCard {
+    GroupCard(note = PhoneSetupCopy.ROOT_COMMANDS_NOTE) {
         ListRow(
             MikaIcons.Terminal, PhoneSetupCopy.ROOT_COMMANDS, PhoneSetupCopy.rootCommandsLine(state.commands, state.commandsGrant), first = true,
             tone = if (state.commands) TileTone.Warn else TileTone.Neutral,
@@ -84,7 +83,6 @@ fun RootSection(
             )
         }
     }
-    FooterNote(PhoneSetupCopy.ROOT_COMMANDS_NOTE)
     if (warn) {
         MikaDialog(
             onDismissRequest = { warn = false },

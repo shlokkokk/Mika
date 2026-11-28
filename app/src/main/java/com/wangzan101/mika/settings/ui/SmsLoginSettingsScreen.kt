@@ -59,13 +59,12 @@ fun SmsLoginSettingsScreen(onBack: () -> Unit) {
     }
     fun toggle(on: Boolean) { if (on) disclosure = true else save(false) }
     PageScaffold(stringResource(R.string.sms_login_title), onBack) {
-        GroupCard {
+        GroupCard(note = stringResource(R.string.sms_login_limits)) {
             ListRow(MikaIcons.Shield, stringResource(R.string.sms_login_enable),
                 stringResource(R.string.sms_login_default_off), first = true, onClick = { toggle(!consent.enabled) }) {
                 MikaSwitch(consent.enabled, ::toggle, Modifier.testTag("sms-login-enabled"))
             }
         }
-        FooterNote(stringResource(R.string.sms_login_limits))
         Text(stringResource(R.string.sms_profile_title))
         TextButton({ selected = null; editing = true }) { Text(stringResource(R.string.add)) }
         consent.profiles.forEach { p ->

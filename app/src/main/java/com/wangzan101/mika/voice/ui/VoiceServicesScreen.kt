@@ -43,6 +43,7 @@ import com.wangzan101.mika.ui.components.ButtonKind
 import com.wangzan101.mika.ui.components.ButtonSize
 import com.wangzan101.mika.ui.components.FooterNote
 import com.wangzan101.mika.ui.components.GroupCard
+import com.wangzan101.mika.ui.components.PageIntro
 import com.wangzan101.mika.ui.components.GroupLabel
 import com.wangzan101.mika.ui.components.InputRow
 import com.wangzan101.mika.ui.components.ListRow
@@ -203,7 +204,7 @@ private fun ServiceList(
     }
     val unconnected = VoiceVendors.all.filter { vendor -> own.none { vendor.owns(it.id) } }
     Page(stringResource(R.string.voice_hub_services), onBack) {
-        Text(stringResource(R.string.voice_vendors_lead), Modifier.padding(top = 4.dp, bottom = 12.dp), style = MikaType.Body, color = c.ink2)
+        PageIntro(stringResource(R.string.voice_vendors_lead))
         GroupLabel(stringResource(R.string.voice_vendors_connected))
         GroupCard {
             ListRow(
@@ -240,7 +241,7 @@ private fun ServiceList(
             }
         }
         GroupLabel(stringResource(R.string.voice_add_advanced))
-        GroupCard {
+        GroupCard(note = stringResource(R.string.voice_services_footer)) {
             ListRow(MikaIcons.Key, stringResource(R.string.voice_preset_compat), subtitle = stringResource(R.string.voice_preset_compat_sub), first = true,
                 onClick = { onPreset(PresetKind.Compatible) }, modifier = Modifier.testTag("preset-compat")) { RowChevron() }
             ListRow(MikaIcons.Key, stringResource(R.string.voice_preset_selfhosted), subtitle = stringResource(R.string.voice_preset_selfhosted_sub),
@@ -248,7 +249,6 @@ private fun ServiceList(
             ListRow(null, stringResource(R.string.voice_add_custom),
                 onClick = onOpenCustom, modifier = Modifier.testTag("voice-service-add")) { RowChevron() }
         }
-        FooterNote(stringResource(R.string.voice_services_footer), Modifier.padding(top = 6.dp))
     }
 }
 
@@ -516,14 +516,13 @@ private fun PresetForm(kind: PresetKind, onBack: () -> Unit, onSave: (VoicePrese
     )
     val optional = stringResource(R.string.voice_field_optional)
     Page(title, onBack) {
-        Text(
+        PageIntro(
             stringResource(
                 when (kind) {
                     PresetKind.Compatible -> R.string.voice_compat_lead
                     PresetKind.SelfHosted -> R.string.voice_selfhosted_lead
                 },
             ),
-            Modifier.padding(top = 4.dp, bottom = 12.dp), style = MikaType.Body, color = c.ink2,
         )
         when (kind) {
             PresetKind.Compatible -> {
@@ -545,11 +544,10 @@ private fun PresetForm(kind: PresetKind, onBack: () -> Unit, onSave: (VoicePrese
                     InputRow(voiceLabel, ttsVoice, { ttsVoice = it }, "alloy", modifier = Modifier.testTag("preset-tts-voice"))
                 }
                 GroupLabel(stringResource(R.string.voice_cap_realtime))
-                GroupCard {
+                GroupCard(note = stringResource(R.string.voice_compat_models_note)) {
                     InputRow(modelLabel, rtModel, { rtModel = it }, "gpt-realtime", first = true, modifier = Modifier.testTag("preset-rt-model"))
                     InputRow(voiceLabel, rtVoice, { rtVoice = it }, optional, modifier = Modifier.testTag("preset-rt-voice"))
                 }
-                FooterNote(stringResource(R.string.voice_compat_models_note))
             }
             PresetKind.SelfHosted -> {
                 GroupCard {
@@ -603,7 +601,7 @@ private fun PresetResult(
     val voiceSettings = VoiceSettings.get(LocalContext.current)
     val sample = stringResource(R.string.voice_try_sample)
     Page(stringResource(R.string.voice_result_title), onDone) {
-        Text(stringResource(R.string.voice_result_lead), Modifier.padding(top = 4.dp, bottom = 12.dp), style = MikaType.Body, color = c.ink2)
+        PageIntro(stringResource(R.string.voice_result_lead))
         GroupCard {
             refs.forEachIndexed { index, ref ->
                 val model = snapshot.modelOf(ref) ?: return@forEachIndexed

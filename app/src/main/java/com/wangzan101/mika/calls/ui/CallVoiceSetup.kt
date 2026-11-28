@@ -36,6 +36,7 @@ import com.wangzan101.mika.ui.components.FooterNote
 import com.wangzan101.mika.ui.components.GroupCard
 import com.wangzan101.mika.ui.components.GroupLabel
 import com.wangzan101.mika.ui.components.ListRow
+import com.wangzan101.mika.ui.components.PageIntro
 import com.wangzan101.mika.ui.components.PageScaffold
 import com.wangzan101.mika.ui.components.RadioRow
 import com.wangzan101.mika.ui.components.RowChevron
@@ -108,7 +109,7 @@ internal fun CallVoiceScreen(runtime: CallRuntime, onBack: () -> Unit, onOpenSer
     }
 
     PageScaffold(stringResource(R.string.calls_voice_title), onBack, Modifier.testTag("call-voice")) {
-        Text(stringResource(R.string.calls_voice_phone_lead), Modifier.padding(bottom = 12.dp), style = MikaType.Body, color = MikaTheme.colors.ink2)
+        PageIntro(stringResource(R.string.calls_voice_phone_lead))
         feedback?.let { CallFeedback(it) }
         GroupCard {
             val followBad = s.resolvedEngine == CallEngine.Standard && sharedListen == null
@@ -219,14 +220,16 @@ private fun RealtimeForCalls(
     val binding = model?.realtime
     if (model != null && binding != null) {
         val voice = if (own != null) s.callSpeaker.ifBlank { binding.speaker } else binding.speaker
-        GroupCard(Modifier.padding(top = 8.dp)) {
+        GroupCard(
+            Modifier.padding(top = 8.dp),
+            note = if (own == null) stringResource(R.string.calls_voice_shared_note) else null,
+        ) {
             ListRow(null, stringResource(R.string.voice_voice), first = true, onClick = { setVoicesOpen(true) },
                 modifier = Modifier.testTag("call-voice-speaker")) {
                 RowValue(if (voice.isBlank()) stringResource(R.string.voice_voice_default) else VoiceVoices.label(voice))
                 RowChevron()
             }
         }
-        if (own == null) FooterNote(stringResource(R.string.calls_voice_shared_note))
         if (voicesOpen) {
             VoicePickerSheet(
                 VoiceVoices.withCurrent(VoiceVoices.realtime(binding.protocol), voice),
@@ -269,7 +272,7 @@ internal fun CallAudioScreen(
 ) {
     val c = MikaTheme.colors
     PageScaffold(stringResource(R.string.calls_audio_title), onBack, Modifier.testTag("call-audio")) {
-        Text(stringResource(R.string.calls_audio_lead), Modifier.padding(bottom = 12.dp), style = MikaType.Body, color = c.ink2)
+        PageIntro(stringResource(R.string.calls_audio_lead))
         GroupLabel(stringResource(R.string.calls_audio_route))
         GroupCard {
             CallAudioMode.entries.forEachIndexed { i, mode ->
@@ -283,7 +286,8 @@ internal fun CallAudioScreen(
             }
         }
         GroupLabel(stringResource(R.string.calls_audio_check))
-        GroupCard {
+        val audioNote = listOfNotNull(audioDetail, stringResource(R.string.calls_audio_footer)).joinToString("\n")
+        GroupCard(note = audioNote) {
             Row(
                 Modifier.fillMaxWidth().toggleable(config.audioVerified, enabled = canVerify, role = Role.Checkbox, onValueChange = onVerify)
                     .padding(horizontal = 16.dp, vertical = 8.dp).heightIn(min = 48.dp).testTag("call-audio-verified"),
@@ -296,8 +300,6 @@ internal fun CallAudioScreen(
                 }
             }
         }
-        audioDetail?.let { FooterNote(it) }
-        FooterNote(stringResource(R.string.calls_audio_footer))
     }
 }
 

@@ -177,7 +177,7 @@ internal fun ComputerAccessPage(
             ListRow(MikaIcons.Gear, stringResource(if (advanced) R.string.mcp_advanced_hide else R.string.mcp_advanced), first = true, onClick = { advanced = !advanced })
         }
         if (advanced) {
-            GroupCard {
+            GroupCard(note = stringResource(R.string.mcp_port_detail, ui.port)) {
                 ListRow(MikaIcons.Link, stringResource(R.string.mcp_usb_title),
                     stringResource(if (ui.usbEnabled) R.string.mcp_usb_on else R.string.mcp_usb_off_sub), first = true,
                     onClick = { onUsbEnabled(!ui.usbEnabled) }) {
@@ -193,7 +193,6 @@ internal fun ComputerAccessPage(
                     onClick = { editingPort = true },
                 )
             }
-            FooterNote(stringResource(R.string.mcp_port_detail, ui.port))
             if (editingPort) PortDialog(current = ui.port, onPick = { onPortChange(it); editingPort = false }, onDismiss = { editingPort = false })
             if (ui.networkEnabled || ui.relayEnabled) {
                 GroupLabel(stringResource(R.string.mcp_token))
@@ -300,17 +299,16 @@ private fun NetworkGuide(ui: ComputerAccessUi, mcp: Boolean, onNetworkEnabled: (
     }
     val address = selectedAddress?.takeIf { it in ui.addresses } ?: ui.addresses.firstOrNull()
     GroupLabel(stringResource(if (mcp) R.string.mcp_network_address_step else R.string.mcp_address))
-    GroupCard {
+    GroupCard(note = stringResource(R.string.mcp_address_foot)) {
         if (ui.addresses.isEmpty()) ListRow(MikaIcons.Link, stringResource(R.string.mcp_no_address), first = true)
         ui.addresses.forEachIndexed { i, a ->
             RadioRow(if (mcp) McpRuntime.url(a, ui.port) else "http://$a:${ui.port}",
                 a == address, { selectedAddress = a }, first = i == 0)
         }
     }
-    FooterNote(stringResource(R.string.mcp_address_foot))
     if (!mcp) {
         val command = address?.let { "mika connect --url http://$it:${ui.port} --token-file /path/to/token" }
-        GroupCard {
+        GroupCard(note = stringResource(R.string.mcp_cli_connection_check)) {
             ListRow(MikaIcons.Code, stringResource(R.string.mcp_cli_connect), note = stringResource(R.string.mcp_cli_network_sub), first = true)
             command?.let { CommandText(it) }
             RowActions {
@@ -321,10 +319,9 @@ private fun NetworkGuide(ui: ComputerAccessUi, mcp: Boolean, onNetworkEnabled: (
                     size = ButtonSize.Small, enabled = ui.token != null)
             }
         }
-        FooterNote(stringResource(R.string.mcp_cli_connection_check))
         return
     }
-    GroupCard {
+    GroupCard(note = stringResource(R.string.mcp_network_verify)) {
         ListRow(MikaIcons.Code, stringResource(R.string.mcp_network_config_step), note = stringResource(R.string.mcp_network_config_sub), first = true)
         val canCopy = address != null && ui.token != null && ui.server is McpServerState.Listening
         RowActions {
@@ -340,7 +337,6 @@ private fun NetworkGuide(ui: ComputerAccessUi, mcp: Boolean, onNetworkEnabled: (
             CommandText(config, Modifier.testTag("computer-config-preview"))
         }
     }
-    FooterNote(stringResource(R.string.mcp_network_verify))
 }
 
 @Composable

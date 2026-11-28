@@ -71,6 +71,7 @@ import com.wangzan101.mika.ui.components.GroupLabel
 import com.wangzan101.mika.ui.components.MikaButton
 import com.wangzan101.mika.ui.components.MikaDialog
 import com.wangzan101.mika.ui.components.MikaSwitch
+import com.wangzan101.mika.ui.components.PageIntro
 import com.wangzan101.mika.ui.components.PillTone
 import com.wangzan101.mika.ui.components.SelectChip
 import com.wangzan101.mika.ui.components.StatusPill
@@ -119,7 +120,7 @@ internal fun VoiceCatalogContent(viewModel: VoiceCatalogViewModel, onBack: () ->
     var confirmingRepair by remember { mutableStateOf(false) }
 
     SubPage(stringResource(R.string.voice_catalog_title), onBack) {
-        FooterNote(stringResource(R.string.voice_catalog_sub))
+        PageIntro(stringResource(R.string.voice_catalog_sub))
 
         viewModel.migrationError?.let { error ->
             Spacer(Modifier.height(8.dp))

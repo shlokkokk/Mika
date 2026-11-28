@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -108,14 +109,16 @@ private fun PersonaPage(store: PersonaStore, onBack: () -> Unit, onManage: () ->
         if (active != null && personas.size > 1) FooterNote(stringResource(R.string.persona_editing, active.name))
 
         // 称呼:Mika 的自称,空着就是 Mika;只接受名字里该有的字符,别的当场提示,不悄悄删
-        GroupCard {
+        GroupCard(
+            note = if (nicknameOk) stringResource(R.string.persona_nickname_about)
+            else stringResource(R.string.persona_nickname_invalid, PersonaPrompt.MAX_NICKNAME),
+            noteColor = if (nicknameOk) Color.Unspecified else c.bad,
+        ) {
             InputRow(
                 stringResource(R.string.persona_nickname), nickname, { nickname = it.replace('\n', ' ') },
                 placeholder = PersonaPrompt.DEFAULT_NICKNAME, first = true, modifier = Modifier.testTag("persona-nickname"),
             )
         }
-        if (nicknameOk) FooterNote(stringResource(R.string.persona_nickname_about))
-        else FooterNote(stringResource(R.string.persona_nickname_invalid, PersonaPrompt.MAX_NICKNAME), color = c.bad)
 
         GroupLabel(stringResource(R.string.persona_style_base))
         GroupCard {

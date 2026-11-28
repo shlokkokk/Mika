@@ -109,10 +109,9 @@ fun ModelGroupsScreen(
                 }
             }
         }
-        GroupCard(Modifier.padding(top = 8.dp)) {
+        GroupCard(Modifier.padding(top = 8.dp), note = ModelsCopy.groupFooter) {
             ListRow(MikaIcons.Plus, ModelsCopy.NEW_GROUP, first = true, titleColor = c.accent, tone = TileTone.Accent, onClick = onNew)
         }
-        FooterNote(ModelsCopy.groupFooter)
     }
 }
 
@@ -166,12 +165,11 @@ fun ModelGroupEditorScreen(
                 RadioRow(ModelsCopy.strategyTitle(s), selected = strategy == s.wire, onClick = { strategy = s.wire }, first = i == 0, subtitle = ModelsCopy.strategyNote(s))
             }
         }
-        GroupCard(Modifier.padding(top = 8.dp)) {
+        GroupCard(Modifier.padding(top = 8.dp), note = ModelsCopy.GROUP_STICKY_NOTE) {
             ListRow(null, ModelsCopy.GROUP_STICKY, first = true) {
                 MikaSwitch(sticky, { sticky = it })
             }
         }
-        FooterNote(ModelsCopy.GROUP_STICKY_NOTE)
 
         GroupLabel(ModelsCopy.GROUP_MEMBERS, Modifier.padding(top = 8.dp))
         if (members.isEmpty()) FooterNote(ModelsCopy.GROUP_NO_MEMBERS)

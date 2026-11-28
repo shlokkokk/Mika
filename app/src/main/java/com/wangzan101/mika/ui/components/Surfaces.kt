@@ -8,15 +8,19 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,11 +44,13 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.ui.theme.MikaColors
+import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaShapes
 import com.wangzan101.mika.ui.theme.MikaSize
 import com.wangzan101.mika.ui.theme.MikaTheme
@@ -124,11 +130,16 @@ fun MikaCard(modifier: Modifier = Modifier, shape: Shape = if (LocalPlainList.cu
  * [note] 非空时在卡片底部内嵌一条说明带,和卡片圆角、描边融为一体。
  */
 @Composable
-fun GroupCard(modifier: Modifier = Modifier, note: String? = null, content: @Composable ColumnScope.() -> Unit) {
+fun GroupCard(
+    modifier: Modifier = Modifier,
+    note: String? = null,
+    noteColor: Color = Color.Unspecified,
+    content: @Composable ColumnScope.() -> Unit,
+) {
     if (!LocalPlainList.current) {
         MikaCard(modifier.padding(bottom = 12.dp)) {
             content()
-            if (!note.isNullOrBlank()) AttachedCardNote(note)
+            if (!note.isNullOrBlank()) AttachedCardNote(note, noteColor)
         }
         return
     }
@@ -138,7 +149,7 @@ fun GroupCard(modifier: Modifier = Modifier, note: String? = null, content: @Com
         CompositionLocalProvider(LocalCardNotes provides notes) {
             MikaCard {
                 content()
-                if (!note.isNullOrBlank()) AttachedCardNote(note)
+                if (!note.isNullOrBlank()) AttachedCardNote(note, noteColor)
             }
         }
         val text = notes.footnote()
@@ -150,7 +161,7 @@ fun GroupCard(modifier: Modifier = Modifier, note: String? = null, content: @Com
 }
 
 @Composable
-private fun AttachedCardNote(note: String) {
+private fun AttachedCardNote(note: String, color: Color = Color.Unspecified) {
     val c = MikaTheme.colors
     Box(Modifier.fillMaxWidth().height(0.5.dp).background(c.hair))
     Box(
@@ -158,7 +169,7 @@ private fun AttachedCardNote(note: String) {
             .background(c.fill)
             .padding(horizontal = 16.dp, vertical = 10.dp),
     ) {
-        Text(note, style = MikaType.Hint, color = c.ink3)
+        Text(note, style = MikaType.Hint, color = color.takeOrElse { c.ink3 })
     }
 }
 
@@ -233,6 +244,47 @@ fun StateCard(
             }
             trailing()
         }
+    }
+}
+
+/**
+ * 页面顶部说明横幅:替代浮在页面顶上的大段纯文字。
+ * 用柔和的填充底、细描边和左侧主题色图标/竖条收住视觉重心,在深浅色下都干净耐看。
+ */
+@Composable
+fun PageIntro(
+    text: String,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = MikaIcons.Info,
+) {
+    val c = MikaTheme.colors
+    val shape = if (LocalPlainList.current) PlainCardShape else MikaShapes.Card
+    Row(
+        modifier
+            .fillMaxWidth()
+            .padding(bottom = 12.dp)
+            .clip(shape)
+            .background(c.fill, shape)
+            .border(0.5.dp, c.edge, shape)
+            .padding(horizontal = 14.dp, vertical = 12.dp)
+            .height(IntrinsicSize.Min),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        if (icon != null) {
+            Box(
+                Modifier.padding(top = 1.dp).size(26.dp).background(c.accentSoft, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(icon, null, Modifier.size(14.dp), tint = c.accent)
+            }
+        } else {
+            Box(
+                Modifier.padding(vertical = 2.dp).width(3.dp).fillMaxHeight()
+                    .background(c.accent, RoundedCornerShape(50)),
+            )
+        }
+        Text(text, Modifier.weight(1f), style = MikaType.Hint, color = c.ink2)
     }
 }
 

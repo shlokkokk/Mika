@@ -129,7 +129,7 @@ fun PhoneOpsScreen(
         }
         if (status.sdkInt >= Prerequisites.MIN_SDK) {
             GroupLabel(stringResource(R.string.phone_transport_title))
-            GroupCard {
+            GroupCard(note = stringResource(R.string.phone_transport_sub)) {
                 Box(Modifier.fillMaxWidth().focusHighlightTarget(SettingsFocusKey.SHELL_TRANSPORT)) {
                     // 固定三选一,和其它页面一样用分段控件
                     val options = listOf(
@@ -146,11 +146,10 @@ fun PhoneOpsScreen(
                     )
                 }
             }
-            FooterNote(stringResource(R.string.phone_transport_sub))
 
             val shizuku = status.shizuku
             GroupLabel(stringResource(R.string.phone_shizuku_group))
-            GroupCard {
+            GroupCard(note = stringResource(R.string.phone_shizuku_footer)) {
                 val actionTitle = stringResource(
                     if (shizuku.running && !shizuku.permissionGranted) R.string.phone_shizuku_grant
                     else R.string.phone_shizuku_open_app
@@ -171,7 +170,6 @@ fun PhoneOpsScreen(
                     ) { RowChevron() }
                 }
             }
-            FooterNote(stringResource(R.string.phone_shizuku_footer))
 
             GroupLabel(stringResource(R.string.phone_channel))
             GroupCard {
