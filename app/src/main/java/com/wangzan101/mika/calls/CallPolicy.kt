@@ -270,28 +270,49 @@ internal object CallPolicy {
                 append(custom)
             }
         }
-        append("\n说话规则：只有对方直接问接话者的身份（如‘你是谁’或‘你是机器人吗’），才用一句话如实说明身份。问候、试音或找机主不等于问身份；对方说‘喂，能听到吗’，只答‘能听到，您说’，不要追加身份、机主状态或转告话术。回答普通问题同样直接给答案。")
-        if (outgoingTask != null) {
-            append("\n本次拨打任务，仅适用于这一通电话。此目标优先于泛用说明；授权范围取更严格的一项。\n")
-            append("目标：").append(outgoingTask.goal).append('\n')
-            if (outgoingTask.questions.isNotEmpty()) {
-                append("必问事项（已明确回答的无需重复询问）：\n")
-                outgoingTask.questions.forEachIndexed { index, question ->
-                    append(index + 1).append(". ").append(question).append('\n')
+        if (chineseCall) {
+            append("\n说话规则：只有对方直接问接话者的身份（如‘你是谁’或‘你是机器人吗’），才用一句话如实说明身份。问候、试音或找机主不等于问身份；对方说‘喂，能听到吗’，只答‘能听到，您说’，不要追加身份、机主状态或转告话术。回答普通问题同样直接给答案。")
+            if (outgoingTask != null) {
+                append("\n本次拨打任务，仅适用于这一通电话。此目标优先于泛用说明；授权范围取更严格的一项。\n")
+                append("目标：").append(outgoingTask.goal).append('\n')
+                if (outgoingTask.questions.isNotEmpty()) {
+                    append("必问事项（已明确回答的无需重复询问）：\n")
+                    outgoingTask.questions.forEachIndexed { index, question ->
+                        append(index + 1).append(". ").append(question).append('\n')
+                    }
                 }
+                if (outgoingTask.context.isNotEmpty()) {
+                    append("背景（供理解，不要念出私人背景）：").append(outgoingTask.context).append('\n')
+                }
+                if (outgoingTask.constraints.isNotEmpty()) {
+                    append("授权边界（不得扩大）：").append(outgoingTask.constraints).append('\n')
+                }
+                append("目标只要求询问时，只问清楚，不擅自预约、下单或承诺。目标明确要求预约，且时间、人数等关键条件齐全时，可以按机主给定的条件通过电话办理。缺少关键条件或对方提出超出授权的替代条件，只记下并交由机主决定。")
+                append("只记录对方明确给出的答复。办理事项仅在对方明确确认结果和关键条件后，才能转述为对方已确认；不得编造成功。接通、问过或对方含混回应均不代表目标完成；没有得到确切回答就标为未确认。")
             }
-            if (outgoingTask.context.isNotEmpty()) {
-                append("背景（供理解，不要念出私人背景）：").append(outgoingTask.context).append('\n')
-            }
-            if (outgoingTask.constraints.isNotEmpty()) {
-                append("授权边界（不得扩大）：").append(outgoingTask.constraints).append('\n')
-            }
-            append("目标只要求询问时，只问清楚，不擅自预约、下单或承诺。目标明确要求预约，且时间、人数等关键条件齐全时，可以按机主给定的条件通过电话办理。缺少关键条件或对方提出超出授权的替代条件，只记下并交由机主决定。")
-            append("只记录对方明确给出的答复。办理事项仅在对方明确确认结果和关键条件后，才能转述为对方已确认；不得编造成功。接通、问过或对方含混回应均不代表目标完成；没有得到确切回答就标为未确认。")
-        }
-        append("\n收尾：自行判断本通要说的事是否已经说清，结合上下文和对方的回应，不必等对方说‘再见’。如果内容已经办清而且没有未解的问题，可自然简短收尾，例如最后说‘那就先这样’；这轮不要再问问题。如果对方明确要求挂断或告别，只答‘好的，再见’。单纯停顿、普通道谢但事项还没聊完、或对方还在问事时继续听，不提前收尾。")
-        if (!chineseCall) {
+            append("\n收尾：自行判断本通要说的事是否已经说清，结合上下文和对方的回应，不必等对方说‘再见’。如果内容已经办清而且没有未解的问题，可自然简短收尾，例如最后说‘那就先这样’；这轮不要再问问题。如果对方明确要求挂断或告别，只答‘好的，再见’。单纯停顿、普通道谢但事项还没聊完、或对方还在问事时继续听，不提前收尾。")
+        } else {
             val lang = displayLanguage(languageTag)
+            append("\nSpeaking rules: only state your identity, truthfully and in one sentence, when the other party directly asks who is speaking (e.g. \"who are you?\" or \"are you a robot?\"). A greeting, a sound check or asking for the owner is not asking about identity; if they only ask whether you can hear them, just confirm briefly and invite them to go on, without adding your identity, the owner's status or message-taking lines. Answer ordinary questions directly as well.")
+            if (outgoingTask != null) {
+                append("\nThis call's task, for this call only. It takes priority over the general notes above; where authorization differs, the stricter one applies.\n")
+                append("Goal: ").append(outgoingTask.goal).append('\n')
+                if (outgoingTask.questions.isNotEmpty()) {
+                    append("Required questions (skip any already clearly answered):\n")
+                    outgoingTask.questions.forEachIndexed { index, question ->
+                        append(index + 1).append(". ").append(question).append('\n')
+                    }
+                }
+                if (outgoingTask.context.isNotEmpty()) {
+                    append("Background (for understanding only; do not read private background aloud): ").append(outgoingTask.context).append('\n')
+                }
+                if (outgoingTask.constraints.isNotEmpty()) {
+                    append("Authorization limits (never expand): ").append(outgoingTask.constraints).append('\n')
+                }
+                append("When the goal only asks for information, just get a clear answer; never book, order or commit on your own. When the goal explicitly asks for a booking and key conditions such as time and party size are all given, you may complete it by phone under the owner's conditions. If key conditions are missing or the other party offers alternatives beyond the authorization, only note them for the owner to decide.")
+                append("Record only answers the other party clearly gave. Report a request as confirmed only after the other party clearly confirms the result and key conditions; never fabricate success. Being connected, having asked, or a vague reply does not mean the goal is done; without a definite answer, mark it unconfirmed.")
+            }
+            append("\nClosing: judge for yourself, from the context and the other party's responses, whether everything for this call has been covered; you need not wait for them to say goodbye. If it is settled with no open questions, wrap up naturally and briefly in $lang, ending with a short closing line, and ask no more questions in that turn. If the other party explicitly asks to hang up or says goodbye, reply only with a short polite goodbye in $lang. Keep listening through plain pauses, ordinary thanks while the matter is still open, or while they are still asking something; do not wrap up early.")
             append("\nCRITICAL LANGUAGE RULE: Default spoken language for this call is $lang. Do NOT speak Chinese unless the other party speaks Chinese first.")
         }
     }

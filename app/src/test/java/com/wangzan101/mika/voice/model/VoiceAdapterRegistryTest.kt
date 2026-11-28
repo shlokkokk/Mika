@@ -97,6 +97,7 @@ class VoiceAdapterRegistryTest {
             credentials: VolcRealtimeCredentials,
             systemPrompt: String,
             enablePhoneDtmf: Boolean,
+            languageTag: String?,
         ): CallRealtimeSession {
             connectError?.let { throw it }
             this.profile = profile

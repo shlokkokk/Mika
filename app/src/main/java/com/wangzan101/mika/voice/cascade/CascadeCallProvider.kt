@@ -32,9 +32,10 @@ class CascadeCallProvider(
         credentials: VolcRealtimeCredentials,
         systemPrompt: String,
         enablePhoneDtmf: Boolean,
+        languageTag: String?,
     ): CallRealtimeSession {
         // 运营商电话:拨号键 + 电话前台(只有请示主人)
-        val tools = if (enablePhoneDtmf) VolcRealtimeProtocol.phoneCallTools().map { LlmBrain.toolSpec(it as JsonObject) } else emptyList()
+        val tools = if (enablePhoneDtmf) VolcRealtimeProtocol.phoneCallTools(languageTag).map { LlmBrain.toolSpec(it as JsonObject) } else emptyList()
         return engine.open(use, systemPrompt, tools, language, background = background, meter = meter)
     }
 }

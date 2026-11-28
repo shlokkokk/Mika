@@ -27,7 +27,6 @@ import com.wangzan101.mika.calls.CallRuntime.CallProblem
 import com.wangzan101.mika.calls.CallRuntime.MediaStage
 import com.wangzan101.mika.calls.CallRuntime.Work
 import com.wangzan101.mika.calls.CallRuntime.Companion.MAX_MEDIA_DIAGNOSTICS
-import com.wangzan101.mika.calls.CallRuntime.Companion.PHONE_DTMF_PROMPT
 import com.wangzan101.mika.calls.CallRuntime.Companion.FAREWELL_ENDING
 import com.wangzan101.mika.calls.CallRuntime.Companion.TOKEN
 
@@ -95,7 +94,7 @@ internal suspend fun CallRuntime.runWork(w: Work) {
         val migrated = realtimeController.migrated
         val standard = standardCalls
         // 标准通话:所属任务的状态每轮作为尾随附注给电话前台,系统提示保持字节不变
-        val languageTag = java.util.Locale.getDefault().toLanguageTag()
+        val languageTag = callLanguageTag()
         val ownerBackground = w.ownerTask?.let { PhoneDesk.background(it, languageTag = languageTag) }
         val provider = if (standard) CascadeCallProvider(cascade, CallUse.Phone, background = ownerBackground,
             meter = w.ownerConversationId?.let(app.conversations::meter)) else if (migrated) {
@@ -133,7 +132,7 @@ internal suspend fun CallRuntime.runWork(w: Work) {
         validateTarget(w)
         // 现有电话提示在前,电话前台说明在后;实时通话把开场时所属任务的状态写进提示,之后变了再推
         val systemPrompt = PhoneDesk.systemPrompt(
-            CallPolicy.prompt(w.config.systemPrompt, w.direction, ownerRules, task = w.task, languageTag = languageTag) + PHONE_DTMF_PROMPT,
+            CallPolicy.prompt(w.config.systemPrompt, w.direction, ownerRules, task = w.task, languageTag = languageTag) + CallRuntime.phoneDtmfPrompt(languageTag),
             task = w.task.takeIf { w.direction == CallDirection.OUTGOING },
             openingOwnerTask = if (standard) null else PhoneDesk.renderOwnerTask(w.ownerTask?.value, languageTag = languageTag),
             canCue = PhoneDesk.canCue(standard, profile.protocol),
@@ -152,7 +151,7 @@ internal suspend fun CallRuntime.runWork(w: Work) {
                 validateSessionTarget(w, helper)
                 w.mediaStage = MediaStage.VOLC_CONNECT
                 val connected = withTimeoutOrNull(5_000L) {
-                    provider.connect(profile, credentials, systemPrompt, enablePhoneDtmf = true)
+                    provider.connect(profile, credentials, systemPrompt, enablePhoneDtmf = true, languageTag = languageTag)
                         .also { w.session = it } // Adopt before the timeout/cancellation boundary.
                 } ?: throw CallProblem("实时语音连接超时，未由 AI 接管")
                 if (!connected.setMuted(true)) throw CallProblem("实时语音服务未进入就绪状态")

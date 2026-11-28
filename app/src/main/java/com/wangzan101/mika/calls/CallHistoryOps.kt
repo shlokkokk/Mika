@@ -49,7 +49,7 @@ internal suspend fun CallRuntime.summarizeCall(id: String, transcript: List<Call
                 it,
                 transcript,
                 direction,
-                languageTag = java.util.Locale.getDefault().toLanguageTag(),
+                languageTag = callLanguageTag(),
             ) { settings.state.value.summaryEnabled }
         }
     } catch (e: CancellationException) {
