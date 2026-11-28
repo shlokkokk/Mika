@@ -1,9 +1,12 @@
 package com.wangzan101.mika.device.ui
 
 import android.app.KeyguardManager
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -19,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.SecureFlagPolicy
@@ -31,13 +35,13 @@ import com.wangzan101.mika.ui.components.ButtonSize
 import com.wangzan101.mika.ui.components.FooterNote
 import com.wangzan101.mika.ui.components.GroupCard
 import com.wangzan101.mika.ui.components.GroupLabel
-import com.wangzan101.mika.ui.components.InputRow
 import com.wangzan101.mika.ui.components.ListRow
 import com.wangzan101.mika.ui.components.MikaButton
 import com.wangzan101.mika.ui.components.MikaDialog
 import com.wangzan101.mika.ui.components.MikaSwitch
-import com.wangzan101.mika.ui.components.RadioRow
+import com.wangzan101.mika.ui.components.MikaTextField
 import com.wangzan101.mika.ui.components.RowActions
+import com.wangzan101.mika.ui.components.SegmentedControl
 import com.wangzan101.mika.settings.ui.SettingsFocusKey
 import com.wangzan101.mika.ui.components.TileTone
 import com.wangzan101.mika.ui.components.focusHighlightTarget
@@ -118,37 +122,58 @@ fun DeviceAccessSection(settings: DeviceAccessSettings, localTasks: Boolean = fa
     FooterNote(stringResource(if (localTasks) R.string.device_local_foot else R.string.device_access_foot))
     if (failed && !editing) FooterNote(stringResource(R.string.device_access_save_failed))
     if (editing) {
+        val keyboard = if (kind == CredentialKind.Pin) KeyboardType.NumberPassword else KeyboardType.Password
+        val mismatch = repeat.isNotEmpty() && value != repeat
         MikaDialog(
             onDismissRequest = { if (!busy) closeEditor() },
             title = { Text(stringResource(R.string.device_access_credential)) },
             text = {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    GroupCard {
-                        RadioRow(stringResource(R.string.device_access_pin), kind == CredentialKind.Pin, first = true,
-                            onClick = { kind = CredentialKind.Pin; value = ""; repeat = "" }, enabled = !busy)
-                        RadioRow(stringResource(R.string.device_access_password), kind == CredentialKind.Password,
-                            onClick = { kind = CredentialKind.Password; value = ""; repeat = "" }, enabled = !busy)
-                        InputRow(stringResource(R.string.device_access_value), value, { if (!busy) value = it.take(64) },
-                            stringResource(R.string.device_access_value_hint), secret = true,
-                            keyboard = if (kind == CredentialKind.Pin) KeyboardType.NumberPassword else KeyboardType.Password,
-                            modifier = Modifier.testTag("device-access-credential"))
-                        InputRow(stringResource(R.string.device_access_repeat), repeat, { if (!busy) repeat = it.take(64) },
-                            stringResource(R.string.device_access_repeat_hint), secret = true,
-                            keyboard = if (kind == CredentialKind.Pin) KeyboardType.NumberPassword else KeyboardType.Password,
-                            modifier = Modifier.testTag("device-access-repeat"))
-                    }
+                Column(
+                    Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    SegmentedControl(
+                        listOf(stringResource(R.string.device_access_pin), stringResource(R.string.device_access_password)),
+                        if (kind == CredentialKind.Pin) 0 else 1,
+                        onSelect = { idx ->
+                            val next = if (idx == 0) CredentialKind.Pin else CredentialKind.Password
+                            if (!busy && next != kind) { kind = next; value = ""; repeat = "" }
+                        },
+                        Modifier.fillMaxWidth(),
+                    )
+                    MikaTextField(
+                        value = value,
+                        onValueChange = { if (!busy) value = it.take(64) },
+                        modifier = Modifier.fillMaxWidth().testTag("device-access-credential"),
+                        enabled = !busy,
+                        label = { Text(stringResource(R.string.device_access_value)) },
+                        placeholder = { Text(stringResource(R.string.device_access_value_hint)) },
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = keyboard, autoCorrectEnabled = false),
+                        singleLine = true,
+                    )
+                    MikaTextField(
+                        value = repeat,
+                        onValueChange = { if (!busy) repeat = it.take(64) },
+                        modifier = Modifier.fillMaxWidth().testTag("device-access-repeat"),
+                        enabled = !busy,
+                        label = { Text(stringResource(R.string.device_access_repeat)) },
+                        placeholder = { Text(stringResource(R.string.device_access_repeat_hint)) },
+                        isError = mismatch,
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = keyboard, autoCorrectEnabled = false),
+                        singleLine = true,
+                    )
                     Text(
                         stringResource(if (kind == CredentialKind.Pin) R.string.device_access_pin_hint else R.string.device_access_password_hint),
                         style = MikaType.Hint,
                         color = MikaTheme.colors.ink3,
-                        modifier = Modifier.padding(top = 4.dp),
                     )
                     if (failed) {
                         Text(
                             stringResource(R.string.device_access_save_failed),
                             style = MikaType.Hint,
                             color = MikaTheme.colors.bad,
-                            modifier = Modifier.padding(top = 6.dp),
                         )
                     }
                 }
@@ -160,10 +185,10 @@ fun DeviceAccessSection(settings: DeviceAccessSettings, localTasks: Boolean = fa
                         change({ settings.setCredential(k, v) }, ::closeEditor)
                     },
                     enabled = !busy && value == repeat && DeviceCredential.valid(kind, value.toCharArray()),
-                ) { Text(stringResource(R.string.device_access_save)) }
+                ) { Text(stringResource(R.string.save), maxLines = 1) }
             },
             dismissButton = {
-                TextButton(onClick = ::closeEditor, enabled = !busy) { Text(stringResource(R.string.cancel)) }
+                TextButton(onClick = ::closeEditor, enabled = !busy) { Text(stringResource(R.string.cancel), maxLines = 1) }
             },
             properties = DialogProperties(securePolicy = SecureFlagPolicy.SecureOn),
         )
