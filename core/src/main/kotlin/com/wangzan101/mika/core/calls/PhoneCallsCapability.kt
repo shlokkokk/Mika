@@ -34,8 +34,6 @@ private class CallAgentTool(private val action: String, override val verb: Verb)
     override val offScreen = true
     override val risk = if (action == "state") Risk.Read else Risk.Write
     override val logged = action != "state"
-    private fun isChinese(): Boolean = java.util.Locale.getDefault().language.equals("zh", ignoreCase = true)
-
     override val label = when (action) { "state" -> "通话状态"; "dial" -> "拨打电话"; "answer" -> "AI 接听"; "hangup" -> "挂断电话"; else -> "人工接管" }
     override val def = ToolDef("phone_call_$action", Prompts.tool("phone_call_$action"),
         when (action) {
@@ -55,28 +53,21 @@ private class CallAgentTool(private val action: String, override val verb: Verb)
     override fun approvalRisk(args: JsonObject): ApprovalRisk {
         val request = try {
             val a = Args(def, args)
-            val zh = isChinese()
             when (action) {
                 "dial" -> {
                     val (number, simId, task) = dialArgs(a)
                     val content = buildString {
                         append(label).append(' ').append(number)
                         if (task != null) {
-                            append(if (zh) "\n本次目标：" else "\nGoal: ").append(task.goal)
-                            if (task.constraints.isNotEmpty()) append(if (zh) "\n本次边界：" else "\nLimits: ").append(task.constraints)
-                            task.questions.forEachIndexed { index, question ->
-                                append(if (zh) "\n必问 " else "\nQuestion ").append(index + 1).append(if (zh) "：" else ": ").append(question)
-                            }
-                            if (task.context.isNotEmpty()) append(if (zh) "\n本次背景：" else "\nBackground: ").append(task.context)
+                            append("\n本次目标：").append(task.goal)
+                            if (task.constraints.isNotEmpty()) append("\n本次边界：").append(task.constraints)
+                            task.questions.forEachIndexed { index, question -> append("\n必问 ").append(index + 1).append("：").append(question) }
+                            if (task.context.isNotEmpty()) append("\n本次背景：").append(task.context)
                         }
                     }
-                    val simTarget = simId ?: if (zh) "（仅一张可用时自动选择）" else "(auto-selected if single SIM)"
-                    ConfirmationRequest(IrrevAction.other, "SIM $simTarget", content, null, capability)
+                    ConfirmationRequest(IrrevAction.other, "SIM ${simId ?: "（仅一张可用时自动选择）"}", content, null, capability)
                 }
-                "answer", "hangup" -> {
-                    val prefix = if (zh) "通话 " else "Call "
-                    ConfirmationRequest(IrrevAction.other, "$prefix${callId(a)}", label, null, capability)
-                }
+                "answer", "hangup" -> ConfirmationRequest(IrrevAction.other, "通话 ${callId(a)}", label, null, capability)
                 else -> null
             }
         } catch (_: ArgError) {
