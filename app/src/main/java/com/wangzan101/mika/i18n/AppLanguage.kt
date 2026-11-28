@@ -123,6 +123,17 @@ enum class AppLanguage(val tag: String?, val speechTag: String?) {
             context.activity()?.recreate()
         }
 
+        /** 恢复备份时把备份里的语言标签写回系统(安卓 13+)或清掉内存缓存让下次启动重读旧配置。 */
+        fun restoreTag(context: Context, tag: String?) {
+            if (systemManaged) {
+                context.getSystemService(LocaleManager::class.java).applicationLocales =
+                    tag?.let(LocaleList::forLanguageTags) ?: LocaleList.getEmptyLocaleList()
+                return
+            }
+            legacyLoaded = false
+            cached = null
+        }
+
         /** App 启动时调:安卓 12 及以前选了语言时,把进程的默认 Locale(日期、数字的格式)也换成它。 */
         fun applyDefaultLocale(context: Context) {
             if (systemManaged) return

@@ -61,6 +61,8 @@ data class BackupManifest(
     val skippedPrefs: Map<String, List<String>> = emptyMap(),
     /** Directories and files deliberately not included (large or not transferable). */
     val excluded: List<String> = emptyList(),
+    /** Selected app language tag (BCP-47, e.g. "en", "zh-CN"), or null when following system. */
+    val appLanguageTag: String? = null,
 ) {
     companion object {
         const val CURRENT_FORMAT_VERSION = 1
@@ -74,6 +76,9 @@ class BackupEngine(
     private val clock: () -> Long = System::currentTimeMillis,
     private val appVersionName: String = "",
     private val appVersionCode: Long = 0,
+    private val databasesDir: File? = null,
+    private val readAppLanguage: () -> String? = { null },
+    private val applyAppLanguage: (String?) -> Unit = {},
 ) {
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
@@ -118,6 +123,9 @@ class BackupEngine(
                 cipherFor = { alias -> com.wangzan101.mika.settings.KeystoreKeyCipher(alias) },
                 appVersionName = com.wangzan101.mika.BuildConfig.VERSION_NAME,
                 appVersionCode = com.wangzan101.mika.BuildConfig.VERSION_CODE.toLong(),
+                databasesDir = File(app.applicationInfo.dataDir, "databases"),
+                readAppLanguage = { com.wangzan101.mika.i18n.AppLanguage.current(app).tag },
+                applyAppLanguage = { tag -> com.wangzan101.mika.i18n.AppLanguage.restoreTag(app, tag) },
             )
         }
     }
@@ -211,6 +219,18 @@ class BackupEngine(
                 entries += BackupEntryInfo(zipPath, encrypted = transformed.isNotEmpty())
             }
 
+        collectDatabaseFiles().forEach { (zipPath, file) ->
+            refuseOversize(file, zipPath)
+            val bytes = try {
+                file.readBytes()
+            } catch (e: Exception) {
+                throw BackupException("Could not read ${file.name}: ${e.message}")
+            }
+            payloads += zipPath to bytes
+            charge(bytes.size.toLong(), zipPath)
+            entries += BackupEntryInfo(zipPath, encrypted = false)
+        }
+
         val manifest = BackupManifest(
             appVersionName = appVersionName,
             appVersionCode = appVersionCode,
@@ -221,6 +241,7 @@ class BackupEngine(
             skippedPrefs = skippedPrefs,
             excluded = excludedDirs.map { "$it/ (large, not included)" } +
                 listOf("noBackupFilesDir/adb/ (wireless-debugging key, must re-pair)"),
+            appLanguageTag = readAppLanguage(),
         )
         ZipOutputStream(output).use { zip ->
             zip.putNextEntry(ZipEntry(MANIFEST_PATH))
@@ -256,7 +277,8 @@ class BackupEngine(
         val obsolete = if (replace) {
             val retained = targets.values.toSet()
             val prefs = sharedPrefsDir.listFiles()?.filter { it.isFile && it.name.endsWith(".xml") }.orEmpty()
-            (collectFiles().map { it.second } + prefs).filter { it.canonicalFile !in retained }
+            val dbs = collectDatabaseFiles().map { it.second }
+            (collectFiles().map { it.second } + prefs + dbs).filter { it.canonicalFile !in retained }
         } else emptyList()
         // Stage every entry before replacing anything: a corrupt payload or a full
         // disk then fails with the install's existing data untouched.
@@ -310,7 +332,19 @@ class BackupEngine(
             if (e is BackupException) throw e
             throw BackupException("Import failed: ${e.message}")
         }
+        if (manifest.appLanguageTag != null) applyAppLanguage(manifest.appLanguageTag)
         return manifest
+    }
+
+    /** Database files to include, as (ZIP path, file), in deterministic order. */
+    private fun collectDatabaseFiles(): List<Pair<String, File>> {
+        val dir = databasesDir ?: return emptyList()
+        if (!dir.isDirectory) return emptyList()
+        return dir.listFiles()
+            ?.filter { it.isFile && !it.name.endsWith(".tmp") && !it.name.endsWith(".import-tmp") && !it.name.endsWith("-journal") }
+            ?.sortedBy { it.name }
+            ?.map { file -> "databases/${file.name}" to file }
+            .orEmpty()
     }
 
     /** Files to include, as (ZIP path, file), in deterministic order. */
@@ -328,6 +362,8 @@ class BackupEngine(
         val root = when {
             zipPath.startsWith("files/") -> filesDir
             zipPath.startsWith("shared_prefs/") -> sharedPrefsDir
+            zipPath.startsWith("databases/") -> databasesDir
+                ?: throw BackupException("Backup entry has no databases directory configured: $zipPath")
             else -> throw BackupException("Backup entry has an unexpected path: $zipPath")
         }
         val rel = zipPath.substringAfter('/')
@@ -431,7 +467,7 @@ class BackupEngine(
         val seen = mutableSetOf<String>()
         manifest.entries.forEach { info ->
             if (!seen.add(info.path)) throw BackupException("Backup lists ${info.path} twice")
-            if (!info.path.startsWith("files/") && !info.path.startsWith("shared_prefs/")) {
+            if (!info.path.startsWith("files/") && !info.path.startsWith("shared_prefs/") && !info.path.startsWith("databases/")) {
                 throw BackupException("Backup entry has an unexpected path: ${info.path}")
             }
             if (info.encrypted && info.alias == null && !info.path.startsWith("shared_prefs/")) {

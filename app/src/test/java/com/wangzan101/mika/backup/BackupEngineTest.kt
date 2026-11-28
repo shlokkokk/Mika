@@ -396,6 +396,45 @@ class BackupEngineTest {
         assertTrue(manifest.entries.any { it.path == "files/settings/provider-keys.json" })
     }
 
+    @Test fun roundTripRestoresDatabasesAppLanguageAndFallbacks() {
+        val srcFiles = tmp.newFolder("src-files")
+        val srcPrefs = tmp.newFolder("src-prefs")
+        val srcDb = tmp.newFolder("src-db")
+        buildSource(srcFiles, srcPrefs)
+        srcFiles.write("settings/model-groups.json", """{"groups":[{"id":"g1","strategy":"failover"}]}""")
+        srcPrefs.write(
+            "mika_voice_model_catalog.xml",
+            """<?xml version='1.0' encoding='utf-8' standalone='yes' ?><map><string name="tts_fallback_order">["v1","v2"]</string></map>""",
+        )
+        srcDb.write("remote-tasks.db", "sqlite-bytes".toByteArray())
+
+        val out = ByteArrayOutputStream()
+        val exportManifest = BackupEngine(
+            srcFiles, srcPrefs, { exportCipher },
+            databasesDir = srcDb,
+            readAppLanguage = { "ja" },
+        ).export(out)
+        assertEquals("ja", exportManifest.appLanguageTag)
+        assertTrue(exportManifest.entries.any { it.path == "databases/remote-tasks.db" })
+
+        val dstFiles = tmp.newFolder("dst-files")
+        val dstPrefs = tmp.newFolder("dst-prefs")
+        val dstDb = tmp.newFolder("dst-db")
+        dstDb.write("stale.db", "old".toByteArray())
+        var appliedLanguage: String? = null
+        BackupEngine(
+            dstFiles, dstPrefs, { importCipher },
+            databasesDir = dstDb,
+            applyAppLanguage = { appliedLanguage = it },
+        ).import(ByteArrayInputStream(out.toByteArray()), replace = true)
+
+        assertEquals("ja", appliedLanguage)
+        assertEquals("sqlite-bytes", File(dstDb, "remote-tasks.db").readText())
+        assertFalse(File(dstDb, "stale.db").exists())
+        assertTrue(File(dstFiles, "settings/model-groups.json").readText().contains("failover"))
+        assertTrue(File(dstPrefs, "mika_voice_model_catalog.xml").readText().contains("tts_fallback_order"))
+    }
+
     private fun readZip(zip: ByteArray): Map<String, ByteArray> {
         val entries = mutableMapOf<String, ByteArray>()
         java.util.zip.ZipInputStream(ByteArrayInputStream(zip)).use { input ->
