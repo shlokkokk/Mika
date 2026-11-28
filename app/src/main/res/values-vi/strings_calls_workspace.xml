@@ -19,7 +19,8 @@
     <string name="calls_task_one_off">Bản tóm tắt chỉ áp dụng cho cuộc gọi này. Tìm cuộc gọi và bản tóm tắt của nó trong Lịch sử.</string>
     <string name="calls_task_pick_sim">Chọn SIM cho cuộc gọi này</string>
     <string name="calls_task_questions">Câu hỏi cần hỏi</string>
-    <string name="calls_task_questions_hint">Mỗi dòng một câu hỏi</string>
+    <string name="calls_task_question_add">Thêm câu hỏi</string>
+    <string name="calls_task_question_remove">Xóa câu hỏi: %1$s</string>
     <string name="calls_task_questions_limit">Tối đa %1$d câu hỏi, mỗi câu %2$d ký tự.</string>
     <string name="calls_task_replace_action">Thay thế bản nháp</string>
     <string name="calls_task_replace_note">Thao tác này thay bản nháp cuộc gọi hiện tại bằng một tác vụ từ Lịch sử. Thao tác này không quay số.</string>

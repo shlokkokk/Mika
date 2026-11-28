@@ -19,7 +19,8 @@
     <string name="calls_task_one_off">Tugas hanya berlaku untuk panggilan ini. Lihat panggilan dan tugasnya di Riwayat.</string>
     <string name="calls_task_pick_sim">Pilih SIM untuk panggilan ini</string>
     <string name="calls_task_questions">Pertanyaan yang perlu diajukan</string>
-    <string name="calls_task_questions_hint">Satu pertanyaan per baris</string>
+    <string name="calls_task_question_add">Tambahkan pertanyaan</string>
+    <string name="calls_task_question_remove">Hapus pertanyaan: %1$s</string>
     <string name="calls_task_questions_limit">Maksimal %1$d pertanyaan, masing-masing %2$d karakter.</string>
     <string name="calls_task_replace_action">Ganti draf</string>
     <string name="calls_task_replace_note">Ganti draf saat ini dengan tugas dari Riwayat. Ini tidak melakukan panggilan.</string>

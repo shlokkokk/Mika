@@ -19,7 +19,8 @@
     <string name="calls_task_one_off">Задание действует только для этого звонка. Звонок и задание можно найти в истории.</string>
     <string name="calls_task_pick_sim">Выберите SIM для этого звонка</string>
     <string name="calls_task_questions">Что нужно спросить</string>
-    <string name="calls_task_questions_hint">По одному вопросу на строку</string>
+    <string name="calls_task_question_add">Добавить вопрос</string>
+    <string name="calls_task_question_remove">Удалить вопрос: %1$s</string>
     <string name="calls_task_questions_limit">До %1$d вопросов, по %2$d символов.</string>
     <string name="calls_task_replace_action">Заменить черновик</string>
     <string name="calls_task_replace_note">Заменит текущий черновик заданием из истории. Звонок не будет сделан.</string>

@@ -24,7 +24,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.draw.alpha
@@ -34,6 +33,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import com.wangzan101.mika.ui.theme.MikaShapes
 import com.wangzan101.mika.ui.theme.MikaSize
 import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.R
@@ -244,7 +244,7 @@ internal fun CallTaskScreen(
     GroupCard {
         ListRow(MikaIcons.Mic, stringResource(R.string.calls_voice_title), first = true,
             onClick = onVoiceProfiles.takeIf { editable }) {
-            Text(callVoiceShort(voiceSummary), style = MikaType.Body, color = MikaTheme.colors.ink3, maxLines = 1)
+            RowValue(callVoiceShort(voiceSummary))
             RowChevron()
         }
         val simValue = when {
@@ -254,12 +254,7 @@ internal fun CallTaskScreen(
         }
         ListRow(MikaIcons.Phone, stringResource(R.string.calls_sim),
             onClick = if (editable) ({ showSims = true }) else null) {
-            Text(
-                simValue,
-                style = MikaType.Body,
-                color = if (sim == null) MikaTheme.colors.warn else MikaTheme.colors.ink3,
-                maxLines = 1,
-            )
+            RowValue(simValue, if (sim == null) ValueTone.Warn else ValueTone.Plain)
             RowChevron()
         }
     }
@@ -368,7 +363,7 @@ private fun CallQuestionsField(
                 onClick = ::commitPending,
                 modifier = Modifier.size(32.dp).testTag("call-task-question-add"),
             ) {
-                Icon(MikaIcons.Plus, stringResource(R.string.calls_task_questions), Modifier.size(18.dp), tint = c.accent)
+                Icon(MikaIcons.Plus, stringResource(R.string.calls_task_question_add), Modifier.size(18.dp), tint = c.accent)
             }
         }) else null,
     ) {
@@ -409,7 +404,7 @@ private fun CallQuestionsField(
                     ) {
                         questions.forEachIndexed { index, item ->
                             Surface(
-                                shape = RoundedCornerShape(12.dp),
+                                shape = MikaShapes.Chip,
                                 color = c.fill,
                                 border = BorderStroke(1.dp, c.ink3.copy(alpha = 0.22f)),
                             ) {
@@ -431,7 +426,7 @@ private fun CallQuestionsField(
                                     )
                                     Icon(
                                         MikaIcons.Close,
-                                        stringResource(R.string.calls_delete_digit),
+                                        stringResource(R.string.calls_task_question_remove, item),
                                         Modifier.size(16.dp).clip(CircleShape).clickable(enabled = enabled, role = Role.Button) {
                                             onQuestionsChange(questions.filterIndexed { i, _ -> i != index })
                                         }.padding(2.dp),

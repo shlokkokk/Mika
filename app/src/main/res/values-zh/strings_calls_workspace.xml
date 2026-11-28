@@ -19,7 +19,8 @@
     <string name="calls_task_one_off">任务单仅用于这通电话。通话结束后可在记录中查看任务与通话。</string>
     <string name="calls_task_pick_sim">请选择这次使用的 SIM</string>
     <string name="calls_task_questions">需要问清的问题</string>
-    <string name="calls_task_questions_hint">每行一个问题</string>
+    <string name="calls_task_question_add">添加问题</string>
+    <string name="calls_task_question_remove">删除问题：%1$s</string>
     <string name="calls_task_questions_limit">最多 %1$d 个问题，每个不超过 %2$d 字。</string>
     <string name="calls_task_replace_action">替换草稿</string>
     <string name="calls_task_replace_note">用记录中的任务替换当前草稿。此操作不会拨号。</string>

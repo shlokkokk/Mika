@@ -19,7 +19,8 @@
     <string name="calls_task_one_off">The brief applies to this call only. Find the call and its brief in History.</string>
     <string name="calls_task_pick_sim">Choose a SIM for this call</string>
     <string name="calls_task_questions">Questions to ask</string>
-    <string name="calls_task_questions_hint">One question per line</string>
+    <string name="calls_task_question_add">Add question</string>
+    <string name="calls_task_question_remove">Remove question: %1$s</string>
     <string name="calls_task_questions_limit">Up to %1$d questions, %2$d characters each.</string>
     <string name="calls_task_replace_action">Replace draft</string>
     <string name="calls_task_replace_note">This replaces the current call draft with a task from History. It does not dial.</string>

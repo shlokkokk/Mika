@@ -19,7 +19,8 @@
     <string name="calls_task_one_off">タスクはこの通話だけに適用されます。通話とタスクは履歴で確認できます。</string>
     <string name="calls_task_pick_sim">この通話で使う SIM を選ぶ</string>
     <string name="calls_task_questions">確認したい質問</string>
-    <string name="calls_task_questions_hint">1 行に 1 問</string>
+    <string name="calls_task_question_add">質問を追加</string>
+    <string name="calls_task_question_remove">質問を削除：%1$s</string>
     <string name="calls_task_questions_limit">最大 %1$d 問、各 %2$d 文字まで。</string>
     <string name="calls_task_replace_action">下書きを置き換える</string>
     <string name="calls_task_replace_note">現在の下書きを履歴のタスクで置き換えます。発信はしません。</string>

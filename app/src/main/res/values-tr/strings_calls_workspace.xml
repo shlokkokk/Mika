@@ -19,7 +19,8 @@
     <string name="calls_task_one_off">Özet yalnızca bu arama için geçerli. Aramayı ve özetini Geçmiş\'te bulun.</string>
     <string name="calls_task_pick_sim">Bu arama için bir SIM seçin</string>
     <string name="calls_task_questions">Sorulacak sorular</string>
-    <string name="calls_task_questions_hint">Her satıra bir soru</string>
+    <string name="calls_task_question_add">Soru ekle</string>
+    <string name="calls_task_question_remove">Soruyu kaldır: %1$s</string>
     <string name="calls_task_questions_limit">En fazla %1$d soru, her biri %2$d karakter.</string>
     <string name="calls_task_replace_action">Taslağı değiştir</string>
     <string name="calls_task_replace_note">Bu, mevcut arama taslağını Geçmiş\'ten bir görevle değiştirir. Aramaz.</string>

@@ -19,7 +19,8 @@
     <string name="calls_task_one_off">El encargo se aplica solo a esta llamada. Consulte la llamada y su encargo en el historial.</string>
     <string name="calls_task_pick_sim">Elija una SIM para esta llamada</string>
     <string name="calls_task_questions">Preguntas por hacer</string>
-    <string name="calls_task_questions_hint">Una pregunta por línea</string>
+    <string name="calls_task_question_add">Añadir pregunta</string>
+    <string name="calls_task_question_remove">Quitar pregunta: %1$s</string>
     <string name="calls_task_questions_limit">Hasta %1$d preguntas, %2$d caracteres cada una.</string>
     <string name="calls_task_replace_action">Sustituir borrador</string>
     <string name="calls_task_replace_note">Sustituye el borrador actual por una tarea del historial. No realiza la llamada.</string>

@@ -19,7 +19,8 @@
     <string name="calls_task_one_off">این خلاصه فقط برای همین تماس اعمال می‌شود. تماس و خلاصه آن را در تاریخچه پیدا کنید.</string>
     <string name="calls_task_pick_sim">برای این تماس یک سیم‌کارت انتخاب کنید</string>
     <string name="calls_task_questions">سؤالاتی که باید پرسید</string>
-    <string name="calls_task_questions_hint">در هر خط یک سؤال</string>
+    <string name="calls_task_question_add">افزودن پرسش</string>
+    <string name="calls_task_question_remove">حذف پرسش: %1$s</string>
     <string name="calls_task_questions_limit">حداکثر %1$d سؤال، هر کدام %2$d نویسه.</string>
     <string name="calls_task_replace_action">جایگزینی پیش‌نویس</string>
     <string name="calls_task_replace_note">این کار پیش‌نویس تماس فعلی را با وظیفه‌ای از تاریخچه جایگزین می‌کند. شماره‌گیری نمی‌کند.</string>

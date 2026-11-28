@@ -19,7 +19,8 @@
     <string name="calls_task_one_off">تنطبق المهمة على هذه المكالمة فقط. تجد المكالمة ومهمتها في السجل.</string>
     <string name="calls_task_pick_sim">اختر بطاقة SIM لهذه المكالمة</string>
     <string name="calls_task_questions">الأسئلة المطلوب طرحها</string>
-    <string name="calls_task_questions_hint">سؤال واحد في كل سطر</string>
+    <string name="calls_task_question_add">إضافة سؤال</string>
+    <string name="calls_task_question_remove">إزالة السؤال: %1$s</string>
     <string name="calls_task_questions_limit">حتى %1$d أسئلة، بحد %2$d حرفًا لكل سؤال.</string>
     <string name="calls_task_replace_action">استبدال المسودة</string>
     <string name="calls_task_replace_note">يستبدل مسودة المكالمة الحالية بمهمة من السجل. لن يتم الاتصال.</string>

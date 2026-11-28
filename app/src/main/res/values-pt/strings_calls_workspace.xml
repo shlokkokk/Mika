@@ -19,7 +19,8 @@
     <string name="calls_task_one_off">A tarefa vale só para esta chamada. Veja a chamada e a tarefa no histórico.</string>
     <string name="calls_task_pick_sim">Escolha um SIM para esta chamada</string>
     <string name="calls_task_questions">Perguntas a fazer</string>
-    <string name="calls_task_questions_hint">Uma pergunta por linha</string>
+    <string name="calls_task_question_add">Adicionar pergunta</string>
+    <string name="calls_task_question_remove">Remover pergunta: %1$s</string>
     <string name="calls_task_questions_limit">Até %1$d perguntas, %2$d caracteres por pergunta.</string>
     <string name="calls_task_replace_action">Substituir rascunho</string>
     <string name="calls_task_replace_note">Substitui o rascunho atual por uma tarefa do histórico. Nenhuma ligação é feita.</string>

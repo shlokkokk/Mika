@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -536,7 +535,7 @@ internal fun CurrentCallCard(
             state.liveTranscript.lastOrNull { it.text.isNotBlank() }?.let { latest ->
                 Row(
                     Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(MikaShapes.Chip)
                         .background(MikaTheme.colors.fill)
                         .padding(horizontal = 10.dp, vertical = 8.dp)
                         .testTag("call-current-latest"),
@@ -700,7 +699,7 @@ private fun CallPreferencesPage(
         ListRow(MikaIcons.Mic, stringResource(R.string.calls_voice_title), first = true,
             onClick = onVoiceProfiles.takeIf { canConfigure }, modifier = Modifier.testTag("call-settings-voice")) {
             if (voiceNeedsChange) StatusPill(stringResource(R.string.calls_voice_needs_change), PillTone.Warn)
-            else Text(callVoiceShort(voiceSummary), style = MikaType.Body, color = MikaTheme.colors.ink3, maxLines = 1)
+            else RowValue(callVoiceShort(voiceSummary))
             RowChevron()
         }
     }
