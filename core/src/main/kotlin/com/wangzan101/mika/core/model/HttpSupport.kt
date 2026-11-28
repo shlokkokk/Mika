@@ -90,6 +90,7 @@ internal object HttpSupport {
      * 有的服务器发完终态后并不主动关流(经隧道时生成完却静默挂到读超时),
      * 此时不能干等 EOF。调用者仍按各自协议判断有没有正常收尾,没收尾算 [ModelError.StreamCut]。
      * 一个事件都没有、又不是事件流格式的成功响应(比如地址指到了网页)算 [ModelError.BadResponse]。
+     * 读超时在这里按数据计:只有保活行(注释、空行、event / id / retry)时最多再等一个读超时,见 [SseStallWatch]。
      */
     suspend fun stream(http: OkHttpClient, req: Request, onEvent: (String) -> Boolean): RawResponse =
         observe(req) { attempt -> streamRaw(http, req, attempt, onEvent) }.also(::requireProxyAccepted)
@@ -119,6 +120,8 @@ internal object HttpSupport {
                             }
                             val source = it.body?.source() ?: throw ModelError.BadResponse("流式响应没有内容")
                             val framer = SseFramer()
+                            // 套接字的读超时只看字节;网关在等上游时发 SSE 注释保活,字节不断它就不触发
+                            val stall = SseStallWatch(http.readTimeoutMillis.toLong())
                             var events = 0
                             /** 派发一个事件;返回 true 表示协议层已到终态(如 [DONE]),读循环就此收尾,不再等连接关闭。 */
                             fun dispatch(event: String?): Boolean {
@@ -129,6 +132,7 @@ internal object HttpSupport {
                             }
                             while (cont.isActive) {
                                 val line = source.readUtf8Line() ?: break
+                                if (SseFramer.isData(line)) stall.onData() else stall.stalled()?.let { throw it }
                                 if (dispatch(framer.feed(line))) break
                             }
                             if (cont.isActive) {
