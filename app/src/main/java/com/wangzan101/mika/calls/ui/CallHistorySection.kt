@@ -166,11 +166,17 @@ internal fun CallHistorySection(
             }
         }
         if (results.isEmpty()) {
-            GroupCard { ListRow(MikaIcons.Search, stringResource(R.string.calls_history_no_match), first = true) }
-            TextButton(
-                onClick = { query = ""; filter = HistoryFilter.ALL; showAll = false; expanded = null },
-                modifier = Modifier.fillMaxWidth().testTag("call-history-reset-filters"),
-            ) { Text(stringResource(R.string.calls_reset_history_filters)) }
+            GroupCard {
+                ListRow(MikaIcons.Search, stringResource(R.string.calls_history_no_match), first = true)
+                ListRow(
+                    MikaIcons.Refresh,
+                    stringResource(R.string.calls_reset_history_filters),
+                    titleColor = MikaTheme.colors.accent,
+                    tone = TileTone.Accent,
+                    onClick = { query = ""; filter = HistoryFilter.ALL; showAll = false; expanded = null },
+                    modifier = Modifier.testTag("call-history-reset-filters"),
+                )
+            }
         } else GroupCard {
             val visible = if (showAll) results else results.take(3)
             visible.forEachIndexed { index, record ->
@@ -204,12 +210,16 @@ internal fun CallHistorySection(
     }
     // 清空是危险操作,放在列表最下面,不放在最显眼的顶上
     if (history.isNotEmpty() || historyWriteFailed) {
-        TextButton(
-            onClick = { pendingClear = true },
-            enabled = !busy,
-            modifier = Modifier.fillMaxWidth().padding(top = 16.dp).testTag("call-history-clear"),
-        ) {
-            Text(stringResource(R.string.calls_history_clear), color = MikaTheme.colors.bad)
+        GroupCard {
+            ListRow(
+                MikaIcons.Trash,
+                stringResource(R.string.calls_history_clear),
+                first = true,
+                titleColor = MikaTheme.colors.bad,
+                tone = TileTone.Bad,
+                onClick = if (!busy) ({ pendingClear = true }) else null,
+                modifier = Modifier.testTag("call-history-clear"),
+            )
         }
     }
 
