@@ -125,9 +125,9 @@ fun rememberNavStack(first: Route = Route.Chat): NavStack =
 
 /** 页面切换的动效参数:时长、视差比例(旧页挪四分之一)、曲线。 */
 private object NavAnim {
-    const val MS = 320
+    const val MS = 350
     const val PARALLAX = 4
-    val EASE = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
+    val EASE = CubicBezierEasing(0.22f, 1f, 0.36f, 1f)
 }
 
 /**

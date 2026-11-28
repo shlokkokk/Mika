@@ -1,5 +1,16 @@
 package com.wangzan101.mika.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,19 +21,28 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -32,12 +52,15 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaMotion
 import com.wangzan101.mika.ui.theme.MikaShapes
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
+import kotlinx.coroutines.delay
 
 /** 备援链里的一项:[name] 是模型名(等宽显示),[detail] 是它属于哪家/哪个服务;[missing] 为 true 时变淡。 */
 data class FallbackChainItem(val name: String, val detail: String = "", val missing: Boolean = false)
@@ -51,6 +74,7 @@ data class FallbackChainItem(val name: String, val detail: String = "", val miss
  * @param removeBody 确认移除的正文,参数是要移除的模型名。
  * @param footer 展开且有备援时卡片下面的说明。
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FallbackChainCard(
     title: String,
@@ -69,8 +93,33 @@ fun FallbackChainCard(
     var expanded by rememberSaveable(tagPrefix) { mutableStateOf(false) }
     var removingSlot by rememberSaveable(tagPrefix) { mutableStateOf<Int?>(null) }
     val c = MikaTheme.colors
+    val reduce = MikaTheme.reduceMotion
+    val requester = remember { BringIntoViewRequester() }
+    var cardSize by remember { mutableStateOf(IntSize.Zero) }
+    val density = LocalDensity.current
+    LaunchedEffect(expanded) {
+        if (!expanded) return@LaunchedEffect
+        withFrameNanos { }
+        withFrameNanos { }
+        suspend fun bringWithMargin() {
+            val extraBottomPx = with(density) { 28.dp.toPx() }
+            val rect = if (cardSize.width > 0 && cardSize.height > 0) {
+                Rect(0f, 0f, cardSize.width.toFloat(), cardSize.height.toFloat() + extraBottomPx)
+            } else null
+            requester.bringIntoView(rect)
+        }
+        bringWithMargin()
+        if (!reduce) {
+            delay(MikaMotion.PAGE_MS.toLong())
+            bringWithMargin()
+        }
+    }
 
-    GroupCard {
+    GroupCard(
+        Modifier
+            .onSizeChanged { cardSize = it }
+            .bringIntoViewRequester(requester),
+    ) {
         Row(
             Modifier
                 .fillMaxWidth()
@@ -130,17 +179,32 @@ fun FallbackChainCard(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            Icon(
-                MikaIcons.Chevron,
-                contentDescription = stringResource(if (expanded) R.string.collapse else R.string.expand),
-                tint = c.ink3,
-                modifier = Modifier
-                    .size(16.dp)
-                    .rotate(if (expanded) 90f else 0f),
-            )
+            val chevronAngle by animateFloatAsState(if (expanded) -90f else 90f, MikaMotion.switch(reduce), label = "fallback-chevron")
+            val pillBg by animateColorAsState(if (expanded) c.accentSoft else c.fill.copy(alpha = 0.6f), MikaMotion.switch(reduce), label = "fallback-pill-bg")
+            val pillTint by animateColorAsState(if (expanded) c.accent else c.ink3, MikaMotion.switch(reduce), label = "fallback-pill-fg")
+            Box(
+                Modifier
+                    .size(26.dp)
+                    .background(pillBg, CircleShape)
+                    .border(0.5.dp, c.edge, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    MikaIcons.Chevron,
+                    contentDescription = stringResource(if (expanded) R.string.collapse else R.string.expand),
+                    tint = pillTint,
+                    modifier = Modifier
+                        .size(13.dp)
+                        .rotate(chevronAngle),
+                )
+            }
         }
 
-        if (expanded) {
+        AnimatedVisibility(
+            visible = expanded,
+            enter = if (reduce) EnterTransition.None else expandVertically(tween(MikaMotion.PAGE_MS, easing = MikaMotion.Decelerate)) + fadeIn(tween(MikaMotion.SWITCH_MS, easing = MikaMotion.Decelerate)),
+            exit = if (reduce) ExitTransition.None else shrinkVertically(tween(MikaMotion.PAGE_MS, easing = MikaMotion.Decelerate)) + fadeOut(tween(MikaMotion.SWITCH_MS, easing = MikaMotion.Decelerate)),
+        ) {
             Column(
                 Modifier
                     .fillMaxWidth()
@@ -263,7 +327,13 @@ fun FallbackChainCard(
         )
     }
 
-    if (hasAny && expanded) FooterNote(footer)
+    AnimatedVisibility(
+        visible = hasAny && expanded,
+        enter = if (reduce) EnterTransition.None else expandVertically(tween(MikaMotion.PAGE_MS, easing = MikaMotion.Decelerate)) + fadeIn(tween(MikaMotion.SWITCH_MS, easing = MikaMotion.Decelerate)),
+        exit = if (reduce) ExitTransition.None else shrinkVertically(tween(MikaMotion.PAGE_MS, easing = MikaMotion.Decelerate)) + fadeOut(tween(MikaMotion.SWITCH_MS, easing = MikaMotion.Decelerate)),
+    ) {
+        FooterNote(footer)
+    }
 }
 
 /** 一行的左半边:序号方块 + 「主模型/备援 #n」+ 模型名 + 来源。 */
