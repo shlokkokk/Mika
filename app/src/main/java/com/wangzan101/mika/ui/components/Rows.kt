@@ -91,12 +91,22 @@ fun GroupLabel(text: String, modifier: Modifier = Modifier) {
     Text(text, modifier.padding(top = 8.dp, bottom = 8.dp), style = MikaType.Label, color = MikaTheme.colors.ink3)
 }
 
-/** 分组下面的说明,和卡片里的文字对齐。 */
+/** 分组下面的说明,和卡片里的文字对齐;紧贴在上一张卡片下面,不和下一组混在一起。 */
 @Composable
 fun FooterNote(text: String, modifier: Modifier = Modifier, color: Color = Color.Unspecified) {
     Text(
-        text, modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
-        style = MikaType.Hint, color = color.takeOrElse { MikaTheme.colors.ink3 },
+        text,
+        modifier
+            .fillMaxWidth()
+            .layout { measurable, constraints ->
+                val pullPx = 6.dp.roundToPx()
+                val p = measurable.measure(constraints)
+                val h = (p.height - pullPx).coerceAtLeast(0)
+                layout(p.width, h) { p.placeRelative(0, -pullPx) }
+            }
+            .padding(start = 16.dp, end = 16.dp, bottom = 14.dp),
+        style = MikaType.Hint,
+        color = color.takeOrElse { MikaTheme.colors.ink3 },
     )
 }
 

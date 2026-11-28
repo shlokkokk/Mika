@@ -119,6 +119,7 @@ fun FallbackChainCard(
         Modifier
             .onSizeChanged { cardSize = it }
             .bringIntoViewRequester(requester),
+        note = if (hasAny && expanded) footer else null,
     ) {
         Row(
             Modifier
@@ -325,14 +326,6 @@ fun FallbackChainCard(
                 TextButton(onClick = { removingSlot = null }) { Text(stringResource(R.string.cancel)) }
             },
         )
-    }
-
-    AnimatedVisibility(
-        visible = hasAny && expanded,
-        enter = if (reduce) EnterTransition.None else expandVertically(tween(MikaMotion.PAGE_MS, easing = MikaMotion.Decelerate)) + fadeIn(tween(MikaMotion.SWITCH_MS, easing = MikaMotion.Decelerate)),
-        exit = if (reduce) ExitTransition.None else shrinkVertically(tween(MikaMotion.PAGE_MS, easing = MikaMotion.Decelerate)) + fadeOut(tween(MikaMotion.SWITCH_MS, easing = MikaMotion.Decelerate)),
-    ) {
-        FooterNote(footer)
     }
 }
 
