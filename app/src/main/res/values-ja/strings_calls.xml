@@ -141,4 +141,9 @@
     <string name="calls_history_summary_updated">要約を更新しました</string>
     <string name="calls_voice_briefing_left_foreground">フォアグラウンドを離れたため発信しませんでした</string>
     <string name="calls_voice_briefing_greeting">この電話でお願いしたい用件を教えてください。お聞きしています。</string>
+    <string name="calls_draft_placeholder">通話後に送る短いフォローアップメッセージを入力...</string>
+    <string name="calls_result_farewell_ended">通話が終了しました（Androidにより切断）</string>
+    <string name="calls_result_max_duration_ended">通話時間の上限に達したためAndroidが切断しました</string>
+    <string name="calls_result_user_hangup">ユーザーにより切断</string>
+    <string name="calls_result_android_ended">通話が終了しました</string>
 </resources>

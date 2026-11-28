@@ -141,4 +141,9 @@
     <string name="calls_history_summary_updated">摘要已更新</string>
     <string name="calls_voice_briefing_left_foreground">已離開前景，未撥號</string>
     <string name="calls_voice_briefing_greeting">請交代這通電話要辦的事，我在聽。</string>
+    <string name="calls_draft_placeholder">輸入通話後的簡短跟進訊息...</string>
+    <string name="calls_result_farewell_ended">通話已收尾，Android 已掛斷</string>
+    <string name="calls_result_max_duration_ended">達到時長上限，Android 已掛斷</string>
+    <string name="calls_result_user_hangup">已由您掛斷</string>
+    <string name="calls_result_android_ended">Android 已確認通話結束</string>
 </resources>

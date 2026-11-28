@@ -141,4 +141,9 @@
     <string name="calls_history_summary_updated">Summary updated</string>
     <string name="calls_voice_briefing_left_foreground">Left foreground, call not placed</string>
     <string name="calls_voice_briefing_greeting">Please tell me what this call is for. I\'m listening.</string>
+    <string name="calls_draft_placeholder">Write a short follow-up message to send after this call...</string>
+    <string name="calls_result_farewell_ended">Call wrapped up · ended by Android</string>
+    <string name="calls_result_max_duration_ended">Time limit reached · ended by Android</string>
+    <string name="calls_result_user_hangup">Hung up by you</string>
+    <string name="calls_result_android_ended">Call ended</string>
 </resources>

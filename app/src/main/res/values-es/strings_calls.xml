@@ -141,4 +141,9 @@
     <string name="calls_history_summary_updated">Resumen actualizado</string>
     <string name="calls_voice_briefing_left_foreground">Saliste de la pantalla, llamada no realizada</string>
     <string name="calls_voice_briefing_greeting">Cuéntame para qué es esta llamada, te escucho.</string>
+    <string name="calls_draft_placeholder">Escribe un breve mensaje de seguimiento después de esta llamada...</string>
+    <string name="calls_result_farewell_ended">Llamada finalizada · colgada por Android</string>
+    <string name="calls_result_max_duration_ended">Límite de tiempo alcanzado · colgada por Android</string>
+    <string name="calls_result_user_hangup">Colgada por ti</string>
+    <string name="calls_result_android_ended">Llamada finalizada</string>
 </resources>

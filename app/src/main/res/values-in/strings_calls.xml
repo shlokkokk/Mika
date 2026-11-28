@@ -141,4 +141,9 @@
     <string name="calls_history_summary_updated">Ringkasan diperbarui</string>
     <string name="calls_voice_briefing_left_foreground">Meninggalkan layar depan, panggilan tidak dilakukan</string>
     <string name="calls_voice_briefing_greeting">Silakan sampaikan apa keperluan panggilan ini, saya mendengarkan.</string>
+    <string name="calls_draft_placeholder">Tulis pesan tindak lanjut singkat setelah panggilan ini...</string>
+    <string name="calls_result_farewell_ended">Panggilan selesai · diakhiri oleh Android</string>
+    <string name="calls_result_max_duration_ended">Batas waktu tercapai · diakhiri oleh Android</string>
+    <string name="calls_result_user_hangup">Dimatikan oleh Anda</string>
+    <string name="calls_result_android_ended">Panggilan berakhir</string>
 </resources>
