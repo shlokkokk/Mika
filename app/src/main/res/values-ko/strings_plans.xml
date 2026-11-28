@@ -125,4 +125,9 @@
     <string name="plans_screen_off_fix">해결</string>
     <string name="plans_screen_off_foot">알림, 웹, 샌드박스 단계는 화면이 꺼진 상태에서 잠금 해제 없이 실행됩니다. 패턴 잠금은 자동으로 해제할 수 없습니다.</string>
     <string name="plans_screen_off_open_failed">설정 화면을 열 수 없습니다. 시스템 설정에서 Mika를 찾아 변경하세요.</string>
+    <string name="plans_preauth_call_title">AI 전화 사전 승인</string>
+    <string name="plans_preauth_call_sub">이 예약 작업이 실행 시 확인 없이 지정된 단일 번호로 전화를 걸 수 있도록 허용합니다</string>
+    <string name="plans_preauth_call_number">승인된 번호</string>
+    <string name="plans_preauth_call_number_hint">예: +91 91155 57175</string>
+    <string name="plans_preauth_call_foot">예약 실행 시 이 정확한 번호로만 자동 발신할 수 있습니다. 다른 번호는 계속 실시간 확인이 필요합니다.</string>
 </resources>

@@ -192,7 +192,8 @@ class TaskService : Service() {
                     triggerKey = intent.getStringExtra(EXTRA_TRIGGER_KEY),
                     triggerActionGoal = intent.getStringExtra(EXTRA_TRIGGER_ACTION),
                     triggerThreadId = intent.getStringExtra(EXTRA_TRIGGER_THREAD),
-                    triggerCondition = intent.getStringExtra(EXTRA_TRIGGER_CONDITION))
+                    triggerCondition = intent.getStringExtra(EXTRA_TRIGGER_CONDITION),
+                    preauthorizedCallNumber = intent.getStringExtra(EXTRA_PREAUTHORIZED_CALL_NUMBER))
             } finally { TriggerHandoffWake.release() }
             ACTION_START_WORKFLOW -> {
                 workflowStarts.incrementAndGet()
@@ -396,6 +397,7 @@ class TaskService : Service() {
         internal const val EXTRA_TRIGGER_ACTION = "trigger_action"
         internal const val EXTRA_TRIGGER_THREAD = "trigger_thread"
         internal const val EXTRA_TRIGGER_CONDITION = "trigger_condition"
+        internal const val EXTRA_PREAUTHORIZED_CALL_NUMBER = "preauthorized_call_number"
         internal const val EXTRA_MCP_ID = "mcp_id"
         internal const val EXTRA_ATTENDANCE = "attendance"
         internal const val EXTRA_CHANNEL_ID = "channel_id"
@@ -505,7 +507,7 @@ class TaskService : Service() {
 
         /** [checkGoal] 是只读检查目标,[condition] 是给人看的用户条件原文;动作仍使用 [goal]。 */
         fun startTrigger(context: Context, goal: String, threadId: String, windowKey: String,
-            checkGoal: String? = null, condition: String? = null) {
+            checkGoal: String? = null, condition: String? = null, preauthorizedCallNumber: String? = null) {
             if (FeatureFlags.get(context).quitRequested()) return
             val checking = checkGoal != null
             // 闹钟广播一结束系统就不再撑 CPU:撑到服务处理完这次启动(见 [TriggerHandoffWake])
@@ -514,7 +516,12 @@ class TaskService : Service() {
                 context.startForegroundService(Intent(context, TaskService::class.java).setAction(ACTION_START_TRIGGER)
                     .putExtra(EXTRA_GOAL, checkGoal ?: goal).putExtra(EXTRA_CONVERSATION, threadId)
                     .putExtra(EXTRA_TRIGGER_KEY, windowKey).putExtra(EXTRA_TRIGGER_THREAD, threadId)
-                    .apply { if (checking) putExtra(EXTRA_TRIGGER_ACTION, goal).putExtra(EXTRA_TRIGGER_CONDITION, condition) })
+                    .apply {
+                        if (checking) putExtra(EXTRA_TRIGGER_ACTION, goal).putExtra(EXTRA_TRIGGER_CONDITION, condition)
+                        if (!preauthorizedCallNumber.isNullOrBlank()) {
+                            putExtra(EXTRA_PREAUTHORIZED_CALL_NUMBER, preauthorizedCallNumber)
+                        }
+                    })
             } catch (e: Exception) {
                 TriggerHandoffWake.release()
                 throw e

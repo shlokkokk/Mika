@@ -259,7 +259,7 @@ fun toolDispatcher(
     }, phoneCalls?.let { port ->
         object : CapabilityProvider {
             override val id = "calls"
-            override fun open(spec: RunSpec) = com.wangzan101.mika.core.calls.PhoneCallsCapability(port, spec.threadId)
+            override fun open(spec: RunSpec) = com.wangzan101.mika.core.calls.PhoneCallsCapability(port, spec.threadId, spec.preauthorizedCallNumber)
         }
     }, helper?.let { port ->
         object : CapabilityProvider {

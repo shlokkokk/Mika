@@ -125,4 +125,9 @@
     <string name="plans_screen_off_fix">対応する</string>
     <string name="plans_screen_off_foot">リマインダー、ウェブ、サンドボックスの操作は画面オフのままロック解除せずに実行されます。パターンロックは自動で解除できません。</string>
     <string name="plans_screen_off_open_failed">この設定画面を開けませんでした。システムの設定で Mika を開いてください。</string>
+    <string name="plans_preauth_call_title">AI通話を事前承認</string>
+    <string name="plans_preauth_call_sub">この予定タスクが実行時の確認なしで指定した1件の番号へ発信できるようにします</string>
+    <string name="plans_preauth_call_number">承認済み番号</string>
+    <string name="plans_preauth_call_number_hint">例: +91 91155 57175</string>
+    <string name="plans_preauth_call_foot">予定の実行時に自動発信できるのはこの番号のみです。他の番号には引き続き確認が必要です。</string>
 </resources>

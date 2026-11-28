@@ -10,10 +10,20 @@ import com.wangzan101.mika.core.tool.*
 import kotlinx.serialization.json.*
 
 /** [ownerConversationId] 是这次运行所在的对话:拨出的电话归这件任务,电话里的前台看得到它的状态。 */
-internal class PhoneCallsCapability(val port: PhoneCallPort, val ownerConversationId: String? = null) : Capability {
+internal class PhoneCallsCapability(
+    val port: PhoneCallPort,
+    val ownerConversationId: String? = null,
+    val preauthorizedCallNumber: String? = null,
+) : Capability {
     override val id = "calls"
     override fun status(): CapabilityStatus = CapabilityStatus.Available
-    override fun tools(): List<AgentTool> = callAgentTools
+    override fun tools(): List<AgentTool> = listOf(
+        CallAgentTool("state", Verb.CallState, preauthorizedCallNumber),
+        CallAgentTool("dial", Verb.CallDial, preauthorizedCallNumber),
+        CallAgentTool("answer", Verb.CallAnswer, preauthorizedCallNumber),
+        CallAgentTool("hangup", Verb.CallHangup, preauthorizedCallNumber),
+        CallAgentTool("takeover", Verb.CallTakeover, preauthorizedCallNumber),
+    )
     override fun sections(env: PromptEnv): List<String> = listOf(
         "Native cellular calls use the locally configured Volcengine voice assistant. Only call numbers the user explicitly requested. " +
             "Call state distinguishes a dial request from a connected call. Do not redial after an uncertain response; inspect state first. " +
@@ -29,7 +39,11 @@ internal val callAgentTools: List<AgentTool> = listOf(
     CallAgentTool("takeover", Verb.CallTakeover),
 )
 
-private class CallAgentTool(private val action: String, override val verb: Verb) : AgentTool {
+private class CallAgentTool(
+    private val action: String,
+    override val verb: Verb,
+    private val preauthorizedCallNumber: String? = null,
+) : AgentTool {
     override val capability = "calls"
     override val offScreen = true
     override val risk = if (action == "state") Risk.Read else Risk.Write
@@ -56,6 +70,9 @@ private class CallAgentTool(private val action: String, override val verb: Verb)
             when (action) {
                 "dial" -> {
                     val (number, simId, task) = dialArgs(a)
+                    if (preauthorizedCallNumber != null && samePhoneNumber(number, preauthorizedCallNumber)) {
+                        return ApprovalRisk(ActionRisk.External)
+                    }
                     val content = buildString {
                         append(label).append(' ').append(number)
                         if (task != null) {
@@ -91,4 +108,10 @@ private class CallAgentTool(private val action: String, override val verb: Verb)
 
     private fun dialArgs(a: Args) = Triple(a.str("number", min = 3, max = 32)!!, a.str("simId", max = 200), parsePhoneCallTask(a.o[CALL_TASK_FIELD]))
     private fun callId(a: Args) = a.str(CALL_ID_FIELD, max = MAX_CALL_ID_LENGTH)!!
+    private fun samePhoneNumber(a: String, b: String): Boolean {
+        val da = a.filter(Char::isDigit)
+        val db = b.filter(Char::isDigit)
+        if (da.isEmpty() || db.isEmpty()) return false
+        return da == db || (da.length >= 10 && db.length >= 10 && da.takeLast(10) == db.takeLast(10))
+    }
 }

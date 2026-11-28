@@ -126,4 +126,9 @@
     <string name="plans_screen_off_fix">رفع</string>
     <string name="plans_screen_off_foot">یادآورها و مراحل وب و سندباکس با صفحهٔ خاموش و بدون باز کردن قفل اجرا می‌شوند. قفل الگویی را نمی‌توان خودکار باز کرد.</string>
     <string name="plans_screen_off_open_failed">این صفحهٔ تنظیمات باز نشد. Mika را در تنظیمات سیستم پیدا کنید.</string>
+    <string name="plans_preauth_call_title">پیش‌مجوز تماس هوش مصنوعی</string>
+    <string name="plans_preauth_call_sub">به این کار زمان‌بندی‌شده اجازه دهید بدون تأیید لحظه‌ای با یک شماره مشخص تماس بگیرد</string>
+    <string name="plans_preauth_call_number">شماره تأییدشده</string>
+    <string name="plans_preauth_call_number_hint">مثلاً +91 91155 57175</string>
+    <string name="plans_preauth_call_foot">هنگام اجرای زمان‌بندی فقط همین شماره دقیق می‌تواند خودکار شماره‌گیری شود. هر شماره دیگری همچنان نیاز به تأیید دارد.</string>
 </resources>

@@ -128,4 +128,9 @@
     <string name="plans_screen_off_fix">Исправить</string>
     <string name="plans_screen_off_foot">Напоминания, веб-шаги и шаги в песочнице выполняются при выключенном экране без разблокировки. Графический ключ нельзя снять автоматически.</string>
     <string name="plans_screen_off_open_failed">Не удалось открыть эту страницу настроек. Найдите Mika в системных настройках.</string>
+    <string name="plans_preauth_call_title">Предварительно разрешить AI-звонок</string>
+    <string name="plans_preauth_call_sub">Разрешить запланированной задаче звонить на один точный номер без подтверждения во время запуска</string>
+    <string name="plans_preauth_call_number">Разрешённый номер</string>
+    <string name="plans_preauth_call_number_hint">напр. +91 91155 57175</string>
+    <string name="plans_preauth_call_foot">При срабатывании расписания автоматический звонок разрешён только на этот точный номер. Любой другой номер по-прежнему требует подтверждения.</string>
 </resources>

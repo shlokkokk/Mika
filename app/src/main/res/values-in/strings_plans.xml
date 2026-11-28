@@ -125,4 +125,9 @@
     <string name="plans_screen_off_fix">Perbaiki</string>
     <string name="plans_screen_off_foot">Pengingat, langkah web, dan sandbox berjalan saat layar mati tanpa membuka kunci. Kunci pola tidak dapat dibuka otomatis.</string>
     <string name="plans_screen_off_open_failed">Halaman setelan tidak dapat dibuka. Cari Mika di Setelan sistem.</string>
+    <string name="plans_preauth_call_title">Pra-otorisasi panggilan AI</string>
+    <string name="plans_preauth_call_sub">Izinkan tugas terjadwal ini menelepon satu nomor persis tanpa konfirmasi langsung</string>
+    <string name="plans_preauth_call_number">Nomor yang disetujui</string>
+    <string name="plans_preauth_call_number_hint">mis. +91 91155 57175</string>
+    <string name="plans_preauth_call_foot">Hanya nomor persis ini yang dapat dihubungi otomatis saat jadwal berjalan. Nomor lain tetap memerlukan konfirmasi langsung.</string>
 </resources>

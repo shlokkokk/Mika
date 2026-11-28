@@ -49,6 +49,7 @@ data class PlanDraft(
     val executionWindow: PlanExecutionWindow = PlanExecutionWindow.Anytime,
     val windowStart: String = "22:00",
     val windowEnd: String = "02:00",
+    val preauthorizedCallNumber: String = "",
 )
 
 private val EDIT_TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm")
@@ -123,6 +124,7 @@ fun TriggerDefinition.toPlanDraft(): PlanDraft {
         executionWindow = executionWindow,
         windowStart = custom?.let { formatExecutionWindowMinute(it.startMinute) } ?: "22:00",
         windowEnd = custom?.let { formatExecutionWindowMinute(it.endMinute) } ?: "02:00",
+        preauthorizedCallNumber = preauthorizedCallNumber.orEmpty(),
     )
 }
 
@@ -234,6 +236,7 @@ fun editedTrigger(
         minutes * 60_000
     } else null
     val reminderText = content.takeIf { draft.reminder }
+    val preauthorizedCallNumber = if (draft.reminder) null else draft.preauthorizedCallNumber.trim().ifEmpty { null }
     val base = original ?: TriggerDefinition(newId, newThreadId, content, nextAt, source = source)
     val updated = base.copy(
         goal = content,
@@ -251,6 +254,7 @@ fun editedTrigger(
         cooldownMs = cooldownMs,
         executionWindowZone = execution?.first,
         executionWindows = execution?.second.orEmpty(),
+        preauthorizedCallNumber = preauthorizedCallNumber,
     )
     return if (original == null) updated else updated.withConditionHistoryFrom(original)
 }

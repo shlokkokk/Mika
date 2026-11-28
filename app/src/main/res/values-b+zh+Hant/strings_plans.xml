@@ -125,4 +125,9 @@
     <string name="plans_screen_off_fix">去處理</string>
     <string name="plans_screen_off_foot">提醒、網頁和沙箱步驟在螢幕關閉時直接執行，不需解鎖。圖案鎖無法自動解鎖。</string>
     <string name="plans_screen_off_open_failed">無法開啟這個設定頁，請到系統設定中找到 Mika 處理。</string>
+    <string name="plans_preauth_call_title">預先授權 AI 通話</string>
+    <string name="plans_preauth_call_sub">允許此排程任務撥打指定號碼而無需執行時再次確認</string>
+    <string name="plans_preauth_call_number">授權號碼</string>
+    <string name="plans_preauth_call_number_hint">例如 +91 91155 57175</string>
+    <string name="plans_preauth_call_foot">僅此指定號碼可在排程觸發時自動撥出；任何其他號碼仍需即時確認。</string>
 </resources>

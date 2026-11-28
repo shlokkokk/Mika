@@ -30,6 +30,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -69,8 +70,10 @@ import com.wangzan101.mika.i18n.uiLocale
 import com.wangzan101.mika.settings.DeviceAccessSettings
 import com.wangzan101.mika.ui.components.ButtonKind
 import com.wangzan101.mika.ui.components.ButtonSize
+import com.wangzan101.mika.ui.components.FooterNote
 import com.wangzan101.mika.ui.components.GroupCard
 import com.wangzan101.mika.ui.components.GroupLabel
+import com.wangzan101.mika.ui.components.InputRow
 import com.wangzan101.mika.ui.components.KeyboardDismissArea
 import com.wangzan101.mika.ui.components.ListRow
 import com.wangzan101.mika.ui.components.MikaButton
@@ -405,6 +408,46 @@ fun PlanEditorDialog(
 
                         if (!draft.reminder && deviceAccess != null) {
                             ScreenOffSetupCard(deviceAccess)
+                        }
+
+                        if (!draft.reminder) {
+                            var callPreauthExpanded by remember(original) { mutableStateOf(draft.preauthorizedCallNumber.isNotBlank()) }
+                            GroupLabel(tr(R.string.plans_preauth_call_title))
+                            GroupCard {
+                                ListRow(
+                                    icon = MikaIcons.Phone,
+                                    title = tr(R.string.plans_preauth_call_title),
+                                    subtitle = tr(R.string.plans_preauth_call_sub),
+                                    first = true,
+                                    onClick = {
+                                        callPreauthExpanded = !callPreauthExpanded
+                                        if (!callPreauthExpanded) draft = draft.copy(preauthorizedCallNumber = "")
+                                    },
+                                ) {
+                                    MikaSwitch(
+                                        checked = callPreauthExpanded,
+                                        onCheckedChange = { on ->
+                                            callPreauthExpanded = on
+                                            if (!on) draft = draft.copy(preauthorizedCallNumber = "")
+                                        },
+                                        modifier = Modifier.testTag("plan-editor-preauth-call-toggle"),
+                                    )
+                                }
+                                if (callPreauthExpanded) {
+                                    HorizontalDivider()
+                                    InputRow(
+                                        label = tr(R.string.plans_preauth_call_number),
+                                        value = draft.preauthorizedCallNumber,
+                                        onChange = { draft = draft.copy(preauthorizedCallNumber = it.take(32)) },
+                                        placeholder = tr(R.string.plans_preauth_call_number_hint),
+                                        keyboard = KeyboardType.Phone,
+                                        modifier = Modifier.testTag("plan-editor-preauth-call-number"),
+                                    )
+                                }
+                            }
+                            if (callPreauthExpanded) {
+                                FooterNote(tr(R.string.plans_preauth_call_foot))
+                            }
                         }
 
                         if (!draft.reminder) {

@@ -127,4 +127,9 @@
     <string name="plans_screen_off_fix">Resolver</string>
     <string name="plans_screen_off_foot">Los recordatorios y los pasos web y de sandbox se ejecutan con la pantalla apagada sin desbloquear. El bloqueo por patrón no se puede quitar automáticamente.</string>
     <string name="plans_screen_off_open_failed">No se pudo abrir esa página de ajustes. Busca Mika en los Ajustes del sistema.</string>
+    <string name="plans_preauth_call_title">Preautorizar llamada IA</string>
+    <string name="plans_preauth_call_sub">Permitir que esta tarea programada marque un número exacto sin confirmación en vivo</string>
+    <string name="plans_preauth_call_number">Número aprobado</string>
+    <string name="plans_preauth_call_number_hint">ej. +91 91155 57175</string>
+    <string name="plans_preauth_call_foot">Solo este número exacto podrá marcarse automáticamente al ejecutarse el plan. Cualquier otro número seguirá requiriendo confirmación.</string>
 </resources>

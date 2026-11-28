@@ -125,4 +125,9 @@
     <string name="plans_screen_off_fix">Khắc phục</string>
     <string name="plans_screen_off_foot">Lời nhắc, bước web và sandbox chạy khi tắt màn hình mà không cần mở khóa. Khóa hình vẽ không thể tự động mở.</string>
     <string name="plans_screen_off_open_failed">Không mở được trang cài đặt này. Hãy tìm Mika trong Cài đặt hệ thống.</string>
+    <string name="plans_preauth_call_title">Cấp phép trước cuộc gọi AI</string>
+    <string name="plans_preauth_call_sub">Cho phép tác vụ đã lên lịch gọi đến một số chính xác mà không cần xác nhận trực tiếp</string>
+    <string name="plans_preauth_call_number">Số đã duyệt</string>
+    <string name="plans_preauth_call_number_hint">vd. +91 91155 57175</string>
+    <string name="plans_preauth_call_foot">Chỉ số chính xác này mới được gọi tự động khi lịch chạy. Mọi số khác vẫn cần xác nhận trực tiếp.</string>
 </resources>

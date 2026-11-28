@@ -127,4 +127,9 @@
     <string name="plans_screen_off_fix">Resolver</string>
     <string name="plans_screen_off_foot">Lembretes e etapas da web e do sandbox são executados com a tela desligada, sem desbloquear. O bloqueio por padrão não pode ser desbloqueado automaticamente.</string>
     <string name="plans_screen_off_open_failed">Não foi possível abrir essa página. Procure o Mika nas Configurações do sistema.</string>
+    <string name="plans_preauth_call_title">Pré-autorizar ligação de IA</string>
+    <string name="plans_preauth_call_sub">Permitir que esta tarefa agendada ligue para um número exato sem confirmação ao vivo</string>
+    <string name="plans_preauth_call_number">Número aprovado</string>
+    <string name="plans_preauth_call_number_hint">ex. +91 91155 57175</string>
+    <string name="plans_preauth_call_foot">Apenas este número exato pode ser discado automaticamente quando o agendamento rodar. Qualquer outro número ainda exige confirmação.</string>
 </resources>

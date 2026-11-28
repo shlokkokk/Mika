@@ -125,4 +125,9 @@
     <string name="plans_screen_off_fix">去处理</string>
     <string name="plans_screen_off_foot">提醒、网页和沙箱步骤熄屏时直接运行，不用解锁。图案锁无法自动解锁。</string>
     <string name="plans_screen_off_open_failed">打不开这个设置页，请到系统设置里找到 Mika 处理。</string>
+    <string name="plans_preauth_call_title">预先授权 AI 通话</string>
+    <string name="plans_preauth_call_sub">允许此定时任务在执行时无需再次确认即可拨打指定号码</string>
+    <string name="plans_preauth_call_number">授权号码</string>
+    <string name="plans_preauth_call_number_hint">例如 +91 91155 57175</string>
+    <string name="plans_preauth_call_foot">仅此指定号码可在定时触发时自动拨打；其他任何号码仍需实时确认。</string>
 </resources>

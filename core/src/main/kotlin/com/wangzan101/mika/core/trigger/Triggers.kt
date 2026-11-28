@@ -48,6 +48,7 @@ data class TriggerDefinition(
     val calendarTimes: List<String> = emptyList(),
     /** 计划是谁建的:用户手动 / 模型 / 外部脚本,只影响展示与追溯。 */
     val source: TriggerSource = TriggerSource.Model,
+    val preauthorizedCallNumber: String? = null,
     /** 模型任务允许执行的当地窗口；空表示随时执行。固定提醒和手动立即执行不受此限制。 */
     val executionWindowZone: String? = null,
     val executionWindows: List<ExecutionWindow> = emptyList(),

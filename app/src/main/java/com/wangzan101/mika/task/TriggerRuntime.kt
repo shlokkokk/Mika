@@ -171,7 +171,7 @@ object TriggerRuntime {
             return
         }
         store.mark(window.key, TriggerWindowState.ActionDispatched)
-        try { TaskService.startTrigger(context, goal, threadId, key, null, null) }
+        try { TaskService.startTrigger(context, goal, threadId, key, null, null, trigger.preauthorizedCallNumber) }
         catch (e: Exception) { reportStartFailure(context, store, trigger, window.key, e, before = trigger) }
     }
 
@@ -213,7 +213,7 @@ object TriggerRuntime {
         try {
             if (trigger.reminderText != null) deliverReminder(context, store, trigger, window.key)
             else TaskService.startTrigger(context, trigger.goal, trigger.threadId, window.key,
-                trigger.conditionCheckGoal(ZoneId.systemDefault()), trigger.conditionGoal)
+                trigger.conditionCheckGoal(ZoneId.systemDefault()), trigger.conditionGoal, trigger.preauthorizedCallNumber)
             store.mark(window.key, TriggerWindowState.Dispatched)
         } catch (e: Exception) {
             reportStartFailure(context, store, trigger, window.key, e)
@@ -254,7 +254,7 @@ object TriggerRuntime {
         paused = MikaPause.get(context)) { trigger, window ->
             if (trigger.reminderText != null) deliverReminder(context, store, trigger, window.key)
             else try { TaskService.startTrigger(context, trigger.goal, trigger.threadId, window.key,
-                    trigger.conditionCheckGoal(ZoneId.systemDefault()), trigger.conditionGoal) }
+                    trigger.conditionCheckGoal(ZoneId.systemDefault()), trigger.conditionGoal, trigger.preauthorizedCallNumber) }
                 catch (e: Exception) { reportStartFailure(context, store, trigger, window.key, e); throw e }
         }
 

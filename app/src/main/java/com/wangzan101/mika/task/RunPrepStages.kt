@@ -204,6 +204,6 @@ internal suspend fun TaskRun.assemblePrompt(a: RunAssembly, priorTurns: List<Tur
     val runSpec = RunSpec(RunId(key), goal, conversationId,
         priorTurns,
         provenance, if (conditionCheck) setOf("web", "sandbox") else null, readOnly = conditionCheck,
-        stepBudget = stepLimit, tokenBudget = tokenBudget)
+        stepBudget = stepLimit, tokenBudget = tokenBudget, preauthorizedCallNumber = preauthorizedCallNumber)
     return RunPrompt(userScreens, basePrompt, personaLabel, runSpec)
 }

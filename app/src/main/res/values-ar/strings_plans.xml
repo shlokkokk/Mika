@@ -130,4 +130,9 @@
     <string name="plans_screen_off_fix">إصلاح</string>
     <string name="plans_screen_off_foot">تعمل التذكيرات وخطوات الويب ووضع الحماية والشاشة مطفأة دون فتح القفل. لا يمكن فتح قفل النمط تلقائيًا.</string>
     <string name="plans_screen_off_open_failed">تعذر فتح صفحة الإعدادات هذه. ابحث عن Mika في إعدادات النظام.</string>
+    <string name="plans_preauth_call_title">تفويض مكالمة AI مسبقاً</string>
+    <string name="plans_preauth_call_sub">السماح لهذه المهمة المجدولة بالاتصال برقم محدد واحد دون تأكيد مباشر</string>
+    <string name="plans_preauth_call_number">الرقم المفوض</string>
+    <string name="plans_preauth_call_number_hint">مثال: +91 91155 57175</string>
+    <string name="plans_preauth_call_foot">لا يمكن الاتصال تلقائياً إلا بهذا الرقم المحدد عند تشغيل الجدول. أي رقم آخر لا يزال يتطلب تأكيداً مباشراً.</string>
 </resources>

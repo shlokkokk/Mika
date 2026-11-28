@@ -64,7 +64,7 @@ internal fun TaskService.begin(newGoal: String, requestedConversation: String?,
     provenance: RunProvenance = RunProvenance(), triggerKey: String? = null,
     triggerActionGoal: String? = null, triggerThreadId: String? = null, mcpExternalId: String? = null, messageId: String? = null,
     channelPeer: ChannelPeer? = null, channelMessageId: String? = null, triggerCondition: String? = null, workflowAttemptId: String? = null,
-    brief: String? = null) {
+    brief: String? = null, preauthorizedCallNumber: String? = null) {
     if (pausedBlocks()) {
         finishPausedStart(provenance, triggerKey, mcpExternalId, workflowAttemptId, channelPeer, channelMessageId, followUp = null)
         return
@@ -101,7 +101,7 @@ internal fun TaskService.begin(newGoal: String, requestedConversation: String?,
     }
     startNew(newGoal, requestedConversation, provenance, triggerKey, triggerActionGoal, triggerThreadId, mcpExternalId,
         triggerCondition = triggerCondition, channelPeer = channelPeer, channelMessageId = channelMessageId, workflowAttemptId = workflowAttemptId,
-        brief = brief)
+        brief = brief, preauthorizedCallNumber = preauthorizedCallNumber)
 }
 
 /**
@@ -113,7 +113,7 @@ internal fun TaskService.startNew(newGoal: String, requestedConversation: String
     triggerActionGoal: String? = null, triggerThreadId: String? = null, mcpExternalId: String? = null,
     followUp: QueuedFollowUp? = null, triggerCondition: String? = null,
     channelPeer: ChannelPeer? = null, channelMessageId: String? = null, workflowAttemptId: String? = null,
-    brief: String? = null) {
+    brief: String? = null, preauthorizedCallNumber: String? = null) {
     if (pausedBlocks()) {
         finishPausedStart(provenance, triggerKey, mcpExternalId, workflowAttemptId, channelPeer, channelMessageId, followUp)
         return
@@ -145,6 +145,7 @@ internal fun TaskService.startNew(newGoal: String, requestedConversation: String
             r.run.triggerActionGoal = triggerActionGoal
             r.run.triggerCondition = triggerCondition
             r.run.triggerThreadId = triggerThreadId
+            r.run.preauthorizedCallNumber = preauthorizedCallNumber
             if (triggerKey != null) center.store.get(com.wangzan101.mika.core.run.RunId(r.run.key))?.let {
                 center.store.save(it.copy(triggerWindowKey = triggerKey, userText = triggerCondition))
             }
@@ -175,6 +176,7 @@ internal fun TaskService.startNew(newGoal: String, requestedConversation: String
             run.triggerActionGoal = triggerActionGoal
             run.triggerCondition = triggerCondition
             run.triggerThreadId = triggerThreadId
+            run.preauthorizedCallNumber = preauthorizedCallNumber
             if (triggerKey != null) center.store.get(com.wangzan101.mika.core.run.RunId(run.key))?.let {
                 center.store.save(it.copy(triggerWindowKey = triggerKey, userText = triggerCondition))
             }
