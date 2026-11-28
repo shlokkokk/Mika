@@ -712,7 +712,7 @@ private fun CallPreferencesPage(
         val preferred = config.defaultOutgoingSimId
         val selected = state.simOptions.firstOrNull { it.id == preferred }
         val summary = when {
-            selected != null -> stringResource(R.string.calls_sim_preferred, selected.label)
+            selected != null -> selected.label
             preferred != null -> stringResource(R.string.calls_sim_unavailable)
             else -> stringResource(R.string.calls_sim_ask_each_time)
         }
@@ -849,7 +849,13 @@ private fun phaseLabel(phase: CallPhase): String = stringResource(when (phase) {
 
 @Composable
 private fun CallProfileDialog(config: CallConfig, onDismiss: () -> Unit, onSave: suspend (CallConfig) -> Boolean) {
-    var greeting by rememberSaveable { mutableStateOf(config.greeting) }
+    val localizedDefaultGreeting = stringResource(R.string.calls_default_greeting)
+    val initialGreeting = if (CallPolicy.migrateDefaultGreeting(config.greeting) == CallPolicy.DEFAULT_GREETING) {
+        localizedDefaultGreeting
+    } else {
+        config.greeting
+    }
+    var greeting by rememberSaveable { mutableStateOf(initialGreeting) }
     var prompt by rememberSaveable { mutableStateOf(config.systemPrompt) }
     var seconds by rememberSaveable { mutableStateOf(config.maxCallSeconds.toString()) }
     var busy by remember { mutableStateOf(false) }
@@ -879,7 +885,12 @@ private fun CallProfileDialog(config: CallConfig, onDismiss: () -> Unit, onSave:
                 busy = true
                 scope.launch {
                     try {
-                        if (onSave(config.copy(greeting = greeting, systemPrompt = prompt, maxCallSeconds = maxSeconds))) onDismiss()
+                        val savedGreeting = if (greeting.trim() == localizedDefaultGreeting.trim()) {
+                            CallPolicy.DEFAULT_GREETING
+                        } else {
+                            greeting
+                        }
+                        if (onSave(config.copy(greeting = savedGreeting, systemPrompt = prompt, maxCallSeconds = maxSeconds))) onDismiss()
                         else error = true
                     } finally { busy = false }
                 }
