@@ -181,7 +181,7 @@ fun FallbackChainCard(
                 )
             }
             val chevronAngle by animateFloatAsState(if (expanded) -90f else 90f, MikaMotion.switch(reduce), label = "fallback-chevron")
-            val pillBg by animateColorAsState(if (expanded) c.accentSoft else c.fill.copy(alpha = 0.6f), MikaMotion.switch(reduce), label = "fallback-pill-bg")
+            val pillBg by animateColorAsState(if (expanded) c.accentSoft else c.fill, MikaMotion.switch(reduce), label = "fallback-pill-bg")
             val pillTint by animateColorAsState(if (expanded) c.accent else c.ink3, MikaMotion.switch(reduce), label = "fallback-pill-fg")
             Box(
                 Modifier

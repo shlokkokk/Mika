@@ -255,7 +255,7 @@ fun FoldRow(
 private fun FoldExpandPill(expanded: Boolean, reduceMotion: Boolean) {
     val c = MikaTheme.colors
     val angle by animateFloatAsState(if (expanded) -90f else 90f, MikaMotion.switch(reduceMotion), label = "fold-chevron")
-    val bg by animateColorAsState(if (expanded) c.accentSoft else c.fill.copy(alpha = 0.6f), MikaMotion.switch(reduceMotion), label = "fold-pill-bg")
+    val bg by animateColorAsState(if (expanded) c.accentSoft else c.fill, MikaMotion.switch(reduceMotion), label = "fold-pill-bg")
     val tint by animateColorAsState(if (expanded) c.accent else c.ink3, MikaMotion.switch(reduceMotion), label = "fold-pill-fg")
     Box(
         Modifier.size(26.dp)

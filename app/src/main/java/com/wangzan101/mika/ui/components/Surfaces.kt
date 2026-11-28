@@ -155,7 +155,7 @@ private fun AttachedCardNote(note: String) {
     Box(Modifier.fillMaxWidth().height(0.5.dp).background(c.hair))
     Box(
         Modifier.fillMaxWidth()
-            .background(c.fill.copy(alpha = 0.55f))
+            .background(c.fill)
             .padding(horizontal = 16.dp, vertical = 10.dp),
     ) {
         Text(note, style = MikaType.Hint, color = c.ink3)
