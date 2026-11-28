@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="models_voice_catalog">نماذج الصوت</string>
-    <string name="models_voice_catalog_sub">إدارة نماذج تحويل الكلام إلى نص، وتحويل النص إلى كلام، والمكالمات المباشرة في مكان واحد</string>
     <string name="voice_catalog_title">نماذج الصوت</string>
     <string name="voice_catalog_sub">إدارة نماذج تحويل الكلام إلى نص، وتحويل النص إلى كلام، والمكالمات المباشرة في مكان واحد. تُعلَن القدرات والبروتوكولات هنا؛ وصفحات الإدخال الصوتي والقراءة والمكالمات تختار التفضيلات وتستخدمها فقط.</string>
     <string name="voice_catalog_add">إضافة نموذج</string>

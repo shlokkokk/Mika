@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="models_voice_catalog">Modelos de voz</string>
-    <string name="models_voice_catalog_sub">Gerencie modelos de fala para texto, texto para fala e chamadas ao vivo em um só lugar</string>
     <string name="voice_catalog_title">Modelos de voz</string>
     <string name="voice_catalog_sub">Gerencie modelos de fala para texto, texto para fala e chamadas ao vivo em um só lugar. Capacidades e protocolos são declarados aqui; as páginas de entrada de voz, leitura e chamadas apenas escolhem e usam preferências.</string>
     <string name="voice_catalog_add">Adicionar modelo</string>

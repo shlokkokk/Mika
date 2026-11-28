@@ -27,6 +27,8 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -47,6 +49,12 @@ internal object SttSilencePolicy {
     const val SILENCE_AFTER_SPEECH_MS = 1_600L
     const val MIN_RECORDING_MS = 900L
     const val HARD_TIMEOUT_MS = 15_000L
+
+    /**
+     * 多久判一次静音。录音电平是 StateFlow,电平不变就不再发事件(比如麦克风被系统静音、一直是 0),
+     * 只靠电平事件判断时超时永远到不了,所以按固定间隔判。
+     */
+    const val TICK_MS = 200L
 
     fun evaluate(
         heardSpeech: Boolean,
@@ -113,7 +121,34 @@ class VoiceCatalogViewModel(
     private val _transcripts = MutableStateFlow<Map<String, String>>(emptyMap())
     val transcripts: StateFlow<Map<String, String>> = _transcripts.asStateFlow()
     private val activeJobs = mutableMapOf<String, Job>()
-    private val activeSttSessions = mutableMapOf<String, SpeechSession>()
+    private val activeSttRuns = mutableMapOf<String, SttRun>()
+
+    /**
+     * 每次测试的身份。同一配置连点两次「测试」时,旧测试被取消后收尾是异步跑的,
+     * 收尾只在登记的还是自己时才动登记表和状态,不会把新测试的任务、录音删掉。
+     */
+    private val probeTokens = mutableMapOf<String, Any>()
+
+    /** 一次识别测试的录音会话;结束录音(静音自动结束、点「完成」)只发生一次。 */
+    private class SttRun(val session: SpeechSession) {
+        var released = false
+            private set
+
+        fun finish() {
+            if (released) return
+            released = true
+            session.release()
+        }
+
+        private var abandoned = false
+
+        fun abandon() {
+            released = true
+            if (abandoned) return
+            abandoned = true
+            runCatching { session.cancel() }
+        }
+    }
 
     // ---------- accounts, models and services ----------
 
@@ -140,8 +175,6 @@ class VoiceCatalogViewModel(
         if (serviceId == SttSelectionController.SYSTEM_STT_SERVICE.id) return
         catalog.deleteService(serviceId)
     }
-
-    fun deleteProvider(providerId: String): List<VoiceModelRef> = manager.deleteProviderWithVoiceUsage(providerId)
 
     fun providerVoiceUsage(providerId: String): List<VoiceModelRef> = manager.providerVoiceUsage(providerId)
 
@@ -177,10 +210,14 @@ class VoiceCatalogViewModel(
     private fun startProbe(ref: VoiceModelRef): Pair<CompletableDeferred<ProbeResult>, String> {
         val fingerprint = probe.connection(ref)
         stopOtherProbes(except = fingerprint)
-        activeJobs.remove(fingerprint)?.cancel()
+        stopFingerprint(fingerprint)
         setProbe(fingerprint, VoiceProbeUi.Running)
+        val token = Any()
+        probeTokens[fingerprint] = token
         val pending = CompletableDeferred<ProbeResult>()
         pending.invokeOnCompletion {
+            if (probeTokens[fingerprint] !== token) return@invokeOnCompletion
+            probeTokens.remove(fingerprint)
             activeJobs.remove(fingerprint)
             if (pending.isCancelled) return@invokeOnCompletion
             when (val result = pending.getCompleted()) {
@@ -198,11 +235,17 @@ class VoiceCatalogViewModel(
     private fun stopOtherProbes(except: String?) {
         val toStop = activeJobs.keys.filter { it != except }
         toStop.forEach { fp ->
-            activeSttSessions.remove(fp)?.cancel()
-            activeJobs.remove(fp)?.cancel()
+            stopFingerprint(fp)
             if (_probes.value[fp]?.isActive == true) setProbe(fp, VoiceProbeUi.Idle)
         }
         onStopAudio()
+    }
+
+    /** 当场放掉这个配置正在进行的测试:录音立即取消(麦克风马上释放),任务取消,收尾不再回写状态。 */
+    private fun stopFingerprint(fingerprint: String) {
+        probeTokens.remove(fingerprint)
+        activeSttRuns.remove(fingerprint)?.abandon()
+        activeJobs.remove(fingerprint)?.cancel()
     }
 
     /** Stops all active probes (e.g. when leaving the screen so mic and audio always release). */
@@ -214,8 +257,7 @@ class VoiceCatalogViewModel(
     fun stopProbe(ref: VoiceModelRef) {
         val fingerprint = probeFingerprint(ref)
         if (fingerprint != null) {
-            activeSttSessions.remove(fingerprint)?.cancel()
-            activeJobs.remove(fingerprint)?.cancel()
+            stopFingerprint(fingerprint)
             _transcripts.update { it - fingerprint }
             if (_probes.value[fingerprint]?.isActive == true) setProbe(fingerprint, VoiceProbeUi.Idle)
         }
@@ -225,10 +267,11 @@ class VoiceCatalogViewModel(
     /** Ends an active non-live STT recording early so it transcribes immediately. */
     fun finishStt(ref: VoiceModelRef) {
         val fingerprint = probeFingerprint(ref) ?: return
-        val session = activeSttSessions[fingerprint] ?: return
+        val run = activeSttRuns[fingerprint] ?: return
+        if (run.released) return
         val current = _probes.value[fingerprint] as? VoiceProbeUi.Listening
         if (current != null) setProbe(fingerprint, current.copy(level = 0f, canFinish = false, converting = true))
-        session.release()
+        run.finish()
     }
 
     private fun setProbe(fingerprint: String, state: VoiceProbeUi) {
@@ -248,80 +291,66 @@ class VoiceCatalogViewModel(
                 pending.complete(ProbeResult.Failed(VoiceModelError.from(e)))
                 return@launch
             }
-            activeSttSessions[fingerprint] = session
+            val run = SttRun(session)
+            if (!isActive) {
+                run.abandon()
+                pending.cancel()
+                return@launch
+            }
+            activeSttRuns[fingerprint] = run
             var currentTranscript = ""
             var currentLevel = 0f
+            fun publish() = setProbe(
+                fingerprint,
+                VoiceProbeUi.Listening(
+                    transcript = currentTranscript,
+                    level = if (run.released) 0f else currentLevel,
+                    canFinish = !session.live && !run.released,
+                    converting = run.released,
+                ),
+            )
+            // 非实时识别要等 release() 才出结果:按固定间隔判静音,没说话就超时报错,说完停顿就自动结束录音。
+            // 计时用累计的间隔而不是墙钟,测试里虚拟时间也能推进。
             var heardSpeech = false
-            val startedMs = System.currentTimeMillis()
-            var lastLoudMs = startedMs
-            var released = false
+            var loud = false
+            val silence = if (session.live) null else launch {
+                var elapsedMs = 0L
+                var lastLoudMs = 0L
+                while (!run.released) {
+                    delay(SttSilencePolicy.TICK_MS)
+                    elapsedMs += SttSilencePolicy.TICK_MS
+                    if (loud) lastLoudMs = elapsedMs
+                    if (run.released) break
+                    when (SttSilencePolicy.evaluate(heardSpeech, elapsedMs - lastLoudMs, elapsedMs)) {
+                        SttSilenceDecision.NoSpeechTimeout -> {
+                            run.abandon()
+                            _transcripts.update { it - fingerprint }
+                            pending.complete(ProbeResult.Failed(VoiceModelError.NoSpeechDetected()))
+                        }
+                        SttSilenceDecision.FinishSpeech -> {
+                            run.finish()
+                            publish()
+                        }
+                        SttSilenceDecision.Continue -> Unit
+                    }
+                }
+            }
             try {
                 session.events.collect { event ->
                     when (event) {
                         is SpeechEvent.Level -> {
                             currentLevel = event.value
-                            val now = System.currentTimeMillis()
-                            if (event.value >= SttSilencePolicy.SPEECH_LEVEL_THRESHOLD) {
-                                heardSpeech = true
-                                lastLoudMs = now
-                            }
-                            setProbe(
-                                fingerprint,
-                                VoiceProbeUi.Listening(
-                                    transcript = currentTranscript,
-                                    level = currentLevel,
-                                    canFinish = !session.live && !released,
-                                    converting = released,
-                                ),
-                            )
-                            if (!session.live && !released) {
-                                when (SttSilencePolicy.evaluate(heardSpeech, now - lastLoudMs, now - startedMs)) {
-                                    SttSilenceDecision.NoSpeechTimeout -> {
-                                        released = true
-                                        runCatching { session.cancel() }
-                                        _transcripts.update { it - fingerprint }
-                                        pending.complete(ProbeResult.Failed(VoiceModelError.NoSpeechDetected()))
-                                    }
-                                    SttSilenceDecision.FinishSpeech -> {
-                                        released = true
-                                        setProbe(
-                                            fingerprint,
-                                            VoiceProbeUi.Listening(
-                                                transcript = currentTranscript,
-                                                level = 0f,
-                                                canFinish = false,
-                                                converting = true,
-                                            ),
-                                        )
-                                        session.release()
-                                    }
-                                    SttSilenceDecision.Continue -> Unit
-                                }
-                            }
+                            loud = event.value >= SttSilencePolicy.SPEECH_LEVEL_THRESHOLD
+                            if (loud) heardSpeech = true
+                            publish()
                         }
                         is SpeechEvent.Partial -> {
                             currentTranscript = event.stable + event.tail
-                            setProbe(
-                                fingerprint,
-                                VoiceProbeUi.Listening(
-                                    transcript = currentTranscript,
-                                    level = currentLevel,
-                                    canFinish = !session.live && !released,
-                                    converting = released,
-                                ),
-                            )
+                            publish()
                         }
                         SpeechEvent.Converting -> {
-                            released = true
-                            setProbe(
-                                fingerprint,
-                                VoiceProbeUi.Listening(
-                                    transcript = currentTranscript,
-                                    level = 0f,
-                                    canFinish = false,
-                                    converting = true,
-                                ),
-                            )
+                            run.finish()
+                            publish()
                         }
                         is SpeechEvent.Final -> {
                             if (event.text.isBlank()) {
@@ -339,13 +368,14 @@ class VoiceCatalogViewModel(
                     }
                 }
             } catch (e: CancellationException) {
-                runCatching { session.cancel() }
+                run.abandon()
                 pending.cancel()
                 throw e
             } catch (e: Exception) {
                 pending.complete(ProbeResult.Failed(VoiceModelError.from(e)))
             } finally {
-                activeSttSessions.remove(fingerprint)
+                silence?.cancel()
+                activeSttRuns.remove(fingerprint, run)
                 runCatching { session.release() }
             }
         }

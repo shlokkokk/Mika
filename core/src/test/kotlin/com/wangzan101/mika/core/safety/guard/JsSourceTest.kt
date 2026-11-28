@@ -1,4 +1,4 @@
-package com.wangzan101.mika.core.script
+package com.wangzan101.mika.core.safety.guard
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

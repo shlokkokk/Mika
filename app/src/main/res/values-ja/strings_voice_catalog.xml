@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="models_voice_catalog">音声モデル</string>
-    <string name="models_voice_catalog_sub">音声認識・音声合成・リアルタイム通話のモデルを一か所で管理</string>
     <string name="voice_catalog_title">音声モデル</string>
     <string name="voice_catalog_sub">音声認識・音声合成・リアルタイム通話のモデルを一か所で管理します。能力とプロトコルはここで宣言し、音声入力・読み上げ・通話の設定ページでは選択と利用の好みだけを扱います。</string>
     <string name="voice_catalog_add">モデルを追加</string>

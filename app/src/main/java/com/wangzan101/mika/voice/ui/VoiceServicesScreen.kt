@@ -643,7 +643,7 @@ private fun PresetResult(
                 }
                 if (probe is VoiceProbeUi.Listening && !probe.converting) {
                     androidx.compose.foundation.layout.Box(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 6.dp)) {
-                        VoiceWave(probe.level, flat = false, reduceMotion = false, color = c.accent)
+                        VoiceWave(probe.level, flat = false, reduceMotion = MikaTheme.reduceMotion, color = c.accent)
                     }
                 }
                 Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="models_voice_catalog">Model suara</string>
-    <string name="models_voice_catalog_sub">Kelola model ucapan ke teks, teks ke ucapan, dan panggilan langsung di satu tempat</string>
     <string name="voice_catalog_title">Model suara</string>
     <string name="voice_catalog_sub">Kelola model ucapan ke teks, teks ke ucapan, dan panggilan langsung di satu tempat. Kemampuan dan protokol dinyatakan di sini; halaman input suara, pembacaan, dan panggilan hanya memilih dan memakai preferensi.</string>
     <string name="voice_catalog_add">Tambah model</string>

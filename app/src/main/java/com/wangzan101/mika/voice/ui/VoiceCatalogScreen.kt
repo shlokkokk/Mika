@@ -440,7 +440,7 @@ private fun CapabilityRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    VoiceWave(ui.level, flat = false, reduceMotion = false, color = c.accent)
+                    VoiceWave(ui.level, flat = false, reduceMotion = MikaTheme.reduceMotion, color = c.accent)
                     Text(
                         ui.transcript.ifBlank { stringResource(R.string.voice_catalog_listening) },
                         style = MikaType.Hint,

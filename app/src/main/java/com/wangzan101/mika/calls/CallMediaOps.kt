@@ -33,8 +33,9 @@ internal suspend fun CallRuntime.probeAudio(): Boolean {
     val ready = probe?.getBoolean("ready") == true
     if (epoch == probeEpoch) {
         audioReady = ready
-        audioDetail = if (ready) "音频路径具备运行条件，仍需双向实机验证"
-            else probe?.getString("reason")?.take(160)?.takeIf { it.isNotBlank() } ?: "内置助手无法检测电话音频"
+        audioDetail = if (ready) app.getString(R.string.calls_audio_probe_ready)
+            else probe?.getString("reason")?.take(160)?.takeIf { it.isNotBlank() }
+                ?: app.getString(R.string.calls_audio_probe_unavailable)
         publish()
     }
     return ready
