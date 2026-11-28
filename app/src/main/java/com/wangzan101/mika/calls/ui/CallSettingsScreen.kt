@@ -726,9 +726,15 @@ private fun CallPreferencesPage(
             preferred != null -> stringResource(R.string.calls_sim_unavailable)
             else -> stringResource(R.string.calls_sim_ask_each_time)
         }
-        CallFoldRow(MikaIcons.Phone, stringResource(R.string.calls_default_sim_settings), simOpen, "call-settings-sim",
-            value = summary) { simOpen = !simOpen }
-        if (simOpen) {
+        FoldRow(
+            title = stringResource(R.string.calls_default_sim_settings),
+            expanded = simOpen,
+            onToggle = { simOpen = !simOpen },
+            icon = MikaIcons.Phone,
+            trailingText = summary,
+            headerModifier = Modifier.testTag("call-settings-sim"),
+            stateLabel = stringResource(if (simOpen) R.string.calls_collapse else R.string.calls_expand),
+        ) {
             HorizontalDivider()
             RadioRow(stringResource(R.string.calls_sim_ask_each_time), preferred == null,
                 onClick = { onDefaultSim(null) }, first = true, enabled = canConfigure)
@@ -740,26 +746,24 @@ private fun CallPreferencesPage(
     }
 
     GroupLabel(stringResource(R.string.calls_settings_records))
-    GroupCard {
+    GroupCard(note = stringResource(R.string.calls_summary_cloud_consent)) {
         ListRow(MikaIcons.Spark, stringResource(R.string.calls_summary_enable), first = true,
             modifier = Modifier.toggleable(config.summaryEnabled, enabled = canConfigure, role = Role.Switch,
                 onValueChange = onSummaryEnabled)) {
             MikaSwitch(config.summaryEnabled, null, modifier = Modifier.testTag("call-summary-enabled"), enabled = canConfigure)
         }
     }
-    FooterNote(stringResource(R.string.calls_summary_cloud_consent))
 
     // 不再有「启用」大开关:做完准备清单就是启用,不想用了在这里停用
     if (config.enabled) {
         Spacer(Modifier.height(16.dp))
-        GroupCard {
+        GroupCard(note = stringResource(R.string.calls_disable_sub)) {
             Box(
                 Modifier.fillMaxWidth().clickable(enabled = !stopBusy, role = Role.Button, onClick = onStop)
                     .heightIn(min = 52.dp).testTag("call-disable"),
                 contentAlignment = Alignment.Center,
             ) { Text(stringResource(R.string.calls_disable_short), style = MaterialTheme.typography.bodyLarge, color = MikaTheme.colors.bad) }
         }
-        FooterNote(stringResource(R.string.calls_disable_sub))
     }
 }
 
