@@ -140,4 +140,5 @@
     <string name="calls_audio_probe_unavailable">内置助手无法检测电话音频</string>
     <string name="calls_history_summary_updated">摘要已更新</string>
     <string name="calls_voice_briefing_left_foreground">已离开前台，未拨号</string>
+    <string name="calls_voice_briefing_greeting">请交代这通电话要办的事，我在听。</string>
 </resources>

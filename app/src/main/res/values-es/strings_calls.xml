@@ -140,4 +140,5 @@
     <string name="calls_audio_probe_unavailable">El asistente integrado no pudo detectar el audio de la llamada</string>
     <string name="calls_history_summary_updated">Resumen actualizado</string>
     <string name="calls_voice_briefing_left_foreground">Saliste de la pantalla, llamada no realizada</string>
+    <string name="calls_voice_briefing_greeting">Cuéntame para qué es esta llamada, te escucho.</string>
 </resources>

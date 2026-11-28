@@ -140,4 +140,5 @@
     <string name="calls_audio_probe_unavailable">دستیار داخلی نتوانست صدای تماس را تشخیص دهد</string>
     <string name="calls_history_summary_updated">خلاصه به‌روزرسانی شد</string>
     <string name="calls_voice_briefing_left_foreground">برنامه از پیش‌زمینه خارج شد، تماس برقرار نشد</string>
+    <string name="calls_voice_briefing_greeting">لطفاً بگویید این تماس برای چه کاری است، گوش می‌دهم.</string>
 </resources>

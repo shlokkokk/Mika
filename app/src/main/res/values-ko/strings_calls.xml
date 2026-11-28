@@ -140,4 +140,5 @@
     <string name="calls_audio_probe_unavailable">내장 도우미가 통화 오디오를 감지하지 못했습니다</string>
     <string name="calls_history_summary_updated">요약이 업데이트되었습니다</string>
     <string name="calls_voice_briefing_left_foreground">포그라운드를 벗어나 전화를 걸지 않았습니다</string>
+    <string name="calls_voice_briefing_greeting">이 전화로 처리할 일을 말씀해 주세요. 듣고 있어요.</string>
 </resources>

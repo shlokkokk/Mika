@@ -140,4 +140,5 @@
     <string name="calls_audio_probe_unavailable">Yerleşik yardımcı arama sesini algılayamadı</string>
     <string name="calls_history_summary_updated">Özet güncellendi</string>
     <string name="calls_voice_briefing_left_foreground">Ön plandan ayrılındı, arama yapılmadı</string>
+    <string name="calls_voice_briefing_greeting">Lütfen bu aramanın ne için olduğunu anlatın, dinliyorum.</string>
 </resources>

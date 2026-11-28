@@ -140,4 +140,5 @@
     <string name="calls_audio_probe_unavailable">Built-in helper could not detect phone audio</string>
     <string name="calls_history_summary_updated">Summary updated</string>
     <string name="calls_voice_briefing_left_foreground">Left foreground, call not placed</string>
+    <string name="calls_voice_briefing_greeting">Please tell me what this call is for. I\'m listening.</string>
 </resources>

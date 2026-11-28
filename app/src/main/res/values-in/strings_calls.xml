@@ -140,4 +140,5 @@
     <string name="calls_audio_probe_unavailable">Asisten bawaan tidak dapat mendeteksi audio panggilan</string>
     <string name="calls_history_summary_updated">Ringkasan diperbarui</string>
     <string name="calls_voice_briefing_left_foreground">Meninggalkan layar depan, panggilan tidak dilakukan</string>
+    <string name="calls_voice_briefing_greeting">Silakan sampaikan apa keperluan panggilan ini, saya mendengarkan.</string>
 </resources>

@@ -140,4 +140,5 @@
     <string name="calls_audio_probe_unavailable">تعذّر على المساعد المدمج اكتشاف صوت المكالمة</string>
     <string name="calls_history_summary_updated">تم تحديث الملخص</string>
     <string name="calls_voice_briefing_left_foreground">تمت مغادرة الواجهة، لم يتم إجراء المكالمة</string>
+    <string name="calls_voice_briefing_greeting">من فضلك أخبرني بالغرض من هذه المكالمة، أنا أستمع.</string>
 </resources>

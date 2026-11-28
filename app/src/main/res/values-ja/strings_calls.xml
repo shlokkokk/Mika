@@ -140,4 +140,5 @@
     <string name="calls_audio_probe_unavailable">内蔵ヘルパーが通話音声を検出できませんでした</string>
     <string name="calls_history_summary_updated">要約を更新しました</string>
     <string name="calls_voice_briefing_left_foreground">フォアグラウンドを離れたため発信しませんでした</string>
+    <string name="calls_voice_briefing_greeting">この電話でお願いしたい用件を教えてください。お聞きしています。</string>
 </resources>

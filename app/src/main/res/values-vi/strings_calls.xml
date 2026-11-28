@@ -140,4 +140,5 @@
     <string name="calls_audio_probe_unavailable">Trình hỗ trợ tích hợp không phát hiện được âm thanh cuộc gọi</string>
     <string name="calls_history_summary_updated">Đã cập nhật tóm tắt</string>
     <string name="calls_voice_briefing_left_foreground">Đã rời khỏi nền trước, chưa thực hiện cuộc gọi</string>
+    <string name="calls_voice_briefing_greeting">Hãy cho tôi biết cuộc gọi này để làm gì, tôi đang nghe.</string>
 </resources>
