@@ -24,4 +24,5 @@
     <string name="device_local_sub">Tác vụ bắt đầu trên điện thoại này có thể đánh thức và mở khóa màn hình để làm việc không cần giám sát.</string>
     <string name="device_local_foot">Tắt theo mặc định. Hoạt động độc lập: nó không thay đổi “Cho phép đánh thức và mở khóa từ xa” trong mục Kết nối máy tính, và công tắc đó cũng không thay đổi công tắc này. Dùng cùng thông tin khóa màn hình đã mã hóa bên dưới; một lần thử sai sẽ tạm dừng các lần thử tiếp theo.</string>
     <string name="device_local_unlock_failed">Tác vụ không thể đánh thức hoặc mở khóa điện thoại. Hãy tự mở khóa, hoặc kiểm tra “Chạy tác vụ khi đang khóa” và thông tin khóa màn hình đã lưu trong Cài đặt › Chạy tác vụ.</string>
+    <string name="device_access_credential_required">Chưa lưu — nếu không có mã PIN hoặc mật khẩu điện thoại, tính năng tự mở khóa sẽ không hoạt động.</string>
 </resources>
